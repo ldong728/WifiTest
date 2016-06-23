@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang = "cn">
+<head>
+    <meta charset = "utf-8"/>
+    <!--<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.js"></script>-->
+    <script src="jquery.js"></script>
+    <script src="mathGraphic.js"></script>
+
+</head>
+<body>
+
+<canvas id="drawing" width="500" height="500">当你看到这行字的时候，说明你电脑的系统已经太老了，装个新系统吧，换个新浏览器也行</canvas>
+<div id="temp"></div>
+<input id="switchButton" type="button" value="线条" onclick="switchLineType()"/><span id="lineType" >实线</span>
+<input type="button" value="撤销" onclick="cancel()"/><input type="button" id="save" value="保存" onclick="saveImg()"></br>
+<div><span id = "keyCode"></span></br><span id="mouseY"></span></div>
+</body>
+</html>

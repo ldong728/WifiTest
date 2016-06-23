@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no"/>
+    <title>webView-native</title>
+    <script src="js/jquery.js"></script>
+    <style type="text/css">
+        img {
+        max-width: 100%;
+        }
+    </style>
+</head>
+
+
+<body>
+<div class="wrap">
+    <div><input type="button" id="startServer" value="开启TCP服务"/></div>
+    <div><input type="button" id="stopServer" value="关闭TCP服务"/></div>
+
+    <div><input type="button" id="controller" value="发送"/></div>
+</div>
+
+
+</body>
+<script>
+
+    $('#startServer').click(function(){
+    var int=window.wifi.startServer();
+
+    })
+    $('#stopServer').click(function(){
+    window.wifi.stopServer();
+    });
+    $('#controller').click(function(){
+    window.wifi.sendData();
+    })
+
+</script>
+
+</html>
