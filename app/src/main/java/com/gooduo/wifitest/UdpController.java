@@ -2,6 +2,7 @@ package com.gooduo.wifitest;
 
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -14,7 +15,7 @@ import java.net.UnknownHostException;
  */
 public class UdpController extends Thread {
     private final int PORT = 48899;
-    private DatagramSocket socket;
+    private DatagramSocket mSocket;
     // 是否接收消息
     private boolean receive = true;
     private String ip;
@@ -29,7 +30,7 @@ public class UdpController extends Thread {
 
     private void initSocket() {
         try {
-            socket = new DatagramSocket(PORT);
+            mSocket = new DatagramSocket(PORT);
             this.start();
         } catch (SocketException e) {
             e.printStackTrace();
@@ -48,11 +49,11 @@ public class UdpController extends Thread {
     * @param msg
     */
     public void sendMsg(byte[] msg) {
-        if (socket != null) {
+        if (mSocket != null) {
             try {
                 DatagramPacket sendPacket = new DatagramPacket(msg, msg.length,
                         InetAddress.getByName(ip), PORT);
-                socket.send(sendPacket);
+                mSocket.send(sendPacket);
             } catch (UnknownHostException e) {
                 e.printStackTrace();
                 System.out.println("发送失败");
@@ -69,7 +70,8 @@ public class UdpController extends Thread {
             byte[] data = new byte[128];
             DatagramPacket revPacket = new DatagramPacket(data, data.length);
             while (receive) {
-                socket.receive(revPacket);
+                Log.i("godlee", "udpServerStart");
+                mSocket.receive(revPacket);
                 if(null!=handler){
                     Message msg =handler.obtainMessage(Tool.REC_DATA, new String(data,"utf-8").trim());
                     handler.sendMessage(msg);
@@ -123,8 +125,8 @@ public class UdpController extends Thread {
     */
     public void breakConnect() {
         receive = false;
-        if (socket == null)
+        if (mSocket == null)
             return;
-        socket.close();
+        mSocket.close();
     }
 }

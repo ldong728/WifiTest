@@ -30,11 +30,11 @@ public class TcpController extends Thread{
     }
     public void init(String ip,int port){
         try{
-            InetSocketAddress sAddress=new InetSocketAddress(ip,port);
-
-            mSocket= new Socket();
-            mSocket.bind(sAddress);
-//            mSocket=new Socket(sAddress.getHostString(),port);
+//            InetSocketAddress sAddress=new InetSocketAddress(ip, port);
+            mSocket= new Socket(InetAddress.getByName(ip),port);
+//            mSocket.bind(sAddress);
+            Log.i("godlee", "bindSecessful");
+//            mSocket=new Socket(sAddress.getHostString(),port);getHostString
         }catch(SocketException e){
             Log.e("godlee",e.getMessage());
 
@@ -57,6 +57,15 @@ public class TcpController extends Thread{
         Log.i("godlee", Tool.bytesToHexString(array));
 //        sendData(array);
     }
+    public void close(){
+        if(mSocket!=null){
+            try{
+                mSocket.close();
+            }catch (IOException e){
+                Log.e("godlee",e.getMessage());
+            }
+        }
+    }
     public void stopServer(){
         mRevFlag=false;
     }
@@ -69,7 +78,7 @@ public class TcpController extends Thread{
         InputStream sInputStream;
         byte buffer[] =new byte[1024];
         try{
-            ServerSocket sServerSocket=new ServerSocket(4900);
+            ServerSocket sServerSocket=new ServerSocket(8899);
             while(mRevFlag){
                 Log.i("godlee","startServer");
                 sSocket=sServerSocket.accept();

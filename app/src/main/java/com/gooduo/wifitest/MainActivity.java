@@ -26,16 +26,18 @@ public class MainActivity extends AppCompatActivity {
     private WebSettings mWebSetting;
     private SearchSSID mSearchSSID;
     private TcpController mTcpController;
+    private UdpController mUdpController;
     private WifiManager mWifiManager;
     private Handler mHander=new Handler(){
         @Override
         public void handleMessage(Message msg){
          switch(msg.what){
              case Tool.REC_DATA:{
-                byte[] data = (byte[]) msg.obj;
-                 Tool.bytesToHexString(data);
-                 decodeData(data);
-                 break;
+//                byte[] data = (byte[]) msg.obj;
+//                 Tool.bytesToHexString(data);
+//                 decodeData(data);
+//                 break;
+                 Log.i("godlee","msg"+msg.obj);
              }
              default:break;
          }
@@ -50,10 +52,10 @@ public class MainActivity extends AppCompatActivity {
         byte[] ip=Tool.int2byte(dhcpInfo.serverAddress);
         Log.i("godlee",Tool.bytesToHexString(ip));
         Log.i("godlee",""+(int)(ip[0]&0xff));
-//        Log.i("godlee"," "+ InetAddress.getHostAdress());
-//        Log.i("godlee"," "+Formatter.formatIpAddress(dhcpInfo.serverAddress));
         mTcpController =new TcpController(this,mHander);
 
+//        mTcpController.start();
+//        mUdpController =new UdpController("192.168.0.153",mHander);
         mWebView=new WebView(this);
         mWebSetting=mWebView.getSettings();
         mWebSetting.setJavaScriptEnabled(true);
@@ -62,7 +64,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(mWebView);
         mWebView.loadUrl("file:///android_asset/temp.html");
         mWebView.addJavascriptInterface(new JsBrg(this), "wifi");
-        Log.i("godlee","hello logcat");
+        Log.i("godlee","wifiTest started");
+//        mTcpController.init("192.168.1.1", 8899);
+
 
     }
 
@@ -89,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
         // 退出处理
 //        lock.release();
 //        smt.setSend(false);
+        mTcpController.close();
         mSearchSSID.setReceive(false);
         mSearchSSID.close();
     }
@@ -114,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
         private Activity mActivity;
         public JsBrg(Activity activity){
             this.mActivity=activity;
+//            initSocket();
         }
         @JavascriptInterface
         public void searchSSID(){
@@ -127,12 +133,84 @@ public class MainActivity extends AppCompatActivity {
             mTcpController.sendData(data);
         }
         @JavascriptInterface
-        public void sendData(){
-            mTcpController.init("192.168.0.153",4900);
-            byte[] data=new byte[]{(byte)0xAA,0x08,0x0A,0x01 ,0x07 ,0x64 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x76};
+          public void greenOn(){
+//            mTcpController.init("192.168.1.1", 8899);
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x07 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x76};
             mTcpController.sendData(data);
-            Log.i("godlee", "send sucessful");
+            Log.i("godlee", "grean sucessful");
         }
+
+        @JavascriptInterface
+        public void greenOff(){
+
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x07 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x12};
+            mTcpController.sendData(data);
+            Log.i("godlee", "grean sucessful");
+        }
+
+        @JavascriptInterface
+        public void redOn(){
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x03 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x72};
+            mTcpController.sendData(data);
+        }
+        @JavascriptInterface
+        public void redOff(){
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x03 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x0e};
+            mTcpController.sendData(data);
+        }
+        @JavascriptInterface
+        public void blueOff(){
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x06 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x11};
+            mTcpController.sendData(data);
+        }
+
+        @JavascriptInterface
+        public void blueOn(){
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x06 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x75};
+            mTcpController.sendData(data);
+        }
+        @JavascriptInterface
+        public void sblueOff(){
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x01 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x0c};
+            mTcpController.sendData(data);
+        }
+        @JavascriptInterface
+        public void sblueOn(){
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x01 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x70};
+            mTcpController.sendData(data);
+        }
+        @JavascriptInterface
+        public void purpleOff(){
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x05 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x10};
+            mTcpController.sendData(data);
+        }
+        @JavascriptInterface
+        public void purpleOn(){
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x05 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x74};
+            mTcpController.sendData(data);
+        }
+        @JavascriptInterface
+        public void whiteOff(){
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x02 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x0d};
+            mTcpController.sendData(data);
+        }
+        @JavascriptInterface
+        public void whiteOn(){
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x02 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x71};
+            mTcpController.sendData(data);
+        }
+        @JavascriptInterface
+        public void opOff(){
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x04 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x0f};
+            mTcpController.sendData(data);
+        }
+        @JavascriptInterface
+        public void opOn(){
+            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x04 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x73};
+            mTcpController.sendData(data);
+        }
+
+
 
         @JavascriptInterface
         public void startServer(){
@@ -147,7 +225,8 @@ public class MainActivity extends AppCompatActivity {
         }
         @JavascriptInterface
         public void initSocket(){
-            mTcpController.init("192.168.0.153",4900);
+            Log.i("godlee","socket init");
+            mTcpController.init("192.168.1.1", 8899);
         }
 
     }
