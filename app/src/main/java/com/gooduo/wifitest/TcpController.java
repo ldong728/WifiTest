@@ -2,8 +2,10 @@ package com.gooduo.wifitest;
 
 import android.app.Activity;
 import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -52,6 +54,16 @@ public class TcpController extends Thread{
             Log.e("godlee",e.getMessage());
         }
     }
+    public void getData(){
+        try{
+            InputStream sIn=mSocket.getInputStream();
+            DataInputStream sDin=new DataInputStream(sIn);
+
+
+        }catch(IOException e){
+
+        }
+    }
     public void temp(){
         byte[] array=new byte[]{0x12,0x13,(byte)0xFF,(byte)0x5a};
         Log.i("godlee", Tool.bytesToHexString(array));
@@ -76,18 +88,23 @@ public class TcpController extends Thread{
 //        ServerSocket sServerSocket=null;
         Socket sSocket;
         InputStream sInputStream;
-        byte buffer[] =new byte[1024];
+
+        byte buffer[] =new byte[50];
         try{
-            ServerSocket sServerSocket=new ServerSocket(8899);
+//            ServerSocket sServerSocket=new ServerSocket(8899);
+            sInputStream=mSocket.getInputStream();
             while(mRevFlag){
                 Log.i("godlee","startServer");
-                sSocket=sServerSocket.accept();
-                sInputStream=sSocket.getInputStream();
+//                sSocket=sServerSocket.accept();
+//                sInputStream=sSocket.getInputStream();
                 sInputStream.read(buffer);
+//                System.arraycopy(data, 0, realData,0, realData.length);
+                Message msg =mHandler.obtainMessage(Tool.REC_DATA,buffer);
+                mHandler.sendMessage(msg);
                 Log.i("godlee",Tool.bytesToHexString(buffer));
 
             }
-            sServerSocket.close();
+//            sServerSocket.close();
         }catch(IOException e){
             Log.e("godlee", e.getMessage());
 //            sServerSocket.close();

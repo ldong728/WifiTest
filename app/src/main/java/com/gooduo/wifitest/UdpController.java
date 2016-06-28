@@ -10,6 +10,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.LinkedList;
+import java.util.Queue;
+
 /**
  * Created by Administrator on 2016/6/21.
  */
@@ -128,5 +131,33 @@ public class UdpController extends Thread {
         if (mSocket == null)
             return;
         mSocket.close();
+
+    }
+    class SendThread extends Thread{
+        private Queue<byte[]> sendMsgQuene = new LinkedList<byte[]>();
+        // 是否发送消息
+        private boolean send = true;
+
+//        private SearchSSID ss;
+//        public SendThread(){
+//
+//        }
+        @Override
+        public void run(){
+            synchronized (this){
+                while(send) {
+                    while (sendMsgQuene.size()>0) {
+                        byte[] msg = sendMsgQuene.poll();
+                        UdpController.this.sendMsg(msg);
+                    }
+                    try{
+                        wait();
+                    }catch(InterruptedException e){
+                        Log.e("godlee",e.getMessage());
+                    }
+                }
+            }
+        }
+
     }
 }

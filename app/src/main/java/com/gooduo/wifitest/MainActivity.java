@@ -18,6 +18,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.text.format.Formatter;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.net.InetAddress;
 
 
@@ -33,11 +36,13 @@ public class MainActivity extends AppCompatActivity {
         public void handleMessage(Message msg){
          switch(msg.what){
              case Tool.REC_DATA:{
-//                byte[] data = (byte[]) msg.obj;
-//                 Tool.bytesToHexString(data);
+                byte[] data = (byte[]) msg.obj;
+                 String sData=Tool.bytesToHexString(data);
 //                 decodeData(data);
-//                 break;
-                 Log.i("godlee","msg"+msg.obj);
+                  Log.i("godlee", "msg:" + sData);
+//                 mWebView.loadUrl("javascript: headerTo('ap_list.html')");
+                 break;
+
              }
              default:break;
          }
@@ -53,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         Log.i("godlee",Tool.bytesToHexString(ip));
         Log.i("godlee",""+(int)(ip[0]&0xff));
         mTcpController =new TcpController(this,mHander);
+        mSearchSSID = new SearchSSID(mHander);
 
 //        mTcpController.start();
 //        mUdpController =new UdpController("192.168.0.153",mHander);
@@ -62,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         mWebView.setWebChromeClient(new WebChromeClient());
         mWebView.setWebViewClient(new mWebViewClint());
         setContentView(mWebView);
-        mWebView.loadUrl("file:///android_asset/temp.html");
+        mWebView.loadUrl("file:///android_asset/index.html");
         mWebView.addJavascriptInterface(new JsBrg(this), "wifi");
         Log.i("godlee","wifiTest started");
 //        mTcpController.init("192.168.1.1", 8899);
@@ -122,22 +128,38 @@ public class MainActivity extends AppCompatActivity {
 //            initSocket();
         }
         @JavascriptInterface
-        public void searchSSID(){
-            mTcpController.temp();
+        public void startUdpServer(){
+            Log.i("godlee","startServer");
+            mSearchSSID.start();
+            mSearchSSID.sendThreadStart();
         }
 
 
         @JavascriptInterface
-        public void sendData(byte[] data){
-            Log.i("godlee","senddata"+Tool.bytesToHexString(data));
-            mTcpController.sendData(data);
+        public String test(final String data){
+            Log.i("godlee","senddata"+data);
+//            mTcpController.sendData(S);
+
+            try{
+                JSONObject sJson=new JSONObject(data);
+            }catch(JSONException e){
+                Log.e("godlee",e.getMessage());
+            }
+            return data;
+        }
+        @JavascriptInterface
+        public void sendUdp(){
+            byte[] data= new byte[]{ (byte) 0xff, 0x00, 0x01,
+                    0x01, 0x02 };
+            mSearchSSID.putMsg(data);
+
+
         }
         @JavascriptInterface
           public void greenOn(){
 //            mTcpController.init("192.168.1.1", 8899);
             byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x07 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x76};
             mTcpController.sendData(data);
-            Log.i("godlee", "grean sucessful");
         }
 
         @JavascriptInterface
@@ -145,7 +167,6 @@ public class MainActivity extends AppCompatActivity {
 
             byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x07 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x12};
             mTcpController.sendData(data);
-            Log.i("godlee", "grean sucessful");
         }
 
         @JavascriptInterface
