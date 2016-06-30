@@ -25,13 +25,8 @@
     <div></div>
     <button id="controller">连接TCP以控制灯具</button>
     <div></div>
-    <div><button class="controller" id="redOn">红色开</button><button class="controller" id="redOff">红色关</button></div>
     <div><button class="controller" id="greenOn">绿色开</button><button class="controller" id="greenOff">绿色关</button></div>
-    <div><button class="controller" id="blueOn">深蓝色开</button><button class="controller" id="blueOff">深蓝色关</button></div>
-    <div><button class="controller" id="sblueOn">宝石蓝色开</button><button class="controller" id="sblueOff">宝石蓝色关</button></div>
-    <div><button class="controller" id="purpleOn">紫色开</button><button class="controller" id="purpleOff">紫色关</button></div>
-    <div><button class="controller" id="whiteOn">白色开</button><button class="controller" id="whiteOff">白色关</button></div>
-    <div><button class="controller" id="opOn">紫外线开</button><button class="controller" id="opOff">紫外线关</button></div>
+    <div><button  id="sendCode">自动测试</button><button class="controller" id="opOff">紫外线关</button></div>
     <div><a href="ap_list.html">界面转换</a></div>
 
 </div>
@@ -63,6 +58,13 @@
     $('#udpStartServer').click(function(){
         window.wifi.startUdpServer();
     });
+    $('#sendCode').click(function(){
+        var data={color:5,time:0,level:100}
+        var str=JSON.stringify(data)
+        alert(str);
+        window.wifi.sendCode(str);
+    });
+
     $('.controller').click(function(){
         var id=$(this).attr('id');
                 switch(id){

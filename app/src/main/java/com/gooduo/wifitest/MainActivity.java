@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private TcpController mTcpController;
     private UdpController mUdpController;
     private WifiManager mWifiManager;
+    private LightsController mLightController= new LightsController();
     private Handler mHander=new Handler(){
         @Override
         public void handleMessage(Message msg){
@@ -70,7 +71,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(mWebView);
         mWebView.loadUrl("file:///android_asset/index.html");
         mWebView.addJavascriptInterface(new JsBrg(this), "wifi");
-        Log.i("godlee","wifiTest started");
+        Log.i("godlee", "wifiTest started");
+
 //        mTcpController.init("192.168.1.1", 8899);
 
 
@@ -168,68 +170,29 @@ public class MainActivity extends AppCompatActivity {
             byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x07 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x12};
             mTcpController.sendData(data);
         }
+        @JavascriptInterface
+        public void sendCode(final String data){
+            JSONObject sJson;
+            int color,time,level;
+            try{
+                sJson=new JSONObject(data);
+                color=Integer.parseInt(sJson.getString("color"));
+                time=Integer.parseInt(sJson.getString("time"));
+                level=Integer.parseInt(sJson.getString("level"));
+//                Log.i
+                byte[] code=mLightController.set(color,time,level);
+                mTcpController.sendData(code);
+                Log.i("godlee", Tool.bytesToHexString(code));
 
-        @JavascriptInterface
-        public void redOn(){
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x03 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x72};
-            mTcpController.sendData(data);
-        }
-        @JavascriptInterface
-        public void redOff(){
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x03 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x0e};
-            mTcpController.sendData(data);
-        }
-        @JavascriptInterface
-        public void blueOff(){
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x06 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x11};
-            mTcpController.sendData(data);
+            }catch(JSONException e){
+                Log.e("godlee",e.getMessage());
+            }
+
+
+
         }
 
-        @JavascriptInterface
-        public void blueOn(){
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x06 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x75};
-            mTcpController.sendData(data);
-        }
-        @JavascriptInterface
-        public void sblueOff(){
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x01 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x0c};
-            mTcpController.sendData(data);
-        }
-        @JavascriptInterface
-        public void sblueOn(){
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x01 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x70};
-            mTcpController.sendData(data);
-        }
-        @JavascriptInterface
-        public void purpleOff(){
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x05 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x10};
-            mTcpController.sendData(data);
-        }
-        @JavascriptInterface
-        public void purpleOn(){
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x05 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x74};
-            mTcpController.sendData(data);
-        }
-        @JavascriptInterface
-        public void whiteOff(){
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x02 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x0d};
-            mTcpController.sendData(data);
-        }
-        @JavascriptInterface
-        public void whiteOn(){
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x02 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x71};
-            mTcpController.sendData(data);
-        }
-        @JavascriptInterface
-        public void opOff(){
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x04 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x0f};
-            mTcpController.sendData(data);
-        }
-        @JavascriptInterface
-        public void opOn(){
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x04 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x73};
-            mTcpController.sendData(data);
-        }
+
 
 
 

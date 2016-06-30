@@ -89,7 +89,7 @@ public class TcpController extends Thread{
         Socket sSocket;
         InputStream sInputStream;
 
-        byte buffer[] =new byte[50];
+        byte buffer[] =new byte[12];
         try{
 //            ServerSocket sServerSocket=new ServerSocket(8899);
             sInputStream=mSocket.getInputStream();
@@ -101,7 +101,7 @@ public class TcpController extends Thread{
 //                System.arraycopy(data, 0, realData,0, realData.length);
                 Message msg =mHandler.obtainMessage(Tool.REC_DATA,buffer);
                 mHandler.sendMessage(msg);
-                Log.i("godlee",Tool.bytesToHexString(buffer));
+//                Log.i("godlee",Tool.bytesToHexString(buffer));
 
             }
 //            sServerSocket.close();

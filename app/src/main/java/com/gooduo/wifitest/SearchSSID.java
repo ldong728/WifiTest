@@ -78,10 +78,12 @@ public class SearchSSID extends Thread {
 				socket.receive(revPacket);
 				if(null!=handler){
 					byte[] realData = new byte[revPacket.getLength()];
-//					System.arraycopy(data, 0, realData,0, realData.length);
-					decodeData(realData);
+					System.arraycopy(data, 0, realData,0, realData.length);
+//					decodeData(realData);
 					Message msg =handler.obtainMessage(Tool.REC_DATA,realData);
+
 					handler.sendMessage(msg);
+					decodeData(realData);
 				}
 				Log.i("godlee","receive");
 			}
