@@ -49,4 +49,15 @@ public class LightsController {
         return mLightsGroup[color].getAutoCode();
     }
 
+    public byte[] unset(int color,int time){
+        mLightsGroup[color].removeKey(time);
+        return  mLightsGroup[color].getAutoCode();
+    }
+
+    public void displayTemp(){
+        for(Light l:mLightsGroup){
+            l.disply();
+        }
+    }
+
 }

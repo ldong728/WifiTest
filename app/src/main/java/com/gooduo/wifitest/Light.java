@@ -107,6 +107,20 @@ public class Light {
         }
         Log.i("godlee", inf);
     }
+    public void removeKey(int index)
+    {
+        mControlMap[index].setKey(false);
+        for(int i=index;i>-1;i--){
+            if(mControlMap[i].isKey()){
+                mControlMap[i].setLevel(mControlMap[i].getLevel());
+                break;
+            }else if(i==0){
+                mControlMap[i].setLevel(mControlMap[i].getLevel());
+                mControlMap[i].setKey(false);
+                break;
+            }
+        }
+    }
 
 
 
@@ -143,14 +157,5 @@ public class Light {
         public int getLevel(){
             return mLevel;
         }
-
-
-
-
-
-
-
-
-
     }
 }

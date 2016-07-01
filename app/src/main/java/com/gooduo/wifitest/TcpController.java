@@ -89,7 +89,7 @@ public class TcpController extends Thread{
         Socket sSocket;
         InputStream sInputStream;
 
-        byte buffer[] =new byte[12];
+        byte buffer[] =new byte[1024];
         try{
 //            ServerSocket sServerSocket=new ServerSocket(8899);
             sInputStream=mSocket.getInputStream();

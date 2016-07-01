@@ -18,7 +18,7 @@ public class WifiClass {
         mWifiManager=(WifiManager)mActivity.getSystemService(Context.WIFI_SERVICE);
     }
     @JavascriptInterface
-    public void scanWifi(boolean stu){
+    public void switchWifi(boolean stu){
         if(stu){
             if(!mWifiManager.isWifiEnabled()){
                 mWifiManager.setWifiEnabled(stu);

@@ -174,15 +174,21 @@ public class MainActivity extends AppCompatActivity {
         public void sendCode(final String data){
             JSONObject sJson;
             int color,time,level;
+            byte[] code;
             try{
                 sJson=new JSONObject(data);
                 color=Integer.parseInt(sJson.getString("color"));
                 time=Integer.parseInt(sJson.getString("time"));
                 level=Integer.parseInt(sJson.getString("level"));
-//                Log.i
-                byte[] code=mLightController.set(color,time,level);
+                if(level>100||level<0){
+                    code=mLightController.unset(color,time);
+                }else{
+                    code=mLightController.set(color,time,level);
+                }
+
                 mTcpController.sendData(code);
                 Log.i("godlee", Tool.bytesToHexString(code));
+                mLightController.displayTemp();
 
             }catch(JSONException e){
                 Log.e("godlee",e.getMessage());
