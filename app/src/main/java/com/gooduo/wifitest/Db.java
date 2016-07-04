@@ -10,9 +10,11 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class Db extends SQLiteOpenHelper {
     public static String DB_NAME="chihiros_db";
     public static String GROUP_TBL="GROUP_TBL";
-    public static String LIGHT_TBL="LIGHT_TBL";
+    public static String DEVICE_TBL="DEVICE_TBL";
+    public static String CODE_TBL="CODE_TBL";
     public static String G_ID="G_ID";
     public static String G_NAME="G_NAME";
+    public static String G_CODE="G_CODE";
     public static String D_MAC="D_MAC";
     public static String D_SSID="D_SSID";
     public static String D_G_ID="D_G_ID";
@@ -28,12 +30,18 @@ public class Db extends SQLiteOpenHelper {
     public Db(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
 
+
+
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
-
+        String str="CREAT TABLE IF NOT EXISTS GROUP_TBL G_ID integer primary key autoincrement,G_NAME text,G_CODE BLOB";
+        db.execSQL(str);
+        str="CREAT TABLE IF NOT EXISTS DEVICE_TBL D_MAC text primary ,D_SSID text,D_G_ID text,D_IP text,D_TYPE text";
+        db.execSQL(str);
+        str="CREAT TABLE IF NOT EXISTS CODE_TBL C_ID integer primary key autoincrement,C_CODE BLOB,C_TYPE text";
+        db.execSQL(str);
 
     }
 

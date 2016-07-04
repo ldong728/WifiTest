@@ -16,12 +16,9 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.text.format.Formatter;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.net.InetAddress;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -189,6 +186,14 @@ public class MainActivity extends AppCompatActivity {
                 mTcpController.sendData(code);
                 Log.i("godlee", Tool.bytesToHexString(code));
                 mLightController.displayTemp();
+                byte[] points=mLightController.getControlMap();
+                Log.i("godlee",Tool.bytesToHexString(points));
+
+                mLightController.setControlMap(points);
+                Log.i("godlee","formated");
+                mLightController.displayTemp();
+
+                Log.i("godlee",mLightController.getJsonControlMap());
 
             }catch(JSONException e){
                 Log.e("godlee",e.getMessage());

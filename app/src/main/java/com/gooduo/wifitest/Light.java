@@ -2,17 +2,18 @@ package com.gooduo.wifitest;
 
 import android.util.Log;
 
+import java.io.Serializable;
+
 /**
  * Created by Administrator on 2016/6/29.
  */
 public class Light {
     public static int TOTAL=48;
+    public static int CODE_LENGTH=12;
     public static int MAX=0x64;
     public static int MIN=0x00;
     private int mColor,mMaxLevel,mMinLevel;
     private ControllerPoint[] mControlMap =new ControllerPoint[TOTAL];
-
-
     public Light(int color,int maxLevel,int minLevel){
         this.mColor=color;
         if(maxLevel>MAX)maxLevel=MAX;
@@ -22,7 +23,7 @@ public class Light {
         initControlMap();
     }
     public Light(int color,int MaxLevel){
-        this(color, MaxLevel,MIN);
+        this(color, MaxLevel, MIN);
     }
     public Light(int color){
         this(color, MAX, MIN);
@@ -34,28 +35,49 @@ public class Light {
         }
 
     }
-
+    public ControllerPoint[] getControlMap(){
+        return mControlMap;
+    }
     public byte[] getAutoCode(){
-        byte[] data=new byte[12*TOTAL];
+        byte[] data=new byte[CODE_LENGTH*TOTAL];
         for(int i=0;i<TOTAL;i++){
             int h=i/2;
             int hh=i%2;
-            data[12*i]=(byte)0xaa;
-            data[12*i+1]=(byte)0x08;
-            data[12*i+2]=(byte)0x0a;
-            data[12*i+3]=(byte)0x03;
-            data[12*i+4]=(byte)mColor;
-            data[12*i+5]=(byte)mControlMap[i].getLevel();
-            data[12*i+6]=(byte)h;
-            data[12*i+7]=(byte)hh;
-            data[12*i+8]=(byte)0x00;
-            data[12*i+9]=(byte)0x00;
-            data[12*i+10]=(byte)0x00;
-            data[12*i+11]=(byte)(mColor+mControlMap[i].getLevel()+h+hh+0x0a+0x03);
+            data[CODE_LENGTH*i]=(byte)0xaa;
+            data[CODE_LENGTH*i+1]=(byte)0x08;
+            data[CODE_LENGTH*i+2]=(byte)0x0a;
+            data[CODE_LENGTH*i+3]=(byte)0x03;
+            data[CODE_LENGTH*i+4]=(byte)mColor;
+            data[CODE_LENGTH*i+5]=(byte)mControlMap[i].getLevel();
+            data[CODE_LENGTH*i+6]=(byte)h;
+            data[CODE_LENGTH*i+7]=(byte)hh;
+            data[CODE_LENGTH*i+8]=(byte)0x00;
+            data[CODE_LENGTH*i+9]=(byte)0x00;
+            data[CODE_LENGTH*i+10]=(byte)0x00;
+            data[CODE_LENGTH*i+11]=(byte)(mColor+mControlMap[i].getLevel()+h+hh+0x0a+0x03);
         }
         return data;
     }
-
+    public byte[] setManuelCode(int level){
+        byte[] data=new byte[12];
+        data[0]=(byte)0xaa;
+        data[1]=(byte)0x08;
+        data[2]=(byte)0x0a;
+        data[3]=(byte)0x01;
+        data[4]=(byte)mColor;
+        data[5]=(byte)level;
+        data[6]=(byte)0x00;
+        data[7]=(byte)0x00;
+        data[8]=(byte)0x00;
+        data[9]=(byte)0x00;
+        data[10]=(byte)0x00;
+        data[11]=(byte)(0x03+0x0a+mColor+level);
+        return data;
+    }
+    public void setControlMap(int index,boolean key,int level){
+        mControlMap[index].setKey(key);
+        mControlMap[index].setLevel(level);
+    }
     private void initControlMap(){
         for(int i=0;i<TOTAL;i++){
             mControlMap[i]=new ControllerPoint(i);
@@ -107,55 +129,19 @@ public class Light {
         }
         Log.i("godlee", inf);
     }
-    public void removeKey(int index)
-    {
+    public void removeKey(int index){
         mControlMap[index].setKey(false);
         for(int i=index;i>-1;i--){
             if(mControlMap[i].isKey()){
-                mControlMap[i].setLevel(mControlMap[i].getLevel());
+//                Log.i("godlee","remove find Key:"+i);
+                setLevel(i,mControlMap[i].getLevel());
                 break;
             }else if(i==0){
-                mControlMap[i].setLevel(mControlMap[i].getLevel());
+//                Log.i("godlee","remove find edge:"+i);
+                setLevel(i,mControlMap[i].getLevel());
                 mControlMap[i].setKey(false);
                 break;
             }
-        }
-    }
-
-
-
-
-
-
-    class ControllerPoint {
-        private int mIndex;
-        private boolean mKey=false;
-        private int mLevel=0;
-
-        public ControllerPoint(int index,boolean key,int level){
-            this.mIndex=index;
-            this.mKey=key;
-            this.mLevel=level;
-        }
-        public ControllerPoint (int index,boolean key){
-            this(index,key,0x00);
-        }
-        public ControllerPoint(int index){
-            this(index,false,0x00);
-        }
-
-
-        public boolean isKey(){
-            return mKey;
-        }
-        public void setKey(boolean key){
-            this.mKey=key;
-        }
-        public void setLevel(int level){
-            this.mLevel=level;
-        }
-        public int getLevel(){
-            return mLevel;
         }
     }
 }

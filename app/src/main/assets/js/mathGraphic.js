@@ -30,11 +30,35 @@ function initCanvas(){
     myCanvas.ondblclick=mouseDouble;
     window.addEventListener('keydown', keyDown,true);
     window.addEventListener('keypress',keyPress,true);
+    document.addEventListener('touchstart',touchStart, false);
+    document.addEventListener('touchmove',touchMove, false);
+    document.addEventListener('touchend',touchEnd, false);
 }
-function test(t){
-    $('#temp').append(testCount+":"+t+ ' ');
-    testCount++;
+function touchStart(e){
+    $('#temp').empty();
+    $.each(e,function(id,value){
+        if(id=="touches"){
+            $.each(value,function(k,v){
+                $.each(v,function(sk,sv){
+                    $('#temp').append(sk+':'+sv+'</br>');
+                })
+
+            })
+        }
+
+    })
+
 }
+function touchMove(e){
+
+}
+function touchEnd(e){
+
+}
+//function test(t){
+//    $('#temp').append(testCount+":"+t+ ' ');
+//    testCount++;
+//}
 function point(x,y){
     this.enable=true;
     this.visible = true;
