@@ -1,83 +1,169 @@
 /**
  * Created by godlee on 2015/4/1.
  */
+
+var pNumber=48;
+var colorList=['#00d4ff','#F7F7F7','#EE2C2C','#4B0082','#7D26CD','#00008B','#66CD00'];
+var edgeL=0;
+var edgeR=pNumber-1;
+var drawList=new Array(7);
 var myCanvas;
 var myContext;
+var bufferCanvas;
+var bufferContext;
+var canvasWidth;
+var canvasHeight;
+var pOffset;
 var testCount=0;
 var lineType=0;
 var lastPoint;
 var mousePressed;
-var points = Array();
-var lines = Array();
-//        var drawActions = Array();
-var chars = Array();
+var currentColor=1;
+
+//var points = Array();
+//var lines = Array();
+//var chars = Array();
 var currentX=0;
 var currentY=0;
 $(document).ready(function(){
     initCanvas();
+    window.requestAnimationFrame(draw);
 });
 function initCanvas(){
+    canvasWidth=$('.canvas_wrap').get(0).clientWidth;
+    canvasHeight=$('.canvas_wrap').get(0).clientHeight;
+    pOffset=canvasWidth/pNumber;
     myCanvas=$('#drawing').get(0);
+    myCanvas.width=canvasWidth;
+    myCanvas.height=canvasHeight;
     myContext=myCanvas.getContext('2d');
-    myContext.fillStyle="#000000";
-    myContext.strokeStyle="#000000";
-    myContext.font = "bold 20px Arial";
-    myContext.textAlign = "center";
-    myContext.textBaseline = "middle";
-    myCanvas.onmousedown=mouseDown;
-    myCanvas.onmouseup=mouseUp;
-    myCanvas.onmousemove=mouseMove;
-    myCanvas.ondblclick=mouseDouble;
-    window.addEventListener('keydown', keyDown,true);
-    window.addEventListener('keypress',keyPress,true);
-    document.addEventListener('touchstart',touchStart, false);
+    bufferCanvas=document.createElement('canvas');
+    bufferContext=bufferCanvas.getContext('2d');
+    bufferCanvas.width=canvasWidth;
+    bufferCanvas.height=canvasHeight;
+    //myContext.fillStyle="#000000";
+    //myContext.strokeStyle="#000000";
+    //myContext.font = "bold 20px Arial";
+    //myContext.textAlign = "center";
+    //myContext.textBaseline = "middle";
+    //myCanvas.onmousedown=mouseDown;
+    //myCanvas.addEventListener('mousedown',mouseDown,true);
+    //myCanvas.onmouseup=mouseUp;
+    //myCanvas.onmousemove=mouseMove;
+    //myCanvas.ondblclick=mouseDouble;
+    //window.addEventListener('keydown', keyDown,true);
+    //window.addEventListener('keypress',keyPress,true);
+    myCanvas.addEventListener('touchstart',touchStart, false);
     document.addEventListener('touchmove',touchMove, false);
-    document.addEventListener('touchend',touchEnd, false);
+    //document.addEventListener('touchend',touchEnd, false);
+    $('#temp').append('offset: '+pOffset);
+    for(var i=0;i<7;i++){
+        drawList[i]=new color(color[i]);
+    }
+    drawBuffer();
+}
+function drawBuffer(){
+    bufferContext.clearRect(0,0,canvasWidth,canvasHeight);
+    $.each(drawList,function(k,v){
+        if(k!=currentColor){
+            v.drawSelf(bufferContext);
+        }
+    });
+}
+function draw(){
+        //myContext.clearRect(0,0,canvasWidth,canvasHeight);
+        myCanvas.width=myCanvas.width;
+        myContext.drawImage(bufferCanvas,0,0);
+        drawList[currentColor].drawSelf(myContext);
+
+
+
+
+
+
+    requestAnimationFrame(draw);
 }
 function touchStart(e){
-    $('#temp').empty();
-    $.each(e,function(id,value){
-        if(id=="touches"){
-            $.each(value,function(k,v){
-                $.each(v,function(sk,sv){
-                    $('#temp').append(sk+':'+sv+'</br>');
-                })
+    var x=e.touches[0].clientX;
+    var y= e.touches[0].clientY;
+    var index=getIndex(x);
+    edgeL=index;
+    edgeR=index;
+    while(!drawList[currentColor].controlPoints[--edgeL]){
+        continue;
+    }
+    while(!drawList[currentColor].controlPoints[++edgeR]){
+        continue;
+    }
+    //alert("l:"+edgeL);
+    //alert("r:"+edgeR);
 
-            })
-        }
 
-    })
+
+
+    drawList[currentColor].add(new point(x,y));
 
 }
 function touchMove(e){
+    var x=e.touches[0].clientX;
+    var y= e.touches[0].clientY;
+    var index=getIndex(x);
+    if(index>edgeL&&index<edgeR){
+        drawList[currentColor].clearRange(edgeL,edgeR);
+        drawList[currentColor].add(new point(x,y));
+    }
 
 }
 function touchEnd(e){
 
 }
-//function test(t){
-//    $('#temp').append(testCount+":"+t+ ' ');
-//    testCount++;
-//}
+
+
+function getIndex(x){
+    var index=(x/pOffset+ 0.5) | 0;
+    if(index>pNumber-1)index=pNumber-1;
+    return index;
+}
+function color(color){
+    this.color=color;
+    this.controlPoints= new Array(pNumber);
+    this.add=add;
+    this.drawSelf=drawSelf;
+    this.clearRange=clearRange;
+    this.add(new point(0,canvasHeight));
+    this.add(new point(canvasWidth,canvasHeight));
+    this.add(new point(100,100));
+    function add(p){
+        var index=getIndex(p.x);
+        this.controlPoints[index]=p;
+    }
+    function drawSelf(context){
+        //context.save();
+        //$('#temp').empty();
+        //context.strokeStyle=colorList[this.color];
+        //context.fillStyle=colorList[this.color];
+        context.moveTo(this.controlPoints[0].x,this.controlPoints[0].y);
+        $.each(this.controlPoints,function(k,v){
+           if(k>0&&v){
+               //$('#temp').append(v.x+"</br>");
+               context.lineTo(v.x, v.y);
+           }
+        });
+        context.stroke();
+        //context.restore();
+    }
+
+    function clearRange(l,r){
+        for(var i=l+1;i<r;i++){
+            this.controlPoints[i]=null;
+        }
+
+    }
+
+}
 function point(x,y){
-    this.enable=true;
-    this.visible = true;
     this.x=x;
     this.y=y;
-    this.drawSelf=drawSelf;
-    this.isIn=isIn;
-    function drawSelf(){
-        if(this.enable&&this.visible){
-            drawPoint(x,y);
-        }
-    }
-    function isIn(tx,ty){
-        if(Math.abs(tx-this.x)<10&&Math.abs(ty-this.y)<10){
-            return true;
-        }else{
-            return false;
-        }
-    }
 }
 function line(p1,p2,type){
     this.p1=p1;
@@ -120,6 +206,11 @@ function char(x,y,value){
     }
 }
 var mouseDown=function(e){
+    //alert('mouse down');
+    $('#temp').empty();
+    $.each(e,function(k,v){
+        $('#temp').append(k+":"+v+"</br>")
+    });
     var P = realP(e.x, e.y);
     var tempPoint = new point(P.x,P.y);
     lastPoint =getPointfromArray(tempPoint);
@@ -169,11 +260,10 @@ var mouseMove = function(e){
 //            $('#mouseY').empty();
 //            $('#mouseX').append(currentX);
 //            $('#mouseY').append(currentY);
+    $('#temp').text(currentX);
 
 }
 var keyDown = function(e){
-//            var keyID = e.keyCode ? e.keyCode :e.which;
-//            $('#keyCode').append(keyID);
 
 }
 var keyPress = function(e){
