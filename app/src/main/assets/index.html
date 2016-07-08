@@ -68,7 +68,6 @@
         var level=$('#level').val();
         var data={color:color,time:time,level:level}
         var str=JSON.stringify(data)
-        alert(str);
         window.wifi.sendCode(str);
     });
 

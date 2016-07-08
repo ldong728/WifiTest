@@ -188,6 +188,25 @@ public class UdpController extends Thread {
 
         }
     }
+    private void sendMsg(DatagramPacket pkg) {
+        if (socket != null) {
+            try {
+                Log.i("godlee", "usrPort------------------->" + usrPort);
+//                DatagramPacket sendPacket = new DatagramPacket(msg, msg.length,
+//                        InetAddress.getByName(IP), usrPort);
+                socket.send(pkg);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+                System.out.println("发送失败（未知主机）");
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("发送失败（IO错误）");
+            } catch (IllegalBlockingModeException e){
+                e.printStackTrace();
+            }
+
+        }
+    }
     public void sendMsg(byte[] msg,String ip,int port) {
         if (socket != null) {
             try {
@@ -236,7 +255,7 @@ public class UdpController extends Thread {
     }
 
     class SendThread extends Thread {
-        private Queue<byte[]> sendMsgQueue = new LinkedList<byte[]>();
+        private Queue<DatagramPacket> sendMsgQueue = new LinkedList<DatagramPacket>();
         // 是否发送消息
         private boolean send = true;
 
@@ -244,12 +263,26 @@ public class UdpController extends Thread {
 //        public SendThread(){
 //
 //        }
-        public synchronized void putMsg(byte[] msg) {
-            if (0 == sendMsgQueue.size()) {
-                notify();
-                Log.i("godlee", "put msg");
-                sendMsgQueue.offer(msg);
+        public void putMsg(byte[] msg) {
+            putMsg(msg,IP,usrPort);
+        }
+        public void putMsg(byte[] msg,int port){
+            putMsg(msg,IP,usrPort);
+        }
+
+        public synchronized  void  putMsg(byte[] msg,String ip,int port){
+            try{
+                DatagramPacket sDatagramPacket=new DatagramPacket(msg,msg.length,InetAddress.getByName(ip),port);
+                if (0 == sendMsgQueue.size()) {
+                    notify();
+                    Log.i("godlee", "put msg");
+                }
+                sendMsgQueue.offer(sDatagramPacket);
+            }catch(IOException e){
+                Log.e("godlee",e.getMessage());
+                e.printStackTrace();
             }
+
         }
 
         public void set(boolean flag) {
@@ -261,7 +294,7 @@ public class UdpController extends Thread {
             synchronized (this) {
                 while (send) {
                     while (sendMsgQueue.size() > 0) {
-                        byte[] msg = sendMsgQueue.poll();
+                        DatagramPacket msg = sendMsgQueue.poll();
                         UdpController.this.sendMsg(msg);
                         Log.i("godlee", "sendMmsg:");
                     }
