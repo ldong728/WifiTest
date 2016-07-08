@@ -21,14 +21,14 @@ import java.util.Objects;
  * Created by Administrator on 2016/6/30.
  */
 public class LightsController {
-    public static int COLOR_NUM=7;
-    public static int RY=0;
-    public static int CW=1;
-    public static int DR=2;
-    public static int UV=3;
-    public static int V=4;
-    public static int B=5;
-    public static int G=6;
+    public static final int COLOR_NUM=7;
+    public static final int RY=0;
+    public static final int CW=1;
+    public static final int DR=2;
+    public static final int UV=3;
+    public static final int V=4;
+    public static final int B=5;
+    public static final int G=6;
     Light[] mLightsGroup=new Light[COLOR_NUM];
 
 
@@ -147,6 +147,11 @@ public class LightsController {
         data[11]=(byte)(0x06+0x0a+sStu+sStart+sEnd);
         return data;
     }
+
+    /**
+     * 将自动模式的状态序列化成字节码便于储存（非控制字节码）
+     * @return 转换后的字节码
+     */
     public byte[] getControlMap(){
         ArrayList<ControllerPoint> sList= new ArrayList<ControllerPoint>(COLOR_NUM*Light.TOTAL);
         int offset=0;
@@ -168,6 +173,11 @@ public class LightsController {
             return null;
         }
     }
+
+    /**
+     * 将自动化控制的状态字节码转化成控制状态
+     * @param data 待转化的字节码
+     */
     public void setControlMap(byte[] data){
         ByteArrayInputStream obj= new ByteArrayInputStream(data);
         try{
@@ -185,6 +195,11 @@ public class LightsController {
             Log.e("godlee",e.getMessage());
         }
     }
+
+    /**
+     * 获取自动控制状态的Json格式字符串
+     * @return Json格式字符串
+     */
     public String getJsonControlMap(){
         JSONObject obj=new JSONObject();
         try{

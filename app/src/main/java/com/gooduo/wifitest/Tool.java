@@ -6,6 +6,10 @@ import java.util.List;
 
 public class Tool {
 	public static final int REC_DATA = 0x01;
+	public static final int TCP_DATA=0x02;
+	public static final int WIFI_LIST_DATA=0x03;
+	public static final int ERR_DATA=0x05;
+	public static final int CFM_DATA=0x06;
 
 	/**
 	 * 校验数据对不对

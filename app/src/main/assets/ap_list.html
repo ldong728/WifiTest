@@ -9,7 +9,27 @@
 </head>
 
 <body>
-hahahahahahah
+<div class="temp">
+
+
+</div>
 
 
 </body>
+
+<script>
+    function getList(d){
+        alert('ok');
+        var data=eval("("+d+")");
+        $.each(data,function(k,v){
+//           $('.temp').append('<div class="sel" id="'+k+'">'+k+':  '+v+'</br></div>')
+            $('.temp').append(k+':'+v+'</br>');
+        });
+    }
+
+    $(document).on('sel','click',function(){
+        var ssid=$(this).attr('id');
+        alert(ssid);
+    })
+
+</script>

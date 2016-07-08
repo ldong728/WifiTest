@@ -20,8 +20,8 @@
 <body>
 <div class="wrap">
     <div><button id="test">测试按钮</button></div>
-    <div><input type="button" id="startServer" value="开启TCP服务"/><input type="button" id="stopServer" value="关闭TCP服务"/></div>
-    <div><input type="button" id="udpStartServer" value="开启udp服务"/><input type="button" id="sendUdp" value="发送udp广播"/></div>
+    <div><input type="button" id="linkwifi" value="链接wifi"/><input type="button" id="stopServer" value="关闭TCP服务"/></div>
+    <div><input type="button" id="udpStartServer" value="开启udp服务"/><input type="button" id="sendUdp" value="获取Wifi列表"/></div>
     <div></div>
     <button id="controller">连接TCP以控制灯具</button>
     <div></div>
@@ -45,10 +45,13 @@
     });
     $('#sendUdp').click(function(){
         window.wifi.sendUdp();
+//        headerTo('ap_list.html');
     })
 
-    $('#startServer').click(function(){
-        var int=window.wifi.startServer();
+    $('#linkwifi').click(function(){
+        var inf={ssid:"TL-Gooduo",pasd:"gooduo789"}
+        inf=JSON.stringify(inf);
+        window.wifi.linkSSID(inf);
     })
     $('#stopServer').click(function(){
         window.wifi.stopServer();

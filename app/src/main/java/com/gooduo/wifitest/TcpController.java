@@ -99,7 +99,7 @@ public class TcpController extends Thread{
 //                sInputStream=sSocket.getInputStream();
                 sInputStream.read(buffer);
 //                System.arraycopy(data, 0, realData,0, realData.length);
-                Message msg =mHandler.obtainMessage(Tool.REC_DATA,buffer);
+                Message msg =mHandler.obtainMessage(Tool.TCP_DATA,buffer);
                 mHandler.sendMessage(msg);
 //                Log.i("godlee",Tool.bytesToHexString(buffer));
 

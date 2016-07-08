@@ -20,48 +20,80 @@ import android.webkit.WebViewClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+
 
 public class MainActivity extends AppCompatActivity {
-    private WebView mWebView;
-    private WebSettings mWebSetting;
-    private SearchSSID mSearchSSID;
-    private TcpController mTcpController;
-    private UdpController mUdpController;
+    private static WebView mWebView;
+    private static WebSettings mWebSetting;
+    private static UdpController mUdpController;
+    //    private TcpController mTcpController;
     private WifiManager mWifiManager;
-    private LightsController mLightController= new LightsController();
-    private Handler mHander=new Handler(){
-        @Override
-        public void handleMessage(Message msg){
-         switch(msg.what){
-             case Tool.REC_DATA:{
-                byte[] data = (byte[]) msg.obj;
-                 String sData=Tool.bytesToHexString(data);
-//                 decodeData(data);
-                  Log.i("godlee", "msg:" + sData);
-//                 mWebView.loadUrl("javascript: headerTo('ap_list.html')");
-                 break;
+    private LightsController mLightController = new LightsController();
 
-             }
-             default:break;
-         }
+    static class MyHandler extends Handler {
+        WeakReference<AppCompatActivity> mActivity;
+
+        MyHandler(AppCompatActivity activity) {
+            mActivity = new WeakReference<AppCompatActivity>(activity);
         }
-    };
+
+        @Override
+        public void handleMessage(Message msg) {
+            AppCompatActivity sActivity = mActivity.get();
+            switch (msg.what) {
+                case Tool.REC_DATA: {
+                    byte[] data = (byte[]) msg.obj;
+                    String sData = Tool.bytesToHexString(data);
+//                 decodeData(data);
+                    Log.i("godlee", "msg:" + sData);
+//                 mWebView.loadUrl("javascript: headerTo('ap_list.html')");
+                    break;
+
+                }
+                case Tool.ERR_DATA: {
+                    byte[] data = (byte[]) msg.obj;
+                    String sData = Tool.bytesToHexString(data);
+                    Log.i("godlee", " other massage:" + sData);
+                    break;
+                }
+                case Tool.WIFI_LIST_DATA: {
+                    getList(msg, mWebView);
+                    break;
+                }
+                case Tool.CFM_DATA: {
+                    byte[] data = (byte[]) msg.obj;
+                    String sData = Tool.bytesToHexString(data);
+                    Log.i("godlee", "cfm massage:" + sData);
+                    break;
+                }
+
+                default:
+                    break;
+            }
+        }
+
+
+    }
+
+    private MyHandler mHander = new MyHandler(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mWifiManager= (WifiManager)getSystemService(Context.WIFI_SERVICE);
-        DhcpInfo dhcpInfo=mWifiManager.getDhcpInfo();
-        byte[] ip=Tool.int2byte(dhcpInfo.serverAddress);
-        Log.i("godlee",Tool.bytesToHexString(ip));
-        Log.i("godlee",""+(int)(ip[0]&0xff));
-        mTcpController =new TcpController(this,mHander);
-        mSearchSSID = new SearchSSID(mHander);
+        mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        DhcpInfo dhcpInfo = mWifiManager.getDhcpInfo();
+        byte[] ip = Tool.int2byte(dhcpInfo.serverAddress);
+        Log.i("godlee", Tool.bytesToHexString(ip));
+        Log.i("godlee", "" + (int) (ip[0] & 0xff));
+//        mTcpController =new TcpController(this,mHander);
+        mUdpController = new UdpController(mHander);
 
 //        mTcpController.start();
-//        mUdpController =new UdpController("192.168.0.153",mHander);
-        mWebView=new WebView(this);
-        mWebSetting=mWebView.getSettings();
+//        mUdpController =new UdpBackUp("192.168.0.153",mHander);
+        mWebView = new WebView(this);
+        mWebSetting = mWebView.getSettings();
         mWebSetting.setJavaScriptEnabled(true);
         mWebView.setWebChromeClient(new WebChromeClient());
         mWebView.setWebViewClient(new mWebViewClint());
@@ -92,16 +124,18 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         // 退出处理
 //        lock.release();
 //        smt.setSend(false);
-        mTcpController.close();
-        mSearchSSID.setReceive(false);
-        mSearchSSID.close();
+//        mTcpController.close();
+        mUdpController.setReceive(false);
+        mUdpController.close();
     }
+
     class mWebViewClint extends WebViewClient {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -112,8 +146,31 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
-    private void decodeData(byte[] data){
-            Log.i("godlee", Tool.bytesToHexString(data));
+
+    private void decodeData(byte[] data) {
+        Log.i("godlee", Tool.bytesToHexString(data));
+    }
+
+
+    private static void getList(Message msg, WebView mWebView) {
+        byte[] data = (byte[]) msg.obj;
+        JSONObject obj = new JSONObject();
+        ArrayList<Item> ssids = Tool.decode_81_data(data);
+        if (ssids.size() != 0) {
+            for (Item ssid : ssids) {
+                try {
+                    Log.i("godlee", ssid.getName() + ":" + ssid.getDbm() + "%");
+                    obj.accumulate(ssid.getName(), ssid.getDbm());
+                } catch (JSONException e) {
+                    Log.e("godlee", e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+            String json = obj.toString();
+            Log.i("godlee", json);
+            mWebView.loadUrl("javascript:getList('" + json + "')");
+
+        }
     }
 
 
@@ -122,107 +179,128 @@ public class MainActivity extends AppCompatActivity {
      */
     class JsBrg {
         private Activity mActivity;
-        public JsBrg(Activity activity){
-            this.mActivity=activity;
+
+        public JsBrg(Activity activity) {
+            this.mActivity = activity;
 //            initSocket();
         }
+
         @JavascriptInterface
-        public void startUdpServer(){
-            Log.i("godlee","startServer");
-            mSearchSSID.start();
-            mSearchSSID.sendThreadStart();
+        public void startUdpServer() {
+            Log.i("godlee", "startServer");
+            mUdpController.start();
+            mUdpController.sendThreadStart();
         }
 
 
         @JavascriptInterface
-        public String test(final String data){
-            Log.i("godlee","senddata"+data);
+        public String test(final String data) {
+            Log.i("godlee", "senddata" + data);
 //            mTcpController.sendData(S);
 
-            try{
-                JSONObject sJson=new JSONObject(data);
-            }catch(JSONException e){
-                Log.e("godlee",e.getMessage());
+            try {
+                JSONObject sJson = new JSONObject(data);
+            } catch (JSONException e) {
+                Log.e("godlee", e.getMessage());
             }
             return data;
         }
+
         @JavascriptInterface
-        public void sendUdp(){
-            byte[] data= new byte[]{ (byte) 0xff, 0x00, 0x01,
-                    0x01, 0x02 };
-            mSearchSSID.putMsg(data);
-
-
+        public void sendUdp() {
+            byte[] data = new byte[]{(byte) 0xff, 0x00, 0x01,
+                    0x01, 0x02};
+            mUdpController.sendMsg(data, 48899);
         }
+
         @JavascriptInterface
-          public void greenOn(){
+        public void greenOn() {
 //            mTcpController.init("192.168.1.1", 8899);
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x07 ,(byte)0x64 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x76};
-            mTcpController.sendData(data);
+            byte[] data = new byte[]{(byte) 0xAA, (byte) 0x08, (byte) 0x0A, (byte) 0x01, (byte) 0x07, (byte) 0x64, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x76};
+            mUdpController.putMsg(data);
         }
 
         @JavascriptInterface
-        public void greenOff(){
+        public void greenOff() {
 
-            byte[] data=new byte[]{(byte)0xAA,(byte)0x08,(byte)0x0A,(byte)0x01 ,(byte)0x07 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x12};
-            mTcpController.sendData(data);
+            byte[] data = new byte[]{(byte) 0xAA, (byte) 0x08, (byte) 0x0A, (byte) 0x01, (byte) 0x07, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x12};
+            mUdpController.putMsg(data);
         }
+
         @JavascriptInterface
-        public void sendCode(final String data){
+        public void sendCode(final String data) {
             JSONObject sJson;
-            int color,time,level;
+            int color, time, level;
             byte[] code;
-            try{
-                sJson=new JSONObject(data);
-                color=Integer.parseInt(sJson.getString("color"));
-                time=Integer.parseInt(sJson.getString("time"));
-                level=Integer.parseInt(sJson.getString("level"));
-                if(level>100||level<0){
-                    code=mLightController.unset(color,time);
-                }else{
-                    code=mLightController.set(color,time,level);
+            try {
+                sJson = new JSONObject(data);
+                color = Integer.parseInt(sJson.getString("color"));
+                time = Integer.parseInt(sJson.getString("time"));
+                level = Integer.parseInt(sJson.getString("level"));
+                if (level > 100 || level < 0) {
+                    code = mLightController.unset(color, time);
+                } else {
+                    code = mLightController.set(color, time, level);
                 }
 
-                mTcpController.sendData(code);
-                Log.i("godlee", Tool.bytesToHexString(code));
+//                mTcpController.sendData(code);
+                mUdpController.putMsg(code);
+//                Log.i("godlee", Tool.bytesToHexString(code));
+//                mLightController.displayTemp();
+//                byte[] points=mLightController.getControlMap();
+//                Log.i("godlee",Tool.bytesToHexString(points));
+//                mLightController.setControlMap(points);
+//                Log.i("godlee","formated");
                 mLightController.displayTemp();
-                byte[] points=mLightController.getControlMap();
-                Log.i("godlee",Tool.bytesToHexString(points));
 
-                mLightController.setControlMap(points);
-                Log.i("godlee","formated");
-                mLightController.displayTemp();
+                Log.i("godlee", mLightController.getJsonControlMap());
 
-                Log.i("godlee",mLightController.getJsonControlMap());
-
-            }catch(JSONException e){
-                Log.e("godlee",e.getMessage());
+            } catch (JSONException e) {
+                Log.e("godlee", e.getMessage());
             }
 
 
+        }
+
+        @JavascriptInterface
+        public void linkSSID(String data) {
+            JSONObject sJson;
+            String ssid, pasd;
+            int index = 0;
+            byte[] code;
+            try {
+                sJson = new JSONObject(data);
+                ssid = sJson.getString("ssid");
+                pasd = sJson.getString("pasd");
+                code = Tool.
+                        generate_02_data(ssid, pasd, index);
+                mUdpController.sendMsg(code, 48899);
+            } catch (JSONException e) {
+                Log.e("godlee", e.getMessage());
+            }
+
 
         }
 
 
-
-
-
         @JavascriptInterface
-        public void startServer(){
+        public void startServer() {
             Log.i("godlee", "startServer");
-            mTcpController.start();
+//            mTcpController.start();
         }
 
         @JavascriptInterface
-        public void stopServer(){
-            Log.i("godlee","stopServer");
-            mTcpController.stopServer();
+        public void stopServer() {
+            Log.i("godlee", "stopServer");
+//            mTcpController.stopServer();
         }
+
         @JavascriptInterface
-        public void initSocket(){
-            Log.i("godlee","socket init");
-            mTcpController.init("192.168.1.1", 8899);
+        public void initSocket() {
+            Log.i("godlee", "socket init");
+//            mTcpController.init("192.168.1.1", 8899);
         }
+
 
     }
 }

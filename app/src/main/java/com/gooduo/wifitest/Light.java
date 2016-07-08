@@ -8,10 +8,10 @@ import java.io.Serializable;
  * Created by Administrator on 2016/6/29.
  */
 public class Light {
-    public static int TOTAL=48;
-    public static int CODE_LENGTH=12;
-    public static int MAX=0x64;
-    public static int MIN=0x00;
+    public static final int TOTAL=48;
+    public static final int CODE_LENGTH=12;
+    public static final int MAX=0x64;
+    public static final int MIN=0x00;
     private int mColor,mMaxLevel,mMinLevel;
     private ControllerPoint[] mControlMap =new ControllerPoint[TOTAL];
     public Light(int color,int maxLevel,int minLevel){
@@ -130,18 +130,21 @@ public class Light {
         Log.i("godlee", inf);
     }
     public void removeKey(int index){
-        mControlMap[index].setKey(false);
-        for(int i=index;i>-1;i--){
-            if(mControlMap[i].isKey()){
+        if(mControlMap[index].isKey()){
+            mControlMap[index].setKey(false);
+            for(int i=index;i>-1;i--){
+                if(mControlMap[i].isKey()){
 //                Log.i("godlee","remove find Key:"+i);
-                setLevel(i,mControlMap[i].getLevel());
-                break;
-            }else if(i==0){
+                    setLevel(i,mControlMap[i].getLevel());
+                    break;
+                }else if(i==0){
 //                Log.i("godlee","remove find edge:"+i);
-                setLevel(i,mControlMap[i].getLevel());
-                mControlMap[i].setKey(false);
-                break;
+                    setLevel(i,0);
+                    mControlMap[i].setKey(false);
+                    break;
+                }
             }
         }
+
     }
 }
