@@ -21,6 +21,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
+import java.net.DatagramPacket;
 import java.util.ArrayList;
 
 
@@ -42,9 +43,15 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
             AppCompatActivity sActivity = mActivity.get();
+            DataPack sDatagram = (DataPack) msg.obj;
+            String fromIp=sDatagram.getIp();
+            int fromPort=sDatagram.getPort();
+            byte[] data=sDatagram.getData();
+//            System.arraycopy(sDatagram.getData(),0,data,0,data.length);
+//            Log.i("godlee","realLength"+sDatagram.getLength());
             switch (msg.what) {
                 case Tool.REC_DATA: {
-                    byte[] data = (byte[]) msg.obj;
+//                    byte[] data = (byte[]) msg.obj;
                     String sData = Tool.bytesToHexString(data);
 //                 decodeData(data);
                     Log.i("godlee", "msg:" + sData);
@@ -53,9 +60,9 @@ public class MainActivity extends AppCompatActivity {
 
                 }
                 case Tool.ERR_DATA: {
-                    byte[] data = (byte[]) msg.obj;
-                    String sData = Tool.bytesToHexString(data);
-                    Log.i("godlee", " other massage:" + sData);
+//                    byte[] data = (byte[]) msg.obj;
+//                    String sData = Tool.bytesToHexString(data);
+//                    Log.i("godlee", " other massage:" + sData);
                     break;
                 }
                 case Tool.WIFI_LIST_DATA: {
@@ -63,9 +70,9 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 }
                 case Tool.CFM_DATA: {
-                    byte[] data = (byte[]) msg.obj;
+//                    byte[] data = (byte[]) msg.obj;
                     String sData = Tool.bytesToHexString(data);
-                    Log.i("godlee", "cfm massage:" + sData);
+//                    Log.i("godlee","from:"+fromIp+":"+fromPort+"  "+sData);
                     break;
                 }
 
@@ -207,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @JavascriptInterface
-        public void sendUdp() {
+        public void usrLink() {
             byte[] data = new byte[]{(byte) 0xff, 0x00, 0x01,
                     0x01, 0x02};
             mUdpController.sendMsg(data, 48899);
@@ -242,10 +249,16 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     code = mLightController.set(color, time, level);
                 }
+                for(int offset=0;offset<code.length;offset+=Light.CODE_LENGTH){
+                    byte[] subCode=new byte[Light.CODE_LENGTH];
+                    System.arraycopy(code,offset,subCode,0,Light.CODE_LENGTH);
+                    mUdpController.putMsg(subCode);
+                    Log.i("godlee2","puted");
+                }
+//                mUdpController.putMsg(code);
 
-//                mTcpController.sendData(code);
-                mUdpController.putMsg(code);
-//                Log.i("godlee", Tool.bytesToHexString(code));
+
+                Log.i("godlee", Tool.bytesToHexString(code));
 //                mLightController.displayTemp();
 //                byte[] points=mLightController.getControlMap();
 //                Log.i("godlee",Tool.bytesToHexString(points));

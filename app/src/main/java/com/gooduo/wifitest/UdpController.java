@@ -23,6 +23,7 @@ import java.util.Queue;
 public class UdpController extends Thread {
     private static final String IP = "255.255.255.255";
     public static final int PORT=26000;
+    public static int usrPort=8899;
     private Handler handler;
     private DatagramSocket socket;
     private SendThread mSendThread;
@@ -40,7 +41,7 @@ public class UdpController extends Thread {
      */
 //    private int usrPort = 48899;
 
-    private int usrPort = 8899;
+//    private int usrPort = 8899;
 
     private boolean receive = true;
 
@@ -88,19 +89,18 @@ public class UdpController extends Thread {
             byte[] data = new byte[1024];
             DatagramPacket revPacket = new DatagramPacket(data, data.length);
             while (receive) {
-//                Log.i("godlee", "wait");
                 socket.receive(revPacket);
-                Log.i("godlee", "from ip:" + revPacket.getAddress().getHostAddress());
-                Log.i("godlee","from port:"+revPacket.getPort());
-//                sendMsg(new byte[]{(byte)0xaa,0x08,0x0a,0x09,0x20,0x07,0x05,0x09,0x20,0x05,0x00},revPacket.getAddress().getHostAddress(),revPacket.getPort());
+                String fromIp=revPacket.getAddress().getHostAddress();
+                int fromPort=revPacket.getPort();
+                Log.i("godlee","receiveLength:"+revPacket.getLength());
                 if (null != handler) {
                     byte[] realData = new byte[revPacket.getLength()];
-                    System.arraycopy(data, 0, realData, 0, realData.length);
-                    Message msg = handler.obtainMessage(filteData(realData), realData);
+                    System.arraycopy(data, 0, realData, 0, revPacket.getLength());
+                    Log.i("godlee", "from:" + fromIp + ":" + fromPort + ".length(byts):"+revPacket.getLength()+"  "+ Tool.bytesToHexString(realData));
+                    Message msg = handler.obtainMessage(filteData(realData),new DataPack(fromIp,fromPort,realData));
                     handler.sendMessage(msg);
-//                    decodeData(realData);
                 }
-                Log.i("godlee", "receive");
+//                Log.i("godlee", "receive");
             }
         } catch (Exception e) {
             Log.e("godlee", e.getMessage());
@@ -255,7 +255,7 @@ public class UdpController extends Thread {
     }
 
     class SendThread extends Thread {
-        private Queue<DatagramPacket> sendMsgQueue = new LinkedList<DatagramPacket>();
+        private final Queue<DatagramPacket> sendMsgQueue = new LinkedList<DatagramPacket>();
         // 是否发送消息
         private boolean send = true;
 
@@ -273,10 +273,6 @@ public class UdpController extends Thread {
         public synchronized  void  putMsg(byte[] msg,String ip,int port){
             try{
                 DatagramPacket sDatagramPacket=new DatagramPacket(msg,msg.length,InetAddress.getByName(ip),port);
-                if (0 == sendMsgQueue.size()) {
-                    notify();
-                    Log.i("godlee", "put msg");
-                }
                 sendMsgQueue.offer(sDatagramPacket);
             }catch(IOException e){
                 Log.e("godlee",e.getMessage());
@@ -291,20 +287,28 @@ public class UdpController extends Thread {
 
         @Override
         public void run() {
-            synchronized (this) {
+
                 while (send) {
-                    while (sendMsgQueue.size() > 0) {
-                        DatagramPacket msg = sendMsgQueue.poll();
-                        UdpController.this.sendMsg(msg);
-                        Log.i("godlee", "sendMmsg:");
+                    if (sendMsgQueue.size() > 0) {
+                        synchronized (sendMsgQueue) {
+                            DatagramPacket msg = sendMsgQueue.poll();
+                            UdpController.this.sendMsg(msg);
+
+//                        Log.i("godlee", "sendMmsg:");
+                            try {
+                                sleep(25);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
-                    try {
-                        wait();
-                    } catch (InterruptedException e) {
-                        Log.e("godlee", e.getMessage());
-                    }
+//                    try {
+//                        wait();
+//                    } catch (InterruptedException e) {
+//                        Log.e("godlee", e.getMessage());
+//                    }
                 }
-            }
+
         }
 
     }

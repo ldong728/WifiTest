@@ -19,7 +19,7 @@
 
 <body>
 <div class="wrap">
-    <div><button id="test">测试按钮</button></div>
+    <div><button id="test">对时测试</button></div>
     <div><input type="button" id="linkwifi" value="链接wifi"/><input type="button" id="stopServer" value="关闭TCP服务"/></div>
     <div><input type="button" id="udpStartServer" value="开启udp服务"/><input type="button" id="sendUdp" value="获取Wifi列表"/></div>
     <div></div>
@@ -36,15 +36,16 @@
 </body>
 <script>
     $('#test').click(function(){
-        var value={"abx":"123","def":"456"}
-        var str=JSON.stringify(value);
-        alert(str);
-        var v=window.wifi.test(str);
-        var obj=eval("("+v+")")
-        alert(obj.abx);
+//        var value={"abx":"123","def":"456"}
+//        var str=JSON.stringify(value);
+//        alert(str);
+//        var v=window.wifi.test(str);
+//        var obj=eval("("+v+")")
+//        alert(obj.abx);
+
     });
     $('#sendUdp').click(function(){
-        window.wifi.sendUdp();
+        window.wifi.usrLink();
 //        headerTo('ap_list.html');
     })
 
@@ -70,54 +71,6 @@
         var str=JSON.stringify(data)
         window.wifi.sendCode(str);
     });
-
-    $('.controller').click(function(){
-        var id=$(this).attr('id');
-                switch(id){
-            case 'greenOn':
-                window.wifi.greenOn();
-                break;
-            case 'greenOff':
-                window.wifi.greenOff();
-                break;
-            case 'redOff':
-                window.wifi.redOff();
-                break;
-            case 'redOn':
-                window.wifi.redOn();
-                break;
-            case 'blueOff':
-                window.wifi.blueOff();
-                break;
-            case 'blueOn':
-                window.wifi.blueOn();
-                break;
-            case 'sblueOff':
-                window.wifi.sblueOff();
-                break;
-            case 'sblueOn':
-                window.wifi.sblueOn();
-                break;
-            case 'purpleOn':
-                window.wifi.purpleOn();
-                break;
-            case 'purpleOff':
-                window.wifi.purpleOff();
-                break;
-            case 'whiteOn':
-                window.wifi.whiteOn();
-                break;
-            case 'whiteOff':
-                window.wifi.whiteOff();
-                break;
-            case 'opOff':
-                window.wifi.opOff();
-                break;
-            case 'opOn':
-                window.wifi.opOn();
-                break;
-        }
-    })
 
 </script>
 <script>

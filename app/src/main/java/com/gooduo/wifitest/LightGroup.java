@@ -12,7 +12,11 @@ public class LightGroup {
     public LightsController mLightsController;
 
     public LightGroup(UdpController udpController){
+        this.mUdpController=udpController;
+    }
 
+    public void initController(byte[] controllerData){
+        mLightsController.setControlMap(controllerData);
     }
 
 }
