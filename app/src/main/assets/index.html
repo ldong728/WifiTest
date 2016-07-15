@@ -20,12 +20,12 @@
 <body>
 <div class="wrap">
     <div><button id="test">对时测试</button></div>
-    <div><input type="button" id="linkwifi" value="链接wifi"/><input type="button" id="stopServer" value="关闭TCP服务"/></div>
+    <div><input type="button" id="linkwifi" value="链接wifi"/><input type="button" id="scanWifi" value="扫描Wifi"/></div>
     <div><input type="button" id="udpStartServer" value="开启udp服务"/><input type="button" id="sendUdp" value="获取Wifi列表"/></div>
     <div></div>
     <button id="controller">连接TCP以控制灯具</button>
     <div></div>
-    <div><button class="controller" id="greenOn">绿色开</button><button class="controller" id="greenOff">绿色关</button></div>
+    <div><button class="controller" id="greenOn">搜索</button><button class="controller" id="greenOff">AT测试</button></div>
     <div><input type="number" placeholder="颜色" id="color"/><input type="number" placeholder="时间" id="time"/><input type="number" placeholder="亮度" id="level"> </div>
     <div><button  id="sendCode">自动测试</button><button class="controller" id="opOff">紫外线关</button></div>
     <div><a href="draw.html">界面转换</a></div>
@@ -36,6 +36,7 @@
 </body>
 <script>
     $('#test').click(function(){
+        window.wifi.test();
 //        var value={"abx":"123","def":"456"}
 //        var str=JSON.stringify(value);
 //        alert(str);
@@ -46,13 +47,17 @@
     });
     $('#sendUdp').click(function(){
         window.wifi.usrLink();
-//        headerTo('ap_list.html');
+        headerTo('ap_list.html');
     })
 
     $('#linkwifi').click(function(){
         var inf={ssid:"TL-Gooduo",pasd:"gooduo789"}
         inf=JSON.stringify(inf);
         window.wifi.linkSSID(inf);
+    })
+    $('#scanWifi').click(function(){
+        alert('scan');
+        window.wifi.scanWifi();
     })
     $('#stopServer').click(function(){
         window.wifi.stopServer();
@@ -67,16 +72,32 @@
         var color=$('#color').val();
         var time=$('#time').val();
         var level=$('#level').val();
-        var data={color:color,time:time,level:level}
+        var data={color:color,time:time,level:level,mode:"confirm"}
         var str=JSON.stringify(data)
-        window.wifi.sendCode(str);
+        window.light.sendAutoCode(str);
     });
+    $('#greenOn').click(function(){
+       window.wifi.linkLights();
+    });
+    $('#greenOff').click(function(){
+        window.wifi.greenOff();
+    })
 
 </script>
 <script>
     function headerTo(url){
         window.location.href=url;
     };
+    function lightStandby(data){
+        alert(data);
+    }
+    function onGetWifiList(data){
+        alert(data);
+        var inf=eval('('+data+')');
+        $.each(inf,function(k,v){
+           alert(v);
+        });
+    }
 
 </script>
 

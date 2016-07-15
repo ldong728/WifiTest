@@ -1,8 +1,6 @@
 package com.gooduo.wifitest;
 
 import android.app.Activity;
-import android.content.Context;
-import android.net.DhcpInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,63 +14,57 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.lang.ref.WeakReference;
-import java.net.DatagramPacket;
 import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity {
+    private static WifiClass mWifiManage;
     private static WebView mWebView;
-    private static WebSettings mWebSetting;
     private static UdpController mUdpController;
-    //    private TcpController mTcpController;
-    private WifiManager mWifiManager;
-    private LightsController mLightController = new LightsController();
-
-    static class MyHandler extends Handler {
+    private static LightControllerGroup mLightControllerGroup;
+    private static JsLightBridge mLightBridge;
+    private static JsWifiBridge mWifiBridge;
+    private static class MyHandler extends Handler {
         WeakReference<AppCompatActivity> mActivity;
-
         MyHandler(AppCompatActivity activity) {
             mActivity = new WeakReference<AppCompatActivity>(activity);
         }
-
         @Override
         public void handleMessage(Message msg) {
             AppCompatActivity sActivity = mActivity.get();
-            DataPack sDatagram = (DataPack) msg.obj;
-            String fromIp=sDatagram.getIp();
-            int fromPort=sDatagram.getPort();
-            byte[] data=sDatagram.getData();
-//            System.arraycopy(sDatagram.getData(),0,data,0,data.length);
-//            Log.i("godlee","realLength"+sDatagram.getLength());
+//            DataPack sDatagram = (DataPack) msg.obj;
+//            String fromIp=sDatagram.getIp();
+//            int fromPort=sDatagram.getPort();
+//            byte[] data=sDatagram.getData();
             switch (msg.what) {
                 case Tool.REC_DATA: {
-//                    byte[] data = (byte[]) msg.obj;
-                    String sData = Tool.bytesToHexString(data);
-//                 decodeData(data);
-                    Log.i("godlee", "msg:" + sData);
-//                 mWebView.loadUrl("javascript: headerTo('ap_list.html')");
+//                    String sData = Tool.bytesToHexString(data);
+//                    Log.i("godlee", "msg:" + sData);
                     break;
-
                 }
                 case Tool.ERR_DATA: {
-//                    byte[] data = (byte[]) msg.obj;
-//                    String sData = Tool.bytesToHexString(data);
-//                    Log.i("godlee", " other massage:" + sData);
                     break;
                 }
                 case Tool.WIFI_LIST_DATA: {
-                    getList(msg, mWebView);
                     break;
                 }
                 case Tool.CFM_DATA: {
-//                    byte[] data = (byte[]) msg.obj;
-                    String sData = Tool.bytesToHexString(data);
-//                    Log.i("godlee","from:"+fromIp+":"+fromPort+"  "+sData);
+//                    String sData = Tool.bytesToHexString(data);
+                    break;
+                }
+                case JsWifiBridge.JS: {
+                    JSONObject obj=(JSONObject)msg.obj;
+                    try{
+                        String function=obj.getString("function");
+                        String value=obj.getString("value");
+                        mWebView.loadUrl("javascript:"+function+"('"+value+"')");
+                    }catch(JSONException e){
+                        Log.e("godlee",e.getMessage());
+                        e.printStackTrace();
+                    }
                     break;
                 }
 
@@ -83,22 +75,45 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
     private MyHandler mHander = new MyHandler(this);
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        final WebSettings mWebSetting;
         super.onCreate(savedInstanceState);
-        mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        DhcpInfo dhcpInfo = mWifiManager.getDhcpInfo();
-        byte[] ip = Tool.int2byte(dhcpInfo.serverAddress);
-        Log.i("godlee", Tool.bytesToHexString(ip));
-        Log.i("godlee", "" + (int) (ip[0] & 0xff));
-//        mTcpController =new TcpController(this,mHander);
-        mUdpController = new UdpController(mHander);
+        mWifiManage=new WifiClass(this);
+        mUdpController = new UdpController(mHander) {
+            @Override
+            public void onReceive(Handler handler, DataPack pack) {
 
-//        mTcpController.start();
-//        mUdpController =new UdpBackUp("192.168.0.153",mHander);
+                byte[] data=pack.getData();
+                Log.i("godlee","main Thread receive,length:"+data.length);
+                if(0xaa==(data[0]&0xff)){
+
+                    return;
+                }
+                if(0xff==(data[0]&0xff)){
+                    mWifiBridge.getList(data,mWebView);
+                    return;
+                }
+                String mac=mLightControllerGroup.getIp(data);
+                if(null!=mac){
+                    sendATMsg("AT+ENTM\r\n",pack.getIp(),pack.getPort());
+                    if(!mac.equals("other")){
+                        mWifiBridge.lightOk(mac);
+                    }
+                }
+
+                Log.i("godlee",Tool.bytesToHexString(pack.getData()));
+                Log.i("godlee",new String(pack.getData()));
+                return;
+            }
+        };
+        mUdpController.start();
+        mLightControllerGroup=new LightControllerGroup(mHander);
+        mWifiBridge=new JsWifiBridge(mUdpController,mWifiManage,mHander);
+        mLightBridge=new JsLightBridge(mLightControllerGroup);
+        mLightControllerGroup.addGroupMember("C4BE8474C223");
+        mLightControllerGroup.addGroupMember("F4B85E45D9F1");
         mWebView = new WebView(this);
         mWebSetting = mWebView.getSettings();
         mWebSetting.setJavaScriptEnabled(true);
@@ -106,12 +121,9 @@ public class MainActivity extends AppCompatActivity {
         mWebView.setWebViewClient(new mWebViewClint());
         setContentView(mWebView);
         mWebView.loadUrl("file:///android_asset/index.html");
-        mWebView.addJavascriptInterface(new JsBrg(this), "wifi");
+        mWebView.addJavascriptInterface(mWifiBridge, "wifi");
+        mWebView.addJavascriptInterface(mLightBridge,"light");
         Log.i("godlee", "wifiTest started");
-
-//        mTcpController.init("192.168.1.1", 8899);
-
-
     }
 
     @Override
@@ -141,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
 //        mTcpController.close();
         mUdpController.setReceive(false);
         mUdpController.close();
+        mLightControllerGroup.finishAll();
     }
 
     class mWebViewClint extends WebViewClient {
@@ -159,26 +172,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private static void getList(Message msg, WebView mWebView) {
-        byte[] data = (byte[]) msg.obj;
-        JSONObject obj = new JSONObject();
-        ArrayList<Item> ssids = Tool.decode_81_data(data);
-        if (ssids.size() != 0) {
-            for (Item ssid : ssids) {
-                try {
-                    Log.i("godlee", ssid.getName() + ":" + ssid.getDbm() + "%");
-                    obj.accumulate(ssid.getName(), ssid.getDbm());
-                } catch (JSONException e) {
-                    Log.e("godlee", e.getMessage());
-                    e.printStackTrace();
-                }
-            }
-            String json = obj.toString();
-            Log.i("godlee", json);
-            mWebView.loadUrl("javascript:getList('" + json + "')");
 
-        }
-    }
 
 
     /*
@@ -192,109 +186,41 @@ public class MainActivity extends AppCompatActivity {
 //            initSocket();
         }
 
-        @JavascriptInterface
-        public void startUdpServer() {
-            Log.i("godlee", "startServer");
-            mUdpController.start();
-            mUdpController.sendThreadStart();
-        }
+//        @JavascriptInterface
+//        public void startUdpServer() {
+//            Log.i("godlee", "startServer");
+//            mUdpController.start();
+//        }
 
 
         @JavascriptInterface
-        public String test(final String data) {
-            Log.i("godlee", "senddata" + data);
+        public String test() {
+            mUdpController.sendMsg(new byte[]{(byte) 0xaa, 0x08, 0x0a, 0x09, 0x2d, 0x0a, 0x11, 0x00, 0x00, 0x00, 0x00, 0x5c}, 8899);
+
+//            Log.i("godlee", "senddata" + data);
 //            mTcpController.sendData(S);
-
-            try {
-                JSONObject sJson = new JSONObject(data);
-            } catch (JSONException e) {
-                Log.e("godlee", e.getMessage());
-            }
-            return data;
+//            try {
+//                JSONObject sJson = new JSONObject(data);
+//            } catch (JSONException e) {
+//                Log.e("godlee", e.getMessage());
+//            }
+            return "ok";
         }
 
-        @JavascriptInterface
-        public void usrLink() {
-            byte[] data = new byte[]{(byte) 0xff, 0x00, 0x01,
-                    0x01, 0x02};
-            mUdpController.sendMsg(data, 48899);
-        }
 
-        @JavascriptInterface
-        public void greenOn() {
-//            mTcpController.init("192.168.1.1", 8899);
-            byte[] data = new byte[]{(byte) 0xAA, (byte) 0x08, (byte) 0x0A, (byte) 0x01, (byte) 0x07, (byte) 0x64, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x76};
-            mUdpController.putMsg(data);
-        }
+
+
 
         @JavascriptInterface
         public void greenOff() {
+            Log.i("godlee","getMac");
+            String code="AT+WSCAN\r";
+            byte[] data=code.getBytes();
+            mUdpController.sendMsg(data,48899);
 
-            byte[] data = new byte[]{(byte) 0xAA, (byte) 0x08, (byte) 0x0A, (byte) 0x01, (byte) 0x07, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x12};
-            mUdpController.putMsg(data);
+//            byte[] data = new byte[]{(byte) 0xAA, (byte) 0x08, (byte) 0x0A, (byte) 0x01, (byte) 0x07, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x12};
+//            mUdpController.putMsg(data);
         }
-
-        @JavascriptInterface
-        public void sendCode(final String data) {
-            JSONObject sJson;
-            int color, time, level;
-            byte[] code;
-            try {
-                sJson = new JSONObject(data);
-                color = Integer.parseInt(sJson.getString("color"));
-                time = Integer.parseInt(sJson.getString("time"));
-                level = Integer.parseInt(sJson.getString("level"));
-                if (level > 100 || level < 0) {
-                    code = mLightController.unset(color, time);
-                } else {
-                    code = mLightController.set(color, time, level);
-                }
-                for(int offset=0;offset<code.length;offset+=Light.CODE_LENGTH){
-                    byte[] subCode=new byte[Light.CODE_LENGTH];
-                    System.arraycopy(code,offset,subCode,0,Light.CODE_LENGTH);
-                    mUdpController.putMsg(subCode);
-                    Log.i("godlee2","puted");
-                }
-//                mUdpController.putMsg(code);
-
-
-                Log.i("godlee", Tool.bytesToHexString(code));
-//                mLightController.displayTemp();
-//                byte[] points=mLightController.getControlMap();
-//                Log.i("godlee",Tool.bytesToHexString(points));
-//                mLightController.setControlMap(points);
-//                Log.i("godlee","formated");
-                mLightController.displayTemp();
-
-                Log.i("godlee", mLightController.getJsonControlMap());
-
-            } catch (JSONException e) {
-                Log.e("godlee", e.getMessage());
-            }
-
-
-        }
-
-        @JavascriptInterface
-        public void linkSSID(String data) {
-            JSONObject sJson;
-            String ssid, pasd;
-            int index = 0;
-            byte[] code;
-            try {
-                sJson = new JSONObject(data);
-                ssid = sJson.getString("ssid");
-                pasd = sJson.getString("pasd");
-                code = Tool.
-                        generate_02_data(ssid, pasd, index);
-                mUdpController.sendMsg(code, 48899);
-            } catch (JSONException e) {
-                Log.e("godlee", e.getMessage());
-            }
-
-
-        }
-
 
         @JavascriptInterface
         public void startServer() {

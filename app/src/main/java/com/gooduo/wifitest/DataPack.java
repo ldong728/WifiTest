@@ -28,4 +28,17 @@ public class DataPack {
     public int getLength(){
         return data.length;
     }
+    public byte[] merge(byte[] otherData){
+        byte[] newData=new byte[this.data.length+otherData.length];
+        System.arraycopy(data,0,newData,0,data.length);
+        System.arraycopy(otherData,0,newData,data.length,otherData.length);
+        this.data=newData;
+        return newData;
+    }
+    public byte[] merge(DataPack otherPack){
+        if(ip.equals(otherPack.getIp())&&port==otherPack.getPort()){
+            merge(otherPack.getData());
+        }
+        return data;
+    }
 }

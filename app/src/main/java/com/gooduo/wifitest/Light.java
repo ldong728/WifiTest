@@ -3,6 +3,8 @@ package com.gooduo.wifitest;
 import android.util.Log;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 /**
  * Created by Administrator on 2016/6/29.
@@ -12,7 +14,9 @@ public class Light {
     public static final int CODE_LENGTH=12;
     public static final int MAX=0x64;
     public static final int MIN=0x00;
-    private int mColor,mMaxLevel,mMinLevel;
+    private final int mColor;
+    private final int mMaxLevel,mMinLevel;
+    private int mLevel=0;
     private ControllerPoint[] mControlMap =new ControllerPoint[TOTAL];
     public Light(int color,int maxLevel,int minLevel){
         this.mColor=color;
@@ -28,11 +32,12 @@ public class Light {
     public Light(int color){
         this(color, MAX, MIN);
     }
-    public void setPoint(int index,int level){
+    public byte[] setPoint(int index,int level){
         if(index>-1&&index<TOTAL&&level<MAX+1&&level>MIN-1){
             double v=(double)level/(double)100*(double)mMaxLevel;
-            setLevel(index,(int)v);
+            return setLevel(index,(int)v);
         }
+        return null;
 
     }
     public ControllerPoint[] getControlMap(){
@@ -59,7 +64,7 @@ public class Light {
         return data;
     }
     public byte[] setManuelCode(int level){
-        byte[] data=new byte[12];
+        byte[] data=new byte[CODE_LENGTH];
         data[0]=(byte)0xaa;
         data[1]=(byte)0x08;
         data[2]=(byte)0x0a;
@@ -72,7 +77,11 @@ public class Light {
         data[9]=(byte)0x00;
         data[10]=(byte)0x00;
         data[11]=(byte)(0x03+0x0a+mColor+level);
+        mLevel=level;
         return data;
+    }
+    public byte getManuelLevel(){
+        return (byte)mLevel;
     }
     public void setControlMap(int index,boolean key,int level){
         mControlMap[index].setKey(key);
@@ -83,8 +92,9 @@ public class Light {
             mControlMap[i]=new ControllerPoint(i);
         }
     }
-    private void setLevel(int index,int level){
-//        Log.i("godlee","setLevel");
+    private byte[] setLevel(int index,int level){
+        int length=0;
+        ByteBuffer buffer=ByteBuffer.allocate(CODE_LENGTH*TOTAL);
         int leftKey,rightKey;
         int leftCount=0,rightCount=0;
         int leftE=0,rightE=0;
@@ -92,13 +102,14 @@ public class Light {
         int offset=0;
         mControlMap[index].setKey(true);
         mControlMap[index].setLevel(level);
+        buffer.put(mControlMap[index].getCode(mColor));
+        length+=CODE_LENGTH;
         for(leftKey=index-1;leftKey>0;leftKey--){
             if(mControlMap[leftKey].isKey()==true)break;
             leftCount++;
         }
         for(rightKey=index+1;rightKey<TOTAL-1;rightKey++){
             if(mControlMap[rightKey].isKey()==true)break;
-//            Log.i("godlee",""+rightKey);
             rightCount++;
         }
         if(leftCount>0){
@@ -108,19 +119,30 @@ public class Light {
             for(int i=0;i<leftCount;i++){
                 offset=i<leftOffsetCount-1? 1:0;
                 mControlMap[index-i-1].setLevel(mControlMap[index-i].getLevel()-leftE-offset);
+                buffer.put(mControlMap[index - i - 1].getCode(mColor));
+                length+=CODE_LENGTH;
             }
-//            Log.i("godlee","leftE="+leftE+"; leftCount="+leftCount);
         }
-//        Log.i("godlee","rightKey="+rightKey+";   leftKey="+leftKey);
         if(rightCount>0){
             rightE=(level-mControlMap[rightKey].getLevel())/(rightCount+1);
             rightOffsetCount=(level-mControlMap[rightKey].getLevel())%(rightCount+1);
             for(int j=0;j<rightCount;j++){
                 offset=j<rightOffsetCount-1? 1:0;
                 mControlMap[index+j+1].setLevel(mControlMap[index+j].getLevel()-rightE-offset);
+                buffer.put( mControlMap[index+j+1].getCode(mColor));
+                length+=CODE_LENGTH;
             }
 //            Log.i("godlee","rightE="+rightE+";  rightCount="+rightCount);
         }
+        if(buffer.hasArray()){
+            byte[] data=new byte[length];
+            buffer.flip();
+            buffer.get(data);
+            return data;
+        }else{
+            return null;
+        }
+
     }
     public void disply(){
         String inf="";
@@ -129,22 +151,20 @@ public class Light {
         }
         Log.i("godlee", inf);
     }
-    public void removeKey(int index){
+    public byte[] removeKey(int index){
         if(mControlMap[index].isKey()){
             mControlMap[index].setKey(false);
             for(int i=index;i>-1;i--){
                 if(mControlMap[i].isKey()){
-//                Log.i("godlee","remove find Key:"+i);
-                    setLevel(i,mControlMap[i].getLevel());
-                    break;
+                    return setLevel(i,mControlMap[i].getLevel());
                 }else if(i==0){
-//                Log.i("godlee","remove find edge:"+i);
-                    setLevel(i,0);
+                    byte[] data=setLevel(i,0);
                     mControlMap[i].setKey(false);
-                    break;
+                    return data;
                 }
             }
         }
+        return null;
 
     }
 }

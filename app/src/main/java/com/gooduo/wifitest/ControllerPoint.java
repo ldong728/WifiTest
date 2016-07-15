@@ -32,4 +32,23 @@ class ControllerPoint implements Serializable {
     public int getLevel(){
         return mLevel;
     }
+    public byte[] getCode(int color){
+        int h=mIndex/2;
+        int hh=mIndex%2;
+        byte[] data = new byte[Light.CODE_LENGTH];
+        data[0]=(byte)0xaa;
+        data[1]=(byte)0x08;
+        data[2]=(byte)0x0a;
+        data[3]=(byte)0x03;
+        data[4]=(byte)color;
+        data[5]=(byte)mLevel;
+        data[6]=(byte)h;
+        data[7]=(byte)hh;
+        data[8]=(byte)0x00;
+        data[9]=(byte)0x00;
+        data[10]=(byte)0x00;
+        data[11]=(byte)(color+mLevel+h+hh+0x0a+0x03);
+        return data;
+
+    }
 }
