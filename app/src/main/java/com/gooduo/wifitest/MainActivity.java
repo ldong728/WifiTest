@@ -1,6 +1,12 @@
 package com.gooduo.wifitest;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.DhcpInfo;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private static LightControllerGroup mLightControllerGroup;
     private static JsLightBridge mLightBridge;
     private static JsWifiBridge mWifiBridge;
+    private static WifiReceiver mReceiver;
+    private MyHandler mHander = new MyHandler(this);
     private static class MyHandler extends Handler {
         WeakReference<AppCompatActivity> mActivity;
         MyHandler(AppCompatActivity activity) {
@@ -35,14 +43,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
             AppCompatActivity sActivity = mActivity.get();
-//            DataPack sDatagram = (DataPack) msg.obj;
-//            String fromIp=sDatagram.getIp();
-//            int fromPort=sDatagram.getPort();
-//            byte[] data=sDatagram.getData();
             switch (msg.what) {
                 case Tool.REC_DATA: {
-//                    String sData = Tool.bytesToHexString(data);
-//                    Log.i("godlee", "msg:" + sData);
                     break;
                 }
                 case Tool.ERR_DATA: {
@@ -75,26 +77,39 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-    private MyHandler mHander = new MyHandler(this);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         final WebSettings mWebSetting;
         super.onCreate(savedInstanceState);
-        mWifiManage=new WifiClass(this);
+        mWifiManage=new WifiClass(this,mHander);
         mUdpController = new UdpController(mHander) {
             @Override
             public void onReceive(Handler handler, DataPack pack) {
-
+                String fromIp=pack.getIp();
+//                int fromPort=pack.getPort();
                 byte[] data=pack.getData();
                 Log.i("godlee","main Thread receive,length:"+data.length);
-                if(0xaa==(data[0]&0xff)){
+                if(fromIp.equals(UdpController.DEFALT_IP)){
+                    if(0xff==(data[0]&0xff)){
+                        if(0x81==(data[3]&0xff)){
+                            mWifiBridge.getList(data,mWebView);
+                            return;
+                        }
+                        if(0x82==(data[3]&0xff)){
+                            int ssidStu=data[4]&0xff;
+                            int pasdStu=data[5]&0xff;
+                            mWifiBridge.getLinkResult(ssidStu,pasdStu);
+                        }
 
-                    return;
+                    }
+                    if(0xaa==(data[0]&0xff)){
+                        Log.i("godlee",Tool.bytesToHexString(data));
+                        return;
+                    }
                 }
-                if(0xff==(data[0]&0xff)){
-                    mWifiBridge.getList(data,mWebView);
-                    return;
-                }
+
+
                 String mac=mLightControllerGroup.getIp(data);
                 if(null!=mac){
                     sendATMsg("AT+ENTM\r\n",pack.getIp(),pack.getPort());
@@ -122,7 +137,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(mWebView);
         mWebView.loadUrl("file:///android_asset/index.html");
         mWebView.addJavascriptInterface(mWifiBridge, "wifi");
-        mWebView.addJavascriptInterface(mLightBridge,"light");
+        mWebView.addJavascriptInterface(mLightBridge, "light");
+        mReceiver=new WifiReceiver();
+        IntentFilter filter=new IntentFilter();
+//        filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
+        filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+        filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+        registerReceiver(mReceiver,filter);
         Log.i("godlee", "wifiTest started");
     }
 
@@ -147,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(mReceiver);
         // 退出处理
 //        lock.release();
 //        smt.setSend(false);
@@ -156,6 +178,9 @@ public class MainActivity extends AppCompatActivity {
         mLightControllerGroup.finishAll();
     }
 
+    /**
+     * 保持在页面内跳转
+     */
     class mWebViewClint extends WebViewClient {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -166,80 +191,37 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+    class WifiReceiver extends BroadcastReceiver{
 
-    private void decodeData(byte[] data) {
-        Log.i("godlee", Tool.bytesToHexString(data));
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+//            Log.i("godlee",intent.getAction());
+            switch(intent.getAction()){
+                case WifiManager.NETWORK_STATE_CHANGED_ACTION:
+                    WifiManager wm=(WifiManager)context.getSystemService(Context.WIFI_SERVICE);
+                    WifiInfo info=wm.getConnectionInfo();
+                    DhcpInfo dhcpInfo=wm.getDhcpInfo();
+                    String gateIp=Tool.intIpToString(dhcpInfo.serverAddress);
+                    Log.i("godlee","Ap Name:"+info.getSSID());
+                    Log.i("godlee", "Ap IP:" + gateIp);
+                    if(gateIp.equals(UdpController.DEFALT_IP)){
+                        mLightBridge.initTime(UdpController.DEFALT_IP);
+//                        mWifiBridge.
+                    }else{
+
+                    }
+                    break;
+//                case WifiManager.RSSI_CHANGED_ACTION:
+//
+//                    break;
+                case WifiManager.WIFI_STATE_CHANGED_ACTION:
+
+                    break;
+            }
+
+        }
     }
 
 
-
-
-
-    /*
-    jsBridge类
-     */
-    class JsBrg {
-        private Activity mActivity;
-
-        public JsBrg(Activity activity) {
-            this.mActivity = activity;
-//            initSocket();
-        }
-
-//        @JavascriptInterface
-//        public void startUdpServer() {
-//            Log.i("godlee", "startServer");
-//            mUdpController.start();
-//        }
-
-
-        @JavascriptInterface
-        public String test() {
-            mUdpController.sendMsg(new byte[]{(byte) 0xaa, 0x08, 0x0a, 0x09, 0x2d, 0x0a, 0x11, 0x00, 0x00, 0x00, 0x00, 0x5c}, 8899);
-
-//            Log.i("godlee", "senddata" + data);
-//            mTcpController.sendData(S);
-//            try {
-//                JSONObject sJson = new JSONObject(data);
-//            } catch (JSONException e) {
-//                Log.e("godlee", e.getMessage());
-//            }
-            return "ok";
-        }
-
-
-
-
-
-        @JavascriptInterface
-        public void greenOff() {
-            Log.i("godlee","getMac");
-            String code="AT+WSCAN\r";
-            byte[] data=code.getBytes();
-            mUdpController.sendMsg(data,48899);
-
-//            byte[] data = new byte[]{(byte) 0xAA, (byte) 0x08, (byte) 0x0A, (byte) 0x01, (byte) 0x07, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x12};
-//            mUdpController.putMsg(data);
-        }
-
-        @JavascriptInterface
-        public void startServer() {
-            Log.i("godlee", "startServer");
-//            mTcpController.start();
-        }
-
-        @JavascriptInterface
-        public void stopServer() {
-            Log.i("godlee", "stopServer");
-//            mTcpController.stopServer();
-        }
-
-        @JavascriptInterface
-        public void initSocket() {
-            Log.i("godlee", "socket init");
-//            mTcpController.init("192.168.1.1", 8899);
-        }
-
-
-    }
 }

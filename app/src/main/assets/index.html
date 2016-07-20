@@ -56,8 +56,9 @@
         window.wifi.linkSSID(inf);
     })
     $('#scanWifi').click(function(){
-        alert('scan');
-        window.wifi.scanWifi();
+//        window.wifi.scanWifi();
+        alert("headerTo");
+        headerTo('wifi_config.html');
     })
     $('#stopServer').click(function(){
         window.wifi.stopServer();
@@ -82,7 +83,6 @@
     $('#greenOff').click(function(){
         window.wifi.greenOff();
     })
-
 </script>
 <script>
     function headerTo(url){
@@ -91,13 +91,8 @@
     function lightStandby(data){
         alert(data);
     }
-    function onGetWifiList(data){
-        alert(data);
-        var inf=eval('('+data+')');
-        $.each(inf,function(k,v){
-           alert(v);
-        });
-    }
+
+
 
 </script>
 

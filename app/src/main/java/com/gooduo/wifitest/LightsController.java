@@ -231,6 +231,31 @@ public class LightsController {
             return null;
         }
     }
+    public String getJsonFlash(){
+        JSONObject obj=new JSONObject();
+        try{
+            obj.accumulate("prob",(int)mFlashCode[4]);
+            obj.accumulate("level",(int)mFlashCode[5]);
+            return obj.toString();
+        }catch(JSONException e){
+            Log.e("godlee",e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public String getJsonMoon(){
+        JSONObject obj=new JSONObject();
+        try{
+            obj.accumulate("stu",(int)mMoonCode[4]);
+            obj.accumulate("start",(int)mMoonCode[6]);
+            obj.accumulate("end",(int)mMoonCode[8]);
+            return obj.toString();
+        }catch(JSONException e){
+            Log.e("godlee",e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
     public byte[] getmCloudCode() {
         return mCloudCode;
     }

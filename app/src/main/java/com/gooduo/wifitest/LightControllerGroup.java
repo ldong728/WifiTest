@@ -23,7 +23,7 @@ public class LightControllerGroup {
     private boolean sendOk=true;
     private boolean threadFlag = true;
     public UdpController mUdpController;
-    private final HashMap<String, String> mIPMap;//组内灯具表（心跳包数据->IP地址）
+    private final HashMap<String, String> mIPMap;//组内灯具表（Mac->IP）
     private final HashMap<String, ArrayList<byte[]>> mSendBuffer;//待发指令缓存（IP地址->指令列表）
     private HashMap<String,DataPack> buffer;//接收数据包的缓存映射，用于补全断帧
     public LightsController mLightsController;
@@ -38,6 +38,7 @@ public class LightControllerGroup {
                 DataPack fullPack=formatReceive(pack);
                 if(null!=fullPack){
                     reGroupSendQueue(fullPack);
+
                 }
             }
         };
@@ -50,9 +51,7 @@ public class LightControllerGroup {
         mSendBuffer.clear();
         buffer.clear();
     }
-    public void setAutoSituation(byte[] stu){
-        mLightsController.setControlMap(stu);
-    }
+
     public void autoController(int color, int time, int level, boolean send) {
         byte[] code;
         if (level > 100 || level < 0) {
@@ -69,11 +68,32 @@ public class LightControllerGroup {
         byte[] data=mLightsController.setManual(color,level);
         putCodeToQueue(data);
     }
+    public void setCloud(boolean stu,int probability,int mask) {
+        byte[] code = mLightsController.setCloud(stu, probability, mask);
+        putCodeToQueue(code);
+    }
+    public void setFlash(int level,int probability){
+        byte[] code=mLightsController.setFlash(level,probability);
+        putCodeToQueue(code);
+    }
+    public void setMoon(boolean stu,int start,int end){
+        byte[] code=mLightsController.setMoon(stu,start,end);
+        putCodeToQueue(code);
+    }
     public String getAutoStu(){
         return mLightsController.getJsonControlMap();
     }
     public String getManualStu(){
         return mLightsController.getJsonManual();
+    }
+    public String getCloudStu(){
+        return mLightsController.getJsonCloud();
+    }
+    public String getFlashStu(){
+        return mLightsController.getJsonFlash();
+    }
+    public String getMoonStu(){
+        return mLightsController.getJsonMoon();
     }
     public void setAutoStu(byte[] data){
         mLightsController.setControlMap(data);
@@ -81,9 +101,13 @@ public class LightControllerGroup {
     public void addGroupMember(byte[] member) {
         mIPMap.put(Tool.bytesToHexString(member), "0.0.0.0");
     }
-    public void addGroupMember(String mac){
+    public synchronized void addGroupMember(String mac){
         mIPMap.put(mac,"0,0,0,0");
     }
+    public synchronized void addGroupMember(String mac,String ip){
+        mIPMap.put(mac,ip);
+    }
+
     public synchronized void removeGroupMember(String mac){
         String ip=mIPMap.remove(mac);
         if(null!=ip){
@@ -109,12 +133,27 @@ public class LightControllerGroup {
                         }
                     }
                 }
+                if(inf[0].equals(UdpController.DEFALT_IP)){//AP模式连接
+
+                    synchronized (mIPMap) {
+                        Iterator it = mIPMap.entrySet().iterator();
+                        while (it.hasNext()) {
+                            Map.Entry<String, String> e = (Map.Entry<String, String>) it.next();
+                            mIPMap.put(e.getKey(),"0.0.0.0");
+                        }
+                        mIPMap.put(key,inf[0]);
+                        return key;
+                    }
+                }
                 return "other";
             }
 
         }
         return null;
 
+    }
+    public void initTime(byte[] timeData,String ip){
+        mUdpController.putMsg(timeData,ip);
     }
 
     /**

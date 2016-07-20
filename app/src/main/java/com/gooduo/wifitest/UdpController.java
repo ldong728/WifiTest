@@ -21,12 +21,15 @@ import java.util.Queue;
  * @author godlee
  */
 public abstract class UdpController extends Thread {
+    public static final int DATA_PORT =8899;
+    public static final int CTR_PORT=48899;
+    public static final String BROADCAST_IP="255.255.255.255";
+    public static final String DEFALT_IP= "192.168.1.1";
     private static int count;
     public  final int id;
     private boolean broadcast=false;
     private  String ip;
     public int localPort =26000;
-    public static int usrPort=8899;
     private Handler handler;
     private DatagramSocket socket;
     private SendThread mSendThread;
@@ -43,9 +46,9 @@ public abstract class UdpController extends Thread {
      * 49000端口：除C32x系列，其他WIFI模块的端�?
      * 1902端口：有人掌控宝系列产品的端�?
      */
-//    private int usrPort = 48899;
+//    private int DATA_PORT = 48899;
 
-//    private int usrPort = 8899;
+//    private int DATA_PORT = 8899;
 
     private boolean receive = true;
     public UdpController(Handler handler,String ip,int port){
@@ -58,7 +61,7 @@ public abstract class UdpController extends Thread {
         init();
     }
     public UdpController(Handler handler) {
-        this(handler,"255.255.255.255",26000);
+        this(handler,BROADCAST_IP,26000);
         broadcast=true;
 //        mSendThread = new SendThread();
 //        this.handler = handler;
@@ -66,7 +69,7 @@ public abstract class UdpController extends Thread {
     }
     public UdpController(Handler handler,int port){
 
-        this(handler,"255.255.255.255",port);
+        this(handler,BROADCAST_IP,port);
         broadcast=true;
 //        init();
     }
@@ -97,14 +100,14 @@ public abstract class UdpController extends Thread {
     }
 
     public void putMsg(byte[] msg) {
-        mSendThread.putMsg(msg,ip,usrPort);
+        mSendThread.putMsg(msg,ip, DATA_PORT);
     }
     public void putMsg(byte[] msg,int port){
        mSendThread.putMsg(msg, ip, port);
     }
 
     public void putMsg(byte[] msg,String ip){
-        mSendThread.putMsg(msg, ip, usrPort);
+        mSendThread.putMsg(msg, ip, DATA_PORT);
     }
 
 
@@ -116,7 +119,7 @@ public abstract class UdpController extends Thread {
         try {
             byte[] data = new byte[1024];
             DatagramPacket revPacket = new DatagramPacket(data, data.length);
-            while (receive) {
+            while (receive&&!socket.isClosed()) {
                 socket.receive(revPacket);
                 String fromIp=revPacket.getAddress().getHostAddress();
                 int fromPort=revPacket.getPort();
@@ -131,7 +134,7 @@ public abstract class UdpController extends Thread {
             }
         } catch (Exception e) {
             Log.e("godlee", e.getMessage());
-            e.printStackTrace();
+//            e.printStackTrace();
             socket.close();
         }
     }
@@ -223,9 +226,9 @@ public abstract class UdpController extends Thread {
     private void sendMsg(byte[] msg) {
         if (socket != null) {
             try {
-                Log.i("godlee", "usrPort------------------->" + usrPort);
+                Log.i("godlee", "DATA_PORT------------------->" + DATA_PORT);
                 DatagramPacket sendPacket = new DatagramPacket(msg, msg.length,
-                        InetAddress.getByName(ip), usrPort);
+                        InetAddress.getByName(ip), DATA_PORT);
                 socket.send(sendPacket);
             } catch (UnknownHostException e) {
                 e.printStackTrace();
@@ -242,10 +245,10 @@ public abstract class UdpController extends Thread {
     private void sendMsg(DatagramPacket pkg) {
         if (socket != null) {
             try {
-                Log.i("godlee", "usrPort------------------->" + usrPort);
+                Log.i("godlee", "DATA_PORT------------------->" + DATA_PORT);
 //                Log.i("godlee","sendContent: "+Tool.bytesToHexString(pkg.getData()));
 //                DatagramPacket sendPacket = new DatagramPacket(msg, msg.length,
-//                        InetAddress.getByName(ip), usrPort);
+//                        InetAddress.getByName(ip), DATA_PORT);
                 socket.send(pkg);
             } catch (UnknownHostException e) {
                 e.printStackTrace();
@@ -282,7 +285,7 @@ public abstract class UdpController extends Thread {
     public void sendMsg(byte[] msg,int port) {
         if (socket != null) {
             try {
-                Log.i("godlee", "usrPort------------------->" + port);
+                Log.i("godlee", "DATA_PORT------------------->" + port);
                 DatagramPacket sendPacket = new DatagramPacket(msg, msg.length,
                         InetAddress.getByName(ip), port);
                 socket.send(sendPacket);
@@ -307,9 +310,6 @@ public abstract class UdpController extends Thread {
         this.receive = receive;
     }
 
-    public void setUsrPort(int usrPort) {
-        this.usrPort = usrPort;
-    }
 
     class SendThread extends Thread {
         private final Queue<DatagramPacket> sendMsgQueue = new LinkedList<DatagramPacket>();

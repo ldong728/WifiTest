@@ -154,4 +154,11 @@ public class Tool {
 		}
 		return n;
 	}
+	public static String intIpToString(int ipInt){
+
+		return new StringBuilder().append(((ipInt) & 0xff)).append('.')
+				.append((ipInt >> 8) & 0xff).append('.').append(
+				(ipInt >> 16) & 0xff).append('.').append(((ipInt >> 24) & 0xff))
+				.toString();
+	}
 }
