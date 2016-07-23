@@ -14,12 +14,20 @@ import java.text.SimpleDateFormat;
 
 public class JsLightBridge {
     private LightControllerGroup mLightControllerGroup;
-    public JsLightBridge(LightControllerGroup lightControllerGroup){
+    private Db mDb;
+    public JsLightBridge(LightControllerGroup lightControllerGroup,Db mDb){
         mLightControllerGroup=lightControllerGroup;
+        this.mDb=mDb;
     }
 
     @JavascriptInterface
     public void sendAutoCode(final String data) {
+
+        byte[] map =mLightControllerGroup.getAutoMap();
+        Log.i("godlee", "put code" + Tool.bytesToHexString(map));
+//        mDb.temp();
+//        mDb.saveCode(Db.TYPE_AUTO, map);
+        Log.i("godlee","put ok");
         JSONObject sJson;
         int color, time, level;
         boolean send;

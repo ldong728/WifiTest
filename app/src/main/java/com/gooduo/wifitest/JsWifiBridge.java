@@ -22,11 +22,13 @@ public class JsWifiBridge {
     private UdpController mUdpController;
     private WifiClass mWifiManager;
     private Handler mHandler;
+    private Db mDb;
 
-    public JsWifiBridge(UdpController uc,WifiClass wm,Handler handler){
+    public JsWifiBridge(UdpController uc,WifiClass wm,Handler handler,Db mDb){
         mUdpController=uc;
         mWifiManager=wm;
         mHandler=handler;
+        this.mDb=mDb;
     }
     public void getList(byte[] data, WebView mWebView) {
         if(0x81==(data[3] & 0xff)){
@@ -59,6 +61,9 @@ public class JsWifiBridge {
             Log.e("godlee",e.getMessage());
             e.printStackTrace();
         }
+    }
+    public void linkedOk(String data){
+        postToJs("onLinked",data);
     }
     public void lightOk(String mac) {
         postToJs("lightStandby",mac);

@@ -28,6 +28,7 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     private static WifiClass mWifiManage;
+    private static Db mDb;
     private static WebView mWebView;
     private static UdpController mUdpController;
     private static LightControllerGroup mLightControllerGroup;
@@ -124,12 +125,14 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         mUdpController.start();
+        mDb=new Db(this,Db.DB_NAME,null,2);
         mLightControllerGroup=new LightControllerGroup(mHander);
-        mWifiBridge=new JsWifiBridge(mUdpController,mWifiManage,mHander);
-        mLightBridge=new JsLightBridge(mLightControllerGroup);
+        mWifiBridge=new JsWifiBridge(mUdpController,mWifiManage,mHander,mDb);
+        mLightBridge=new JsLightBridge(mLightControllerGroup,mDb);
         mLightControllerGroup.addGroupMember("C4BE8474C223");
         mLightControllerGroup.addGroupMember("F4B85E45D9F1");
         mWebView = new WebView(this);
+//        mDb.onCreate(mDb.getWritableDatabase());
         mWebSetting = mWebView.getSettings();
         mWebSetting.setJavaScriptEnabled(true);
         mWebView.setWebChromeClient(new WebChromeClient());
@@ -207,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.i("godlee", "Ap IP:" + gateIp);
                     if(gateIp.equals(UdpController.DEFALT_IP)){
                         mLightBridge.initTime(UdpController.DEFALT_IP);
-//                        mWifiBridge.
+                        mWifiBridge.linkedOk(info.getSSID());
                     }else{
 
                     }

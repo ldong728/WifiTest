@@ -46,14 +46,13 @@
 
     });
     $('#sendUdp').click(function(){
-        window.wifi.usrLink();
         headerTo('ap_list.html');
     })
 
     $('#linkwifi').click(function(){
         var inf={ssid:"TL-Gooduo",pasd:"gooduo789"}
         inf=JSON.stringify(inf);
-        window.wifi.linkSSID(inf);
+        window.wifi.ap2sta(inf);
     })
     $('#scanWifi').click(function(){
 //        window.wifi.scanWifi();

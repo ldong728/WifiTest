@@ -10,14 +10,23 @@
 
 <body>
 <div class="temp">
+    <button id ="usrLink">重试</button>
 
 
 </div>
 
 
 </body>
+<script>
+    $(document).ready(function(){
+       window.wifi.usrLink();
+    });
+</script>
 
 <script>
+    $('#usrLink').click(function(){
+        window.wifi.usrLink();
+    })
     function getList(d){
         alert('ok');
         var data=eval("("+d+")");

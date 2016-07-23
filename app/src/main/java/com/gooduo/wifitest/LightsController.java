@@ -34,7 +34,11 @@ public class LightsController {
     public LightsController(){
         for(int i=0;i<7;i++){
             mLightsList[i]=new Light(i+1);
+            mManualCode[i]=mLightsList[i].getManuelLevel();
         }
+        mCloudCode=new byte[]{(byte)0xAA, 0x08, 0x0A, 0x04, 0x00, 0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x0E};
+        mFlashCode=new byte[]{(byte)0xAA, 0x08, 0x0A, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
+        mMoonCode=new byte[]{(byte)0xAA, 0x08, 0x0A, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10};
     }
     public byte[] set(int color,int time,int level){
       byte[] temp= mLightsList[color].setPoint(time, level);
@@ -50,6 +54,7 @@ public class LightsController {
     }
     public byte[] setManual(int color,int level){
         byte[] code= mLightsList[color].setManuelCode(level);
+        mManualCode[color]=(byte)level;
         return code;
     }
     public byte[] setCloud(boolean stu,int probability,int mask){
@@ -128,7 +133,7 @@ public class LightsController {
      * 将自动模式的状态序列化成字节码便于储存（非控制字节码）
      * @return 转换后的字节码
      */
-    public byte[] getControlMap(){
+    public byte[] getAutoMap(){
         ArrayList<ControllerPoint> sList= new ArrayList<ControllerPoint>(COLOR_NUM*Light.TOTAL);
         int offset=0;
         for(int i=0; i<COLOR_NUM; i++){
@@ -149,28 +154,45 @@ public class LightsController {
             return null;
         }
     }
+    public byte[] getManualMap(){
+        return mManualCode;
+    }
 
     /**
      * 将自动化控制的状态字节码转化成控制状态
      * @param data 待转化的字节码
      */
-    public void setControlMap(byte[] data){
-        ByteArrayInputStream obj= new ByteArrayInputStream(data);
-        try{
-            ObjectInputStream in =new ObjectInputStream(obj);
-            ArrayList<ControllerPoint> sCp=(ArrayList<ControllerPoint>)in.readObject();
-            for(int i=0;i<COLOR_NUM;i++){
-                for(int j=0; j<Light.TOTAL;j++){
-                    ControllerPoint p=sCp.get(i*Light.TOTAL+j);
-                    mLightsList[i].setControlMap(j, p.isKey(), p.getLevel());
+    public void setAutoMap(byte[] data){
+            ByteArrayInputStream obj= new ByteArrayInputStream(data);
+            try{
+                ObjectInputStream in =new ObjectInputStream(obj);
+                ArrayList<ControllerPoint> sCp=(ArrayList<ControllerPoint>)in.readObject();
+                for(int i=0;i<COLOR_NUM;i++){
+                    for(int j=0; j<Light.TOTAL;j++){
+                        ControllerPoint p=sCp.get(i*Light.TOTAL+j);
+                        mLightsList[i].setControlMap(j, p.isKey(), p.getLevel());
+                    }
                 }
+            }catch(IOException e){
+                Log.e("godlee",e.getMessage());
+            }catch(ClassNotFoundException e){
+                Log.e("godlee",e.getMessage());
             }
-        }catch(IOException e){
-            Log.e("godlee",e.getMessage());
-        }catch(ClassNotFoundException e){
-            Log.e("godlee",e.getMessage());
+    }
+    public void initAutoMap(){
+        for(int i=0;i<COLOR_NUM;i++){
+            for(int j=0; j<Light.TOTAL;j++){
+                mLightsList[i].setControlMap(j,false, 0);
+            }
         }
     }
+    public void setManualMap(byte[] data){
+        mManualCode=data;
+        for(int i=0;i<data.length;i++){
+            mLightsList[i].setManuelCode(data[i]&0xff);
+        }
+    }
+
 
     /**
      * 获取自动控制状态的Json格式字符串
@@ -195,6 +217,8 @@ public class LightsController {
             return null;
         }
     }
+
+
 
     /**
      * 获取手动模式状态json格式字符串

@@ -128,6 +128,7 @@ public abstract class UdpController extends Thread {
                     if (null != handler) {
                         byte[] realData = new byte[revPacket.getLength()];
                         System.arraycopy(data, 0, realData, 0, revPacket.getLength());
+                        Log.i("godlee",Tool.bytesToHexString(realData));
                         onReceive(handler,new DataPack(fromIp,fromPort,realData));
                     }
                 }
