@@ -24,7 +24,7 @@ public class Db extends SQLiteOpenHelper {
     public final static String U_EMAIL="U_EMAIL";
     public final static String U_PHONE="U_PHONE";
     public final static String U_PASD="U_PASD";
-    public final static String U_DEFAULT="UDEFAULT";
+    public final static String U_DEFAULT="U_DEFAULT";
     public final static String G_ID="G_ID";
     public final static String G_INF="G_INF";
     public final static String G_NAME="G_NAME";
@@ -44,7 +44,7 @@ public class Db extends SQLiteOpenHelper {
     public final static String TYPE_CLOUD="TYPE_CLOUD";
     public final static String TYPE_FLASH="TYPE_FLASH";
     public final static String TYPE_MOON="TYPE_MOON";
-    private int mCurrentUserId;
+    private int mCurrentUserId=-1;
     private int mCurrentGroupId;
 
 
@@ -57,13 +57,13 @@ public class Db extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String str="CREATE TABLE IF NOT EXISTS USER_TBL (U_ID integer primary key autoincrement,U_NAME text,U_EMAIL text,U_PHONE text,U_PASD text,U_DEFAULT tinyint(1))";
+        String str="CREATE TABLE IF NOT EXISTS USER_TBL (U_ID integer primary key autoincrement,U_NAME text,U_EMAIL text,U_PHONE text,U_PASD text,U_DEFAULT integer)";
         db.execSQL(str);
         Log.i("godlee","created");
         str="CREATE TABLE IF NOT EXISTS GROUP_TBL (G_ID integer primary key autoincrement,G_NAME text,U_ID integer,G_INF text,G_TYPE text)";
         Log.i("godlee","create");
         db.execSQL(str);
-        str="CREATE TABLE IF NOT EXISTS DEVICE_TBL (D_MAC text primary key,D_SSID text,G_ID text,D_TYPE text,D_NAME text)";
+        str="CREATE TABLE IF NOT EXISTS DEVICE_TBL (D_MAC text primary key,D_SSID text,G_ID integer,D_TYPE text,D_NAME text)";
         db.execSQL(str);
         str="CREATE TABLE IF NOT EXISTS CODE_TBL (C_ID integer primary key autoincrement,G_ID integer,C_TYPE text,C_CODE BLOB,UNIQUE(G_ID,C_TYPE))";
         db.execSQL(str);
@@ -78,34 +78,45 @@ public class Db extends SQLiteOpenHelper {
     public void onOpen(SQLiteDatabase db) {
         super.onOpen(db);
         Log.i("godlee", "dataBase Open");
-        Cursor cursor=db.query(USER_TBL,new String[]{U_ID},"U_DEFAULT=?",new String[]{""+1},null,null,null,"limit 1");
-        if(cursor.getCount()>0){
-            cursor.moveToFirst();
-            mCurrentUserId=cursor.getInt(0);
-        }else{
-            mCurrentUserId=-1;
+        if(-1==mCurrentUserId){
+            Log.i("godlee","not hav userInf,read from db");
+            Cursor cursor=db.query(USER_TBL, new String[]{U_ID}, U_DEFAULT + "=?", new String[]{"" + 1}, null, null, null, null);
+            if(cursor.getCount()>0){
+                cursor.moveToFirst();
+                mCurrentUserId=cursor.getInt(0);
+            }else{
+                Log.i("godlee","no userInf in Db");
+                mCurrentUserId=-1;
+            }
+            cursor.close();
         }
+
     }
 
     public int addUser(String name,String mail,String phone,String pasd){
         SQLiteDatabase db=getWritableDatabase();
         ContentValues cv=new ContentValues();
-        cv.put(U_DEFAULT,0);
-        db.update(USER_TBL, cv, null, null);
-        cv.clear();
+//        cv.put(U_DEFAULT,0);
+//        db.update(USER_TBL, cv, null, null);
+//        cv.clear();
+        String sql="update "+USER_TBL+" set "+U_DEFAULT+"=0";
+        db.execSQL(sql);
         cv.put(U_NAME, name);
         cv.put(U_EMAIL, mail);
         cv.put(U_PHONE, phone);
         cv.put(U_PASD,pasd);
         cv.put(U_DEFAULT,1);
-        db.insert(USER_TBL,null,cv);
+        db.insert(USER_TBL, null, cv);
+        Log.i("godlee","userInf put Db ok");
         Cursor cursor = db.rawQuery("select last_insert_rowid() from "+USER_TBL,null);
         int strid=-1;
+        int count=cursor.getCount();
         if(cursor.moveToFirst())
             strid = cursor.getInt(0);
         cursor.close();
         db.close();
         mCurrentUserId=strid;
+        Log.i("godlee","get added UserId="+mCurrentUserId);
         return strid;
     }
     public void chooseUser(int userId){
@@ -115,7 +126,7 @@ public class Db extends SQLiteOpenHelper {
         db.update(USER_TBL, cv, null, null);
         cv.clear();
         cv.put(U_DEFAULT, 1);
-        db.update(USER_TBL, cv, "U_ID", new String[]{"" + userId});
+        db.update(USER_TBL, cv, U_ID, new String[]{"" + userId});
         db.close();
         mCurrentUserId=userId;
     }
@@ -135,6 +146,7 @@ public class Db extends SQLiteOpenHelper {
         cv.put(G_TYPE, type);
         cv.put(G_INF, inf);
         db.insert(GROUP_TBL, null, cv);
+        Log.i("godlee","group add ok");
         Cursor cursor = db.rawQuery("select last_insert_rowid() from "+GROUP_TBL,null);
 
         int strid=-1;
@@ -146,7 +158,7 @@ public class Db extends SQLiteOpenHelper {
     }
     public JSONObject getGroupInf(){
         SQLiteDatabase db=getReadableDatabase();
-        Cursor cursor=db.query(GROUP_TBL, null, "G_ID=?,U_ID=?", new String[]{"" + mCurrentGroupId, "" + mCurrentUserId}, null, null, null);
+        Cursor cursor=db.query(GROUP_TBL, null, G_ID + "=? and " + U_ID + "=?", new String[]{"" + mCurrentGroupId, "" + mCurrentUserId}, null, null, null);
         cursor.moveToFirst();
         JSONObject obj= getStringRow(cursor);
         cursor.close();
@@ -158,11 +170,11 @@ public class Db extends SQLiteOpenHelper {
         String[] selectionArgs=new String[]{""+mCurrentUserId};
         switch(type){
             case GROUP_TYPE_LOCAL:
-                selection="U_ID=?,G_TYPE=?";
+                selection=U_ID+"=?,"+G_TYPE+"=?";
                 selectionArgs=new String[]{GROUP_TYPE_LOCAL};
                 break;
             case GROUP_TYPE_ONLINE:
-                selection="U_ID=?,G_TYPE=?";
+                selection=U_ID+"=?,"+G_TYPE+"=?";
                 selectionArgs=new String[]{GROUP_TYPE_ONLINE};
                 break;
             default:
@@ -182,8 +194,9 @@ public class Db extends SQLiteOpenHelper {
         cv.put(D_SSID,SSID);
         cv.put(G_ID,mCurrentGroupId);
         cv.put(G_TYPE,type);
-        cv.put(G_NAME, name);
+        cv.put(D_NAME, name);
         db.replace(DEVICE_TBL, null, cv);
+        Log.i("godlee","device add to db ok");
         db.close();
     }
 
@@ -209,6 +222,19 @@ public class Db extends SQLiteOpenHelper {
             return null;
         }
     }
+    public String[] getValue(String tableName,String[] columes,String selection,String[] selectionArg){
+        SQLiteDatabase db=getReadableDatabase();
+        Cursor cusor=db.query(tableName,columes,selection,selectionArg,null,null,null);
+        if(cusor.moveToFirst()){
+            String[] value=new String[cusor.getColumnCount()];
+            for(int i=0; i<cusor.getColumnCount(); i++){
+                value[i]=cusor.getString(i);
+            }
+            return value;
+        }else{
+            return null;
+        }
+    }
 
     public JSONObject[] getDeviceList(){
         SQLiteDatabase db=getReadableDatabase();
@@ -230,6 +256,15 @@ public class Db extends SQLiteOpenHelper {
     public int getUserId() {
         return this.mCurrentUserId;
     }
+    public JSONObject getUserInf(){
+        SQLiteDatabase db=getReadableDatabase();
+        String selection=U_ID+"=?";
+        String[] selectionArgs=new String[]{""+mCurrentUserId};
+        Cursor cursor=db.query(USER_TBL,null,selection,selectionArgs,null,null,null);
+        JSONObject obj=getStringRow(cursor);
+        db.close();
+        return obj;
+    }
     public void saveCode(String type, byte[] code){
         Log.i("godlee", "replaceStart");
         SQLiteDatabase db=getWritableDatabase();
@@ -242,16 +277,22 @@ public class Db extends SQLiteOpenHelper {
         db.close();
     }
     private JSONObject getStringRow(Cursor cursor){
-        JSONObject obj=new JSONObject();
-        try{
-            for(int i=0; i<cursor.getColumnCount();i++){
-                obj.accumulate(cursor.getColumnName(i),cursor.getString(i));
+        if(cursor.getCount()>0){
+            if(cursor.isBeforeFirst())cursor.moveToFirst();
+            JSONObject obj=new JSONObject();
+            try{
+                for(int i=0; i<cursor.getColumnCount();i++){
+                    obj.accumulate(cursor.getColumnName(i),cursor.getString(i));
+                }
+                return obj;
+            }catch(JSONException e) {
+                e.printStackTrace();
+                return null;
             }
-            return obj;
-        }catch(JSONException e) {
-            e.printStackTrace();
+        }else{
             return null;
         }
+
 
     }
     private JSONObject[] getStringQuery(Cursor cursor){
@@ -271,6 +312,8 @@ public class Db extends SQLiteOpenHelper {
             return null;
         }
     }
+
+
 
 
     }

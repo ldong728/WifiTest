@@ -156,7 +156,7 @@ public abstract class UdpController extends Thread {
                 return null;
             }
         }
-//        String fromIp=revPacket.getIp();
+//        String fromIp=revPacket.reflushDeviceIp();
 //        int fromPort=revPacket.getPort();
 //        byte[] realData =revPacket.getData();
 //        Log.i("godlee", "from:" + fromIp + ":" + fromPort + ".length(byts):"+revPacket.getLength()+"  "+ Tool.bytesToHexString(realData));

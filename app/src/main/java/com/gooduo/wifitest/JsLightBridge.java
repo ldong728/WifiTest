@@ -1,5 +1,7 @@
 package com.gooduo.wifitest;
 
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 
@@ -12,10 +14,11 @@ import java.text.SimpleDateFormat;
  * Created by Administrator on 2016/7/14.
  */
 
-public class JsLightBridge {
+public class JsLightBridge extends JsBridge {
     private LightControllerGroup mLightControllerGroup;
     private Db mDb;
-    public JsLightBridge(LightControllerGroup lightControllerGroup,Db mDb){
+    public JsLightBridge(Handler mHandler,LightControllerGroup lightControllerGroup,Db mDb){
+        super(mHandler);
         mLightControllerGroup=lightControllerGroup;
         this.mDb=mDb;
     }
@@ -37,7 +40,7 @@ public class JsLightBridge {
             time = Integer.parseInt(sJson.getString("time"));
             level = Integer.parseInt(sJson.getString("level"));
             send=sJson.getString("mode").equals("confirm")? true:false;
-            mLightControllerGroup.autoController(color,time,level,send);
+            mLightControllerGroup.autoController(color, time, level, send);
         } catch (JSONException e) {
             Log.e("godlee", e.getMessage());
             e.printStackTrace();
@@ -105,9 +108,8 @@ public class JsLightBridge {
             e.printStackTrace();
         }
     }
-
     @JavascriptInterface
-    public byte[] initTime(String ip){
+    public byte[] initTime(final String ip){
         SimpleDateFormat data=new SimpleDateFormat("yyyy,MM,dd,HH,mm,ss");
         String sTime=data.format(new java.util.Date());
         String[] times=sTime.split(",");
@@ -164,6 +166,112 @@ public class JsLightBridge {
     public String getLightList(){
         return mLightControllerGroup.getLightsList();
     }
+
+    @JavascriptInterface
+    public int addUser(final String userInf){
+        int id=-1;
+        try{
+            JSONObject obj=new JSONObject(userInf);
+            String name=obj.getString("name");
+            String email=obj.getString("email");
+            String phone=obj.getString("phone");
+            String pasd=obj.getString("pasd");
+            id=mDb.addUser(name,email,phone,pasd);
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+        return id;
+    }
+    @JavascriptInterface
+    public String getUserInf(){
+//        Log.i("godlee","getInf");
+        JSONObject obj=mDb.getUserInf();
+        if(null!=obj){
+            return obj.toString();
+        }else{
+            return "";
+        }
+    }
+    @JavascriptInterface
+    public String getGroupList(String type){
+        String list="[";
+        JSONObject[] objs=mDb.getGroupList(type);
+
+        if(null!=objs){
+            int count=0;
+            for(JSONObject obj:objs){
+                list+=obj.toString();
+                count++;
+                if(count<objs.length)list+=",";
+            }
+            list+="]";
+            Log.i("godlee","get GroupList:"+list);
+            return list;
+        }
+        Log.i("godlee","there have no GroupList");
+        return "[]";
+
+    }
+    @JavascriptInterface
+    public int addGroup(final String inf){
+        try{
+            JSONObject obj=new JSONObject(inf);
+            String groupName=obj.getString("name");
+            String groupType=obj.getString("type");
+            String groupInf=obj.getString("inf");
+            int groupId=mDb.addGroup(groupName,groupType,groupInf);
+            if(groupId>-1)mDb.setGroupId(groupId);
+            return groupId;
+
+        }catch(JSONException e){
+            e.printStackTrace();
+            return -1;
+        }
+    }
+    @JavascriptInterface
+    public void addDevice(final String inf){
+     try{
+         JSONObject obj=new JSONObject(inf);
+         String mac=obj.getString("mac");
+         mDb.addDevice(mac,WifiClass.ssid,"light","light");
+
+     }catch(JSONException e){
+         e.printStackTrace();
+     }
+    }
+    @JavascriptInterface
+    public void chooseGroup(final String inf){
+        Log.i("godlee","choose Group");
+        int groupId=Integer.parseInt(inf);
+        mDb.setGroupId(groupId);
+    }
+    @JavascriptInterface
+    public void initGroup(){
+        JSONObject groupInf=mDb.getGroupInf();
+        try{
+            String sGroupType=groupInf.getString(Db.G_TYPE);
+            switch(sGroupType){
+                case Db.GROUP_TYPE_LOCAL:
+                    mLightControllerGroup.initGroup(mDb);
+                    String[] deviceInf= mDb.getValue(Db.DEVICE_TBL,new String[]{Db.D_SSID},Db.G_ID+"=?",new String[]{""+mDb.getGroupId()});
+                    String ssid=deviceInf[0];
+                    Log.i("godlee","get device SSID from DB:"+ssid);
+                    Message msg=mHandler.obtainMessage(JsBridge.LOCAL_LINK,"");
+                   mHandler.sendMessage(msg);
+                    break;
+
+                case Db.GROUP_TYPE_ONLINE:
+                    mLightControllerGroup.initGroup(mDb);
+                    break;
+
+            }
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+
+    }
+
+//    public String addGroup()
 
 
 

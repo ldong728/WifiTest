@@ -1,6 +1,5 @@
 package com.gooduo.wifitest;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -15,15 +14,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import com.android.volley.toolbox.Volley;
+import com.android.volley.RequestQueue;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
+
 
 
 public class MainActivity extends AppCompatActivity {
@@ -34,8 +34,10 @@ public class MainActivity extends AppCompatActivity {
     private static LightControllerGroup mLightControllerGroup;
     private static JsLightBridge mLightBridge;
     private static JsWifiBridge mWifiBridge;
+    private static JsWebBridge mWebBridge;
     private static WifiReceiver mReceiver;
     private MyHandler mHander = new MyHandler(this);
+    private RequestQueue mRequestQueue;
     private static class MyHandler extends Handler {
         WeakReference<AppCompatActivity> mActivity;
         MyHandler(AppCompatActivity activity) {
@@ -58,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
 //                    String sData = Tool.bytesToHexString(data);
                     break;
                 }
-                case JsWifiBridge.JS: {
+                case JsBridge.JS: {
                     JSONObject obj=(JSONObject)msg.obj;
                     try{
                         String function=obj.getString("function");
@@ -83,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         final WebSettings mWebSetting;
         super.onCreate(savedInstanceState);
+        mRequestQueue= Volley.newRequestQueue(this);
         mWifiManage=new WifiClass(this,mHander);
         mUdpController = new UdpController(mHander) {
             @Override
@@ -111,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
 
-                String mac=mLightControllerGroup.getIp(data);
+                String mac=mLightControllerGroup.reflushDeviceIp(data);
                 if(null!=mac){
                     sendATMsg("AT+ENTM\r\n",pack.getIp(),pack.getPort());
                     if(!mac.equals("other")){
@@ -128,7 +131,8 @@ public class MainActivity extends AppCompatActivity {
         mDb=new Db(this,Db.DB_NAME,null,2);
         mLightControllerGroup=new LightControllerGroup(mHander);
         mWifiBridge=new JsWifiBridge(mUdpController,mWifiManage,mHander,mDb);
-        mLightBridge=new JsLightBridge(mLightControllerGroup,mDb);
+        mLightBridge=new JsLightBridge(mHander,mLightControllerGroup,mDb);
+        mWebBridge =new JsWebBridge(mHander,mDb,mRequestQueue);
         mLightControllerGroup.addGroupMember("C4BE8474C223");
         mLightControllerGroup.addGroupMember("F4B85E45D9F1");
         mWebView = new WebView(this);
@@ -141,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
         mWebView.loadUrl("file:///android_asset/index.html");
         mWebView.addJavascriptInterface(mWifiBridge, "wifi");
         mWebView.addJavascriptInterface(mLightBridge, "light");
+        mWebView.addJavascriptInterface(mWebBridge,"web");
         mReceiver=new WifiReceiver();
         IntentFilter filter=new IntentFilter();
 //        filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
@@ -211,6 +216,7 @@ public class MainActivity extends AppCompatActivity {
                     if(gateIp.equals(UdpController.DEFALT_IP)){
                         mLightBridge.initTime(UdpController.DEFALT_IP);
                         mWifiBridge.linkedOk(info.getSSID());
+                        WifiClass.ssid=info.getSSID();
                     }else{
 
                     }

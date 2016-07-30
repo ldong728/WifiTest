@@ -20,6 +20,7 @@ import java.util.List;
  * Created by Administrator on 2016/6/21.
  */
 public class WifiClass {
+    public static String ssid="";
     private boolean stu;
     private WifiManager mWifiManager;
     private WifiInfo mWifiInfo;
@@ -97,12 +98,14 @@ public class WifiClass {
     }
 
     public void connectBySSID(String SSID) {
+        disConnectionWifi(getNetWordId());
         WifiConfiguration config = isExsits(SSID);
         final int id;
         boolean inlist=false;
         if (null != config) {
             mWifiManager.removeNetwork(config.networkId);
-
+//            Log.i("godlee","removeNetwork");
+//            id=config.networkId;
         }
             config = new WifiConfiguration();
             config.allowedAuthAlgorithms.clear();
@@ -112,10 +115,11 @@ public class WifiClass {
             config.allowedProtocols.clear();
             config.SSID = "\"" + SSID + "\"";
             config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-            config.priority=9999;
+            config.priority = 999999;
             Log.i("godlee", "wifiConfiguration ok");
             id = mWifiManager.addNetwork(config);
             Log.i("godlee", "not in list" + id);
+
             new Thread(new Runnable() {
                 @Override
                 public void run() {

@@ -32,7 +32,8 @@ public class LightsController {
 
 
     public LightsController(){
-        for(int i=0;i<7;i++){
+        mManualCode=new byte[COLOR_NUM];
+        for(int i=0;i<COLOR_NUM;i++){
             mLightsList[i]=new Light(i+1);
             mManualCode[i]=mLightsList[i].getManuelLevel();
         }

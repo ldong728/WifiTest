@@ -1,5 +1,6 @@
 package com.gooduo.wifitest;
 
+import android.net.DhcpInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
@@ -17,17 +18,18 @@ import java.util.ArrayList;
 /**
  * Created by Administrator on 2016/7/15.
  */
-public class JsWifiBridge {
+public class JsWifiBridge extends JsBridge{
     public static final int JS=0xcafe;
     private UdpController mUdpController;
     private WifiClass mWifiManager;
-    private Handler mHandler;
+//    private Handler mHandler;
     private Db mDb;
 
     public JsWifiBridge(UdpController uc,WifiClass wm,Handler handler,Db mDb){
+        super(handler);
         mUdpController=uc;
         mWifiManager=wm;
-        mHandler=handler;
+//        mHandler=handler;
         this.mDb=mDb;
     }
     public void getList(byte[] data, WebView mWebView) {
@@ -63,6 +65,7 @@ public class JsWifiBridge {
         }
     }
     public void linkedOk(String data){
+//        String mac=info.
         postToJs("onLinked",data);
     }
     public void lightOk(String mac) {
@@ -93,21 +96,6 @@ public class JsWifiBridge {
                 0x01, 0x02};
         mUdpController.sendMsg(data, 48899);
     }
-//    @JavascriptInterface
-//    public void Ap2Sta(String data){
-//        JSONObject obj;
-//        String ssid,pwd;
-//        try{
-//            obj=new JSONObject((data));
-//            ssid=obj.getString("ssid");
-//            pwd=obj.getString("pwd");
-//            byte[] code= Tool.generate_02_data(ssid,pwd,0);
-//            mUdpController.sendMsg(code,UdpController.DEFALT_IP,UdpController.CTR_PORT);
-//        }catch(JSONException e){
-//            Log.e("godlee",e.getMessage());
-//            e.printStackTrace();
-//        }
-//    }
 
     @JavascriptInterface
     public void linkLights() {
@@ -139,20 +127,20 @@ public class JsWifiBridge {
         }
 
     }
-    private void postToJs(String functionName,String value){
-        JSONObject obj=new JSONObject();
-        try{
-            obj.accumulate("function",functionName);
-            obj.accumulate("value",value);
-            Message msg=mHandler.obtainMessage(JS,obj);
-            mHandler.sendMessage(msg);
-        }catch(JSONException e){
-            Log.e("godlee",e.getMessage());
-            e.printStackTrace();
-        }
-
-
-    }
+//    private void postToJs(String functionName,String value){
+//        JSONObject obj=new JSONObject();
+//        try{
+//            obj.accumulate("function",functionName);
+//            obj.accumulate("value",value);
+//            Message msg=mHandler.obtainMessage(JS,obj);
+//            mHandler.sendMessage(msg);
+//        }catch(JSONException e){
+//            Log.e("godlee",e.getMessage());
+//            e.printStackTrace();
+//        }
+//
+//
+//    }
 
 
 
