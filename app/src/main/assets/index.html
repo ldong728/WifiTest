@@ -19,12 +19,14 @@
 
 
 <body>
+<input type="button" value="添加" id="findDevice" onclick="searchDevice()">
 
 <div class="groupList"></div>
 
 
 </body>
 <script>
+
     init();
 
     function init(){
@@ -46,6 +48,9 @@
 
             }
         }
+    }
+    function searchDevice(){
+        headerTo("wifi_config.html")
     }
     $(document).on('click','.group',function(){
         var g_id=$(this).attr('id');

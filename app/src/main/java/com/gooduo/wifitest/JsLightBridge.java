@@ -246,30 +246,37 @@ public class JsLightBridge extends JsBridge {
         mDb.setGroupId(groupId);
     }
     @JavascriptInterface
-    public void initGroup(){
+    public String initGroup(){
         JSONObject groupInf=mDb.getGroupInf();
+        JSONObject returnInf=new JSONObject();
         try{
             String sGroupType=groupInf.getString(Db.G_TYPE);
             switch(sGroupType){
                 case Db.GROUP_TYPE_LOCAL:
+                    returnInf.accumulate("type",Db.GROUP_TYPE_LOCAL);
                     mLightControllerGroup.initGroup(mDb);
                     String[] deviceInf= mDb.getValue(Db.DEVICE_TBL,new String[]{Db.D_SSID},Db.G_ID+"=?",new String[]{""+mDb.getGroupId()});
                     String ssid=deviceInf[0];
-                    Log.i("godlee","get device SSID from DB:"+ssid);
-                    Message msg=mHandler.obtainMessage(JsBridge.LOCAL_LINK,"");
+                    Log.i("godlee", "get device SSID from DB:" + ssid);
+                    returnInf.accumulate("ssid",ssid);
+                    Message msg=mHandler.obtainMessage(JsBridge.LOCAL_LINK,ssid);
                    mHandler.sendMessage(msg);
-                    break;
+                    return returnInf.toString();
 
                 case Db.GROUP_TYPE_ONLINE:
+                    returnInf.accumulate("type",Db.GROUP_TYPE_ONLINE);
                     mLightControllerGroup.initGroup(mDb);
-                    break;
+                    return "";
 
             }
         }catch(JSONException e){
             e.printStackTrace();
+
         }
+        return "";
 
     }
+
 
 //    public String addGroup()
 

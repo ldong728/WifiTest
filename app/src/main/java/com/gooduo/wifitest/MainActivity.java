@@ -47,19 +47,12 @@ public class MainActivity extends AppCompatActivity {
         public void handleMessage(Message msg) {
             AppCompatActivity sActivity = mActivity.get();
             switch (msg.what) {
-                case Tool.REC_DATA: {
+                case JsBridge.LOCAL_LINK:{
+                    String ssid=(String)msg.obj;
+                    mWifiManage.connectBySSID(ssid);
                     break;
                 }
-                case Tool.ERR_DATA: {
-                    break;
-                }
-                case Tool.WIFI_LIST_DATA: {
-                    break;
-                }
-                case Tool.CFM_DATA: {
-//                    String sData = Tool.bytesToHexString(data);
-                    break;
-                }
+
                 case JsBridge.JS: {
                     JSONObject obj=(JSONObject)msg.obj;
                     try{
@@ -178,9 +171,6 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         unregisterReceiver(mReceiver);
         // 退出处理
-//        lock.release();
-//        smt.setSend(false);
-//        mTcpController.close();
         mUdpController.setReceive(false);
         mUdpController.close();
         mLightControllerGroup.finishAll();
@@ -214,8 +204,10 @@ public class MainActivity extends AppCompatActivity {
                     Log.i("godlee","Ap Name:"+info.getSSID());
                     Log.i("godlee", "Ap IP:" + gateIp);
                     if(gateIp.equals(UdpController.DEFALT_IP)){
-                        mLightBridge.initTime(UdpController.DEFALT_IP);
+//                        mLightBridge.initTime(UdpController.DEFALT_IP);
+//                        Log.i("godlee","inittimeOK");
                         mWifiBridge.linkedOk(info.getSSID());
+//                        Log.i("godlee","recallToUi");
                         WifiClass.ssid=info.getSSID();
                     }else{
 

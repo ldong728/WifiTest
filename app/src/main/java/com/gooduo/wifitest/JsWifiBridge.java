@@ -65,8 +65,14 @@ public class JsWifiBridge extends JsBridge{
         }
     }
     public void linkedOk(String data){
-//        String mac=info.
-        postToJs("onLinked",data);
+        String sData;
+        if(data.startsWith("\"")){
+            sData=data.replace("\"","");
+        }else{
+            sData=data;
+        }
+
+        postToJs("onLinked",sData);
     }
     public void lightOk(String mac) {
         postToJs("lightStandby",mac);

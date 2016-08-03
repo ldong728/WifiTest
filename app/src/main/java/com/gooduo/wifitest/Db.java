@@ -34,7 +34,7 @@ public class Db extends SQLiteOpenHelper {
     public final static String D_SSID="D_SSID";
     public final static String D_IP="D_IP";
     public final static String D_TYPE="D_TYPE";
-    public final static String D_NAME="D_name";
+    public final static String D_NAME="D_NAME";
     public final static String C_ID="C_ID";
     public final static String C_TYPE="C_TYPE";
     public final static String G_TYPE="G_TYPE";
@@ -170,11 +170,11 @@ public class Db extends SQLiteOpenHelper {
         String[] selectionArgs=new String[]{""+mCurrentUserId};
         switch(type){
             case GROUP_TYPE_LOCAL:
-                selection=U_ID+"=?,"+G_TYPE+"=?";
+                selection=U_ID+"=? and "+G_TYPE+"=?";
                 selectionArgs=new String[]{GROUP_TYPE_LOCAL};
                 break;
             case GROUP_TYPE_ONLINE:
-                selection=U_ID+"=?,"+G_TYPE+"=?";
+                selection=U_ID+"=? and "+G_TYPE+"=?";
                 selectionArgs=new String[]{GROUP_TYPE_ONLINE};
                 break;
             default:
@@ -193,7 +193,7 @@ public class Db extends SQLiteOpenHelper {
         cv.put(D_MAC,mac);
         cv.put(D_SSID,SSID);
         cv.put(G_ID,mCurrentGroupId);
-        cv.put(G_TYPE,type);
+        cv.put(D_TYPE,type);
         cv.put(D_NAME, name);
         db.replace(DEVICE_TBL, null, cv);
         Log.i("godlee","device add to db ok");
@@ -203,7 +203,7 @@ public class Db extends SQLiteOpenHelper {
 
 
     public byte[] getCode(String type){
-        String selection="G_ID=?,C_TYPE=?";
+        String selection="G_ID=? and C_TYPE=?";
         String[] selectionArg=new String[]{""+ mCurrentGroupId,type};
         SQLiteDatabase db=getReadableDatabase();
         Cursor cursor=db.query(CODE_TBL, new String[]{C_CODE}, selection, selectionArg, null, null, null);

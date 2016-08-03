@@ -36,9 +36,12 @@ public class LightControllerGroup {
             @Override
             public void onReceive(Handler handler, DataPack pack) {
                 DataPack fullPack = formatReceive(pack);
-                if (null != fullPack) {
-                    reGroupSendQueue(fullPack);
 
+                if (null != fullPack) {
+                    if(Light.CODE_LENGTH==fullPack.getLength()){
+
+                    }
+                    reGroupSendQueue(fullPack);
                 }
             }
         };
