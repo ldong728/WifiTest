@@ -266,6 +266,8 @@ public class LightControllerGroup {
             System.arraycopy(code, offset, subCode, 0, Light.CODE_LENGTH);
             list.add(subCode);
         }
+        int mode=code[3]&0xff;
+        int colorOrValue=code[4]&0xff;//获取新指令特征，用以删除待发序列中相同指令或过时指令
         synchronized (mSendBuffer) {
             Iterator it = mIPMap.entrySet().iterator();
             while (it.hasNext()) {
@@ -274,6 +276,11 @@ public class LightControllerGroup {
                     ArrayList<byte[]> oldList = mSendBuffer.get(e.getValue());
                     if (oldList != null) {
                         synchronized (oldList) {
+                            for(byte[] oldCode:oldList){
+                                if((oldCode[3]&0xff)==mode&&(oldCode[4]&0xff)==colorOrValue){//删除待发序列中重复或过时指令
+                                    oldList.remove(oldList.indexOf(oldCode));
+                                }
+                            }
                             oldList.addAll(list);
                         }
                         mSendBuffer.put(e.getValue(), oldList);
@@ -331,6 +338,9 @@ public class LightControllerGroup {
                 }
             }
         }
+    }
+    private void reGroupSendQueue(byte[] data){
+
     }
 
     private Runnable SendQueue = new Runnable() {

@@ -1,5 +1,9 @@
 package com.gooduo.wifitest;
 
+import android.util.Log;
+
+import org.json.JSONObject;
+
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -160,5 +164,19 @@ public class Tool {
 				.append((ipInt >> 8) & 0xff).append('.').append(
 				(ipInt >> 16) & 0xff).append('.').append(((ipInt >> 24) & 0xff))
 				.toString();
+	}
+	public static String jsonArray2String(JSONObject[] objArray){
+		String list="[";
+		if(null!=objArray){
+			int count=0;
+			for(JSONObject obj:objArray){
+				list+=obj.toString();
+				count++;
+				if(count<objArray.length)list+=",";
+			}
+			list+="]";
+			return list;
+		}
+		return "[]";
 	}
 }

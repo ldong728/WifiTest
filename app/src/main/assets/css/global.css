@@ -1,0 +1,60 @@
+@charset "UTF-8";
+@import url(animate.css);
+@import url(reset.css);
+/* 2016-08-01 */
+body, html { width: 100%; height: 100%; font: 14px/1 Helvetica, Arial, sans-serif; color: #555; }
+body { position: relative; min-width: 320px; max-width: 640px; margin: 0 auto; background: #25bb9c; }
+.shadow { background: rgba(0,0,0,.05); }
+/* Tool */
+.app-tool { position: relative; padding: 12px 5%; height: 30px; line-height: 30px; white-space: nowrap; overflow: hidden; }
+.app-tool .pos-m { display: block; position: absolute; left: 20%; right: 20%; text-align: center; font-size: 15px; color: #fff; }
+.app-tool .pos-l { display: block; float: left; }
+.app-tool .pos-r { display: block; float: right; }
+.app-tool .img { width: 25px; height: 25px; }
+.app-tool .img img { display: block; width: 100%; height: 100%; }
+.app-tool .txt { width: 20%; text-align: right; color: #fff; }
+.app-load { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 9999; background: url(../image/loading2.gif) center no-repeat; }
+/* Msg */
+.app-msg { position: absolute; left: 5px; right: 5px; bottom: 5px; z-index: 999; background: #fff; border-radius: 5px; animation-duration: .15s; -webkit-animation-duration: .15s; text-align: center; overflow: hidden; }
+.app-msg .txt { line-height: 60px; font-size: 16px; white-space: nowrap; }
+.app-msg .confirm { height: 40px; border-top: 1px solid #eee; }
+.app-msg .wifi input[type=text] { width: 80%; padding: 8px; margin: 0 auto 30px; border: 1px solid #eee; border-radius: 3px; }
+.app-msg .confirm span { display: block; float: left; width: 50%; border-right: 1px solid #eee; box-sizing: border-box; line-height: 40px; cursor: pointer; }
+.app-msg .confirm span:last-child { border: none; }
+/* Fixed-Nav */
+.app-nav { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.3); }
+.app-nav a { display: block; float: left; width: 25%; padding: 36px 0 6px; box-sizing: border-box; text-align: center; font-size: 12px; color: #fff; }
+.app-nav a.n1 { background: url(../image/icon/11.png) center 6px no-repeat; background-size: auto 22px; }
+.app-nav a.n2 { background: url(../image/icon/12.png) center 6px no-repeat; background-size: auto 22px; }
+.app-nav a.n3 { background: url(../image/icon/13.png) center 6px no-repeat; background-size: auto 22px; }
+.app-nav a.n4 { background: url(../image/icon/14.png) center 6px no-repeat; background-size: auto 22px; }
+/* User */
+.app-user { height: inherit; }
+.app-user .image { display: block; width: 36%; padding: 20% 0 10%; margin: 0 auto; }
+.app-user .link { text-align: center; color: #fff; }
+.app-user .link a { display: inline-block; margin: 0 10px; }
+/* Form */
+.app-form .form-txt { width: 55%; height: 30px; padding: 3px 10px; margin: 0 auto 10px; border-radius: 5px; }
+.app-form .form-txt input { width: 100%; height: inherit; }
+.app-form .form-chk { width: 55%; height: 20px; padding: 10px; margin: 0 auto; line-height: 20px; color: #fff; }
+.app-form .form-sub { width: 40%; margin: 5% auto 10%; }
+.app-form .form-sub input[type=button] { width: 100%; height: 36px; background: #fff; border-radius: 5px; }
+.app-form .icon0 { padding: 3px 30px; background: #fff; border-radius: 5px; }
+.app-form .icon1 { padding-left: 50px; background: url(../image/icon/1.png) 5% center no-repeat #fff; background-size: auto 70%; }
+.app-form .icon2 { padding-left: 50px; background: url(../image/icon/2.png) 5% center no-repeat #fff; background-size: auto 70%; }
+.app-form .icon3 { padding-left: 50px; background: url(../image/icon/3.png) 5% center no-repeat; background-size: auto 42%; }
+.app-form .checked { background: url(../image/icon/4.png) 5% center no-repeat; background-size: auto 42%; }
+/* Equip */
+.app-equip { height: inherit; }
+.app-equip .equip-list .li { margin-bottom: 5px; background: rgba(0,0,0,.1); color: #fff; }
+.app-equip .equip-list .li a { display: block; padding: 20px 5%; background: url(../image/icon/9.png) 93.5% center no-repeat; background-size: auto 16px; }
+.app-equip .equip-info { padding: 5%; text-align: center; color: #fff; }
+.app-equip .equip-info .e-head img { display: block; width: 40%; margin: 5% auto 20px; }
+.app-equip .equip-info .e-name { margin-bottom: 30px; font-size: 16px; }
+.app-equip .equip-info .e-lamp { font-size: 18px; }
+/* Item */
+.app-item { height: inherit; }
+.app-item .item-list { margin-bottom: 100px; }
+.app-item .item-list .li { border-bottom: 2px solid #1c9e8a; color: #fff; }
+.app-item .item-list .li a { display: block; padding: 20px 5%; background: url(../image/icon/9.png) 93.5% center no-repeat; background-size: auto 16px; }
+.app-item .tips { padding: 15% 5%; text-align: center; font-size: 14px; color: rgba(255,255,255,.5); }

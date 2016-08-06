@@ -28,6 +28,8 @@ public class Db extends SQLiteOpenHelper {
     public final static String G_ID="G_ID";
     public final static String G_INF="G_INF";
     public final static String G_NAME="G_NAME";
+    public final static String G_SSID="G_SSID";
+    public final static String G_SSID_PASD="G_SSID_PASD";
     public final static String GROUP_TYPE_LOCAL="local";
     public final static String GROUP_TYPE_ONLINE="online";
     public final static String D_MAC="D_MAC";
@@ -60,7 +62,7 @@ public class Db extends SQLiteOpenHelper {
         String str="CREATE TABLE IF NOT EXISTS USER_TBL (U_ID integer primary key autoincrement,U_NAME text,U_EMAIL text,U_PHONE text,U_PASD text,U_DEFAULT integer)";
         db.execSQL(str);
         Log.i("godlee","created");
-        str="CREATE TABLE IF NOT EXISTS GROUP_TBL (G_ID integer primary key autoincrement,G_NAME text,U_ID integer,G_INF text,G_TYPE text)";
+        str="CREATE TABLE IF NOT EXISTS GROUP_TBL (G_ID integer primary key autoincrement,G_NAME text,U_ID integer,G_INF text,G_TYPE text,G_SSID text,G_SSID_PASD text)";
         Log.i("godlee","create");
         db.execSQL(str);
         str="CREATE TABLE IF NOT EXISTS DEVICE_TBL (D_MAC text primary key,D_SSID text,G_ID integer,D_TYPE text,D_NAME text)";
@@ -96,9 +98,6 @@ public class Db extends SQLiteOpenHelper {
     public int addUser(String name,String mail,String phone,String pasd){
         SQLiteDatabase db=getWritableDatabase();
         ContentValues cv=new ContentValues();
-//        cv.put(U_DEFAULT,0);
-//        db.update(USER_TBL, cv, null, null);
-//        cv.clear();
         String sql="update "+USER_TBL+" set "+U_DEFAULT+"=0";
         db.execSQL(sql);
         cv.put(U_NAME, name);
@@ -130,9 +129,18 @@ public class Db extends SQLiteOpenHelper {
         db.close();
         mCurrentUserId=userId;
     }
+    public boolean signIn(String mail,String pasd){
+        String selection=U_EMAIL+"=? and "+U_PASD+"=?";
+        String[] selectionArg=new String[]{mail,pasd};
+        String[] userInf=getValue(USER_TBL,new String[]{U_ID},selection,selectionArg);
+        if(null==userInf)return false;
+        int userId=Integer.parseInt(userInf[0]);
+        chooseUser(userId);
+        return true;
+    }
     public JSONObject[] getUserList(){
         SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor=db.query(USER_TBL,null,null,null,null,null,null);
+        Cursor cursor=db.query(USER_TBL, null, null, null, null, null, null);
         JSONObject[] returnData=getStringQuery(cursor);
         db.close();
         return returnData;
@@ -164,6 +172,15 @@ public class Db extends SQLiteOpenHelper {
         cursor.close();
         db.close();
         return obj;
+    }
+    public void changeGroupType(String ssid,String pasd){
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv=new ContentValues();
+        cv.put(G_SSID,ssid);
+        cv.put(G_SSID_PASD,pasd);
+        cv.put(G_TYPE,GROUP_TYPE_ONLINE);
+        db.update(GROUP_TBL,cv,G_ID+"=?",new String[]{""+mCurrentGroupId});
+        db.close();
     }
     public JSONObject[] getGroupList(String type){
         String selection="U_ID=?";
@@ -230,8 +247,12 @@ public class Db extends SQLiteOpenHelper {
             for(int i=0; i<cusor.getColumnCount(); i++){
                 value[i]=cusor.getString(i);
             }
+            cusor.close();
+            db.close();
             return value;
         }else{
+            cusor.close();
+            db.close();
             return null;
         }
     }
