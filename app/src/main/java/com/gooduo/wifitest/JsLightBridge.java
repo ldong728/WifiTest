@@ -114,7 +114,8 @@ public class JsLightBridge extends JsBridge {
     }
 
     @JavascriptInterface
-    public byte[] initTime(final String ip) {
+    public byte[] initTime() {
+        Log.i("godlee","initTime");
         SimpleDateFormat data = new SimpleDateFormat("yyyy,MM,dd,HH,mm,ss");
         String sTime = data.format(new java.util.Date());
         String[] times = sTime.split(",");
@@ -138,13 +139,17 @@ public class JsLightBridge extends JsBridge {
                 (byte) 0,
                 (byte) (0x0a + 0x09 + (y - 1970) + M + d + h + m + s)
         };
-        mLightControllerGroup.initTime(timeCode, ip);
+        mLightControllerGroup.initTime(timeCode);
         Log.i("godlee", data.toPattern());
         Log.i("godlee", data.toLocalizedPattern());
         Log.i("godlee", data.format(new java.util.Date()));
         return timeCode;
     }
-
+    @JavascriptInterface
+        public String tempMethod(){
+        Log.i("godlee","temp");
+        return "ok";
+    }
     @JavascriptInterface
     public String getAutoCode() {
         return mLightControllerGroup.getAutoStu();
@@ -250,9 +255,8 @@ public class JsLightBridge extends JsBridge {
         try {
             JSONObject obj = new JSONObject(inf);
             String groupName = obj.getString("name");
-            String groupType = obj.getString("type");
             String groupInf = obj.getString("inf");
-            int groupId = mDb.addGroup(groupName, groupType, groupInf);
+            int groupId = mDb.addGroup(groupName, groupInf);
             if (groupId > -1) mDb.setGroupId(groupId);
             return groupId;
 
@@ -261,6 +265,16 @@ public class JsLightBridge extends JsBridge {
             return -1;
         }
     }
+
+//    @JavascriptInterface
+//    public void changeGroupType(final String inf){
+//        try{
+//            JSONObject obj=new JSONObject(inf);
+//
+//        }catch(JSONException e){
+//            e.printStackTrace();
+//        }
+//    }
 
     @JavascriptInterface
     public void addDevice(final String inf) {
@@ -285,12 +299,15 @@ public class JsLightBridge extends JsBridge {
     public String initGroup() {
         JSONObject groupInf = mDb.getGroupInf();
         JSONObject returnInf = new JSONObject();
+        String deviceList=mLightControllerGroup.initGroup(mDb);;
         try {
             String sGroupType = groupInf.getString(Db.G_TYPE);
+            returnInf.accumulate("device",deviceList);
             switch (sGroupType) {
                 case Db.GROUP_TYPE_LOCAL:
                     returnInf.accumulate("type", Db.GROUP_TYPE_LOCAL);
-                    mLightControllerGroup.initGroup(mDb);
+
+//                    mLightControllerGroup.initGroup(mDb);
                     String[] deviceInf = mDb.getValue(Db.DEVICE_TBL, new String[]{Db.D_SSID}, Db.G_ID + "=?", new String[]{"" + mDb.getGroupId()});
                     String ssid = deviceInf[0];
                     Log.i("godlee", "get device SSID from DB:" + ssid);
@@ -301,7 +318,7 @@ public class JsLightBridge extends JsBridge {
 
                 case Db.GROUP_TYPE_ONLINE:
                     returnInf.accumulate("type", Db.GROUP_TYPE_ONLINE);
-                    mLightControllerGroup.initGroup(mDb);
+//                    mLightControllerGroup.initGroup(mDb);
                     return "";
 
             }

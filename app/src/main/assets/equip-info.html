@@ -6,6 +6,7 @@
 <link href="css/global.css" rel="stylesheet" />
 <script src="js/jquery2.min.js"></script>
 <script src="js/jquery.public.js"></script>
+    <script src="js/main.js"></script>
 <title>XXX鱼缸</title>
 </head>
 
@@ -18,7 +19,10 @@
         <div class="equip-info">
             <div class="e-head"><img src="image/bg/df-photo.png" alt=""></div>
             <div class="e-name">XXX鱼缸</div>
-            <div class="e-lamp">已加入3盏灯</div>
+            <div class="e-lamp"><a href="equip_add_step4.html">已加入3盏灯</a></div>
+            <div class="e-lamp"><a id="linkLight">连接灯具</a></div>
+            <div class="e-lamp"><a>  </a></div>
+            <div class="e-lamp"><a id="time">对时</a></div>
         </div>
     </div>
     <div class="app-nav">
@@ -27,5 +31,52 @@
         <a href="#" class="n3">情景模拟</a>
         <a href="set_index.html" class="n4">个人中心</a>
     </div>
+<script>
+    var localLinked=false;
+    var inf=window.light.initGroup();
+    var ssid;
+    alert(inf);
+    inf=eval('('+inf+')');
+    var deviceList=inf.device;
+    var type=inf.type;
+
+    if('local'==type){
+        ssid=inf.ssid;
+        window.wifi.linkWifi(getJsonString({ssid:ssid}));
+    }else{
+        window.light.initTime()
+    }
+    function onLinked(data){
+//        alert('linked')
+        if(!localLinked){
+//            alert('ssid='+data+",localSSid="+ssid);
+            if(data==ssid){
+                localLinked=true;
+                alert('localLinkedOk');
+
+                window.wifi.linkLights();
+            }
+        }
+    }
+
+    function lightStandby(data){
+        if(localLinked){
+            alert('lightStanby');
+            window.light.initTime();
+            alert(window.light.tempMethod());
+        }else{
+
+        }
+    }
+    $('#linkLight').click(function(){
+        window.wifi.linkLights();
+    })
+    $('#time').click(function(){
+        window.light.initTime();
+    })
+//    var deviceList=window.light.get
+
+
+</script>
 </body>
 </html>

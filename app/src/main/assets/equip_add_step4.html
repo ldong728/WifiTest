@@ -6,6 +6,7 @@
 <link href="css/global.css" rel="stylesheet" />
 <script src="js/jquery2.min.js"></script>
 <script src="js/jquery.public.js"></script>
+    <script src="js/main.js"></script>
 <title>选择网络</title>
 </head>
 
@@ -17,15 +18,47 @@
         </div>
         <div class="item-list">
             <div class="li">
-                <a onClick="app_msg.wifi($(this).text(), function(){location='equip-info.html';});">WIFI #1</a>
+                <a class="wifi-item">WIFI #1</a>
             </div>
             <div class="li">
-                <a onClick="app_msg.wifi($(this).text(), function(){location='equip-info.html';});">WIFI #2</a>
+                <a class="wifi-item">WIFI #2</a>
             </div>
             <div class="li">
-                <a onClick="app_msg.wifi($(this).text(), function(){location='equip-info.html';});">WIFI #3</a>
+                <a class="wifi-item">WIFI #3</a>
             </div>
         </div>
     </div>
 </body>
+<script>
+    var ssid;
+    window.wifi.usrLink();
+    function getList(data){
+        var list=eval('('+data+')');
+        $('.item-list').empty();
+        $.each(list,function(k,v){
+            var content='<div class="li"><a class="wifi-item">'+k+'</a></div>'
+            $('.item-list').append(content);
+
+        })
+    }
+    $(document).on('click','.wifi-item',function(){
+        ssid=$(this).text();
+        alert(ssid)
+        $('body').append('<div class="app-msg slideInUp"><div class="txt" id="ssid">' + ssid + '</div><div class="wifi"><input type="text" id="pasd" name="wifipass" placeholder="密码" class="noset" /></div><div class="confirm"><span class="no">取消</span><span class="yes">连接</span></div></div>');
+
+    })
+    $(document).on('click','.yes',function(){
+        var pasd=$('#pasd').val();
+        alert(ssid);
+        alert(pasd)
+    })
+    $(document).on('click','.no',function(){
+        app_msg.animation();
+    })
+    function changeType(){
+        var ssid=$('#ssid').text();
+        var pasd=$('#pasd').val();
+
+    }
+</script>
 </html>

@@ -26,6 +26,9 @@ function getUserInf(){
     }
 
 }
+function getUserInfOnline(){
+
+}
 function getGroupList(data){
     if(!debug)return window.light.getGroupList(data);
     return '[{"G_NAME":"abc","G_INF":"","U_ID":"1","G_TYPE":"local","G_ID":"1"}]';

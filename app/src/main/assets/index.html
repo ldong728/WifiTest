@@ -1,1 +1,16 @@
-<script>location='user-login.html';</script>
+<script src="js/jquery2.min.js"></script>
+<script src="js/jquery.public.js"></script>
+<script src="js/main.js"></script>
+<script>
+    var userdata=getUserInf();
+    if(""==userdata){
+//        userdata=getUserInfOnline()
+        headerTo("user-reg.html");
+    }else{
+        headerTo("equip-index.html");
+    }
+</script>
+
+<script>
+//    location='user-login.html';
+</script>

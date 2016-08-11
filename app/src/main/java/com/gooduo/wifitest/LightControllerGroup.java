@@ -50,7 +50,7 @@ public class LightControllerGroup {
         new Thread(SendQueue).start();
     }
 
-    public synchronized void initGroup(Db mDb) {
+    public synchronized String initGroup(Db mDb) {
         mIPMap.clear();
         mSendBuffer.clear();
         buffer.clear();
@@ -58,6 +58,7 @@ public class LightControllerGroup {
         JSONObject[] sDeviceObj= mDb.getDeviceList();
         if (null != sObj&&sDeviceObj.length>0) {
             mLocal = true;
+            JSONObject returnData=new JSONObject();
             try {
                 setAutoStu(mDb.getCode(Db.TYPE_AUTO));
                 setManualStu(mDb.getCode(Db.TYPE_MANUAL));
@@ -65,6 +66,7 @@ public class LightControllerGroup {
                 setFlashStu(mDb.getCode(Db.TYPE_FLASH));
                 setMoonStu(mDb.getCode(Db.TYPE_MOON));
                 String sGroupType = sObj.getString(Db.G_TYPE);
+                int index=0;
                 for(JSONObject obj:sDeviceObj){
                     String mac=obj.getString(Db.D_MAC);
                     if(sGroupType.equals(Db.GROUP_TYPE_LOCAL)){
@@ -72,13 +74,18 @@ public class LightControllerGroup {
                     }else{
                         addGroupMember(mac);
                     }
+                    returnData.accumulate(""+index,obj);
+                    index++;
                 }
+                return returnData.toString();
 
             } catch (JSONException e) {
                 e.printStackTrace();
+                return "";
             }
         } else {
             mLocal = false;
+            return "";
         }
 
 
@@ -222,9 +229,11 @@ public class LightControllerGroup {
 
     }
 
-    public void initTime(byte[] timeData, String ip) {
-        mUdpController.putMsg(timeData, ip);
+    public void initTime(byte[] timeData) {
+        putCodeToQueue(timeData);
+//        mUdpController.putMsg(timeData, ip);
     }
+
 
     /**
      * 获取灯组Json,格式为{Mac:ip,Mac:ip}

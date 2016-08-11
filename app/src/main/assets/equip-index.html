@@ -6,6 +6,7 @@
 <link href="css/global.css" rel="stylesheet" />
 <script src="js/jquery2.min.js"></script>
 <script src="js/jquery.public.js"></script>
+    <script src="js/main.js"></script>
 <title>全部设备</title>
 </head>
 
@@ -17,15 +18,15 @@
             <a href="equip_add_step1.html" class="pos-r img"><img src="image/icon/7.png" alt=""></a>
         </div>
         <div class="equip-list">
-            <div class="li">
-                <a href="equip-info.html" data-id="">鱼缸#1</a>
-            </div>
-            <div class="li">
-                <a href="equip-info.html" data-id="">鱼缸#2</a>
-            </div>
-            <div class="li">
-                <a href="equip-info.html" data-id="">鱼缸#3</a>
-            </div>
+            <!--<div class="li">-->
+                <!--<a href="equip-info.html" data-id="">鱼缸#1</a>-->
+            <!--</div>-->
+            <!--<div class="li">-->
+                <!--<a href="equip-info.html" data-id="">鱼缸#2</a>-->
+            <!--</div>-->
+            <!--<div class="li">-->
+                <!--<a href="equip-info.html" data-id="">鱼缸#3</a>-->
+            <!--</div>-->
         </div>
     </div>
     <div class="app-nav">
@@ -34,5 +35,23 @@
         <a href="#" class="n3">情景模拟</a>
         <a href="set_index.html" class="n4">个人中心</a>
     </div>
+    <script>
+        $('.equip-list').empty();
+        var list=window.light.getGroupList('all');
+        if('[]'!=list){
+            list=eval('('+list+')');
+            $.each(list,function(k,v){
+                var content='<div class="li"><a class="group-inf" id="'+v.G_ID+'" data-id="'+ v.G_ID+'">'+ v.G_NAME+'</a></div>'
+                $('.equip-list').append(content);
+            });
+        }else{
+            $('.equip-list').append("当前无设备");
+        }
+        $(document).on('click','.group-inf',function(){
+            window.light.chooseGroup($(this).attr('id'));
+            headerTo('equip-info.html');
+        })
+
+    </script>
 </body>
 </html>

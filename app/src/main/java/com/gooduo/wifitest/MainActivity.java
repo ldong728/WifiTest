@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
             switch (msg.what) {
                 case JsBridge.LOCAL_LINK:{
                     String ssid=(String)msg.obj;
-                    mWifiManage.connectBySSID(ssid);
+//                    mWifiManage.connectBySSID(ssid);
                     break;
                 }
 
@@ -206,9 +206,12 @@ public class MainActivity extends AppCompatActivity {
                     if(gateIp.equals(UdpController.DEFALT_IP)){
 //                        mLightBridge.initTime(UdpController.DEFALT_IP);
 //                        Log.i("godlee","inittimeOK");
-                        mWifiBridge.linkedOk(info.getSSID());
+                       String ssid= mWifiBridge.linkedOk(info.getSSID());
 //                        Log.i("godlee","recallToUi");
-                        WifiClass.ssid=info.getSSID();
+                        if(null!=ssid){
+                            WifiClass.ssid=ssid;
+                            Log.i("godlee","currentSSid:"+WifiClass.ssid);
+                        }
                     }else{
 
                     }

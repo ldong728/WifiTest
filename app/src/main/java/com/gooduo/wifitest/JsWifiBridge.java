@@ -64,15 +64,20 @@ public class JsWifiBridge extends JsBridge{
             e.printStackTrace();
         }
     }
-    public void linkedOk(String data){
-        String sData;
-        if(data.startsWith("\"")){
-            sData=data.replace("\"","");
-        }else{
-            sData=data;
-        }
+    public String linkedOk(String data){
+        if(null!=data){
+            String sData;
+            if(data.startsWith("\"")){
+                sData=data.replace("\"","");
+            }else{
+                sData=data;
+            }
 
-        postToJs("onLinked",sData);
+            postToJs("onLinked",sData);
+            return sData;
+        }
+        return null;
+
     }
     public void lightOk(String mac) {
         postToJs("lightStandby",mac);

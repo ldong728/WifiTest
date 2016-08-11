@@ -146,12 +146,12 @@ public class Db extends SQLiteOpenHelper {
         return returnData;
     }
 
-    public int addGroup(String groupName,String type,String inf){
+    public int addGroup(String groupName,String inf){
         SQLiteDatabase db=getWritableDatabase();
         ContentValues cv=new ContentValues();
         cv.put(G_NAME,groupName);
         cv.put(U_ID, mCurrentUserId);
-        cv.put(G_TYPE, type);
+        cv.put(G_TYPE, GROUP_TYPE_LOCAL);
         cv.put(G_INF, inf);
         db.insert(GROUP_TBL, null, cv);
         Log.i("godlee","group add ok");
@@ -185,6 +185,7 @@ public class Db extends SQLiteOpenHelper {
     public JSONObject[] getGroupList(String type){
         String selection="U_ID=?";
         String[] selectionArgs=new String[]{""+mCurrentUserId};
+
         switch(type){
             case GROUP_TYPE_LOCAL:
                 selection=U_ID+"=? and "+G_TYPE+"=?";
@@ -213,7 +214,7 @@ public class Db extends SQLiteOpenHelper {
         cv.put(D_TYPE,type);
         cv.put(D_NAME, name);
         db.replace(DEVICE_TBL, null, cv);
-        Log.i("godlee","device add to db ok");
+        Log.i("godlee","device add to db ok,mac:"+mac+", SSID:"+SSID);
         db.close();
     }
 

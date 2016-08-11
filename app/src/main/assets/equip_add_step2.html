@@ -6,6 +6,7 @@
 <link href="css/global.css" rel="stylesheet" />
 <script src="js/jquery2.min.js"></script>
 <script src="js/jquery.public.js"></script>
+    <script src="js/main.js"></script>
 <title>选择鱼缸</title>
 </head>
 
@@ -19,13 +20,26 @@
             <div class="li">
                 <a href="equip-info.html" data-id="">鱼缸#1</a>
             </div>
-            <div class="li">
-                <a data-id="">鱼缸#2</a>
-            </div>
+
             <div class="li">
                 <a data-id="">鱼缸#3</a>
             </div>
         </div>
     </div>
+<script>
+    var list=window.light.getGroupList("online")
+    if('[]'==list){
+//        alert('jump')
+        headerTo('equip_add_step3.html')
+    }else{
+        $('.item-list').empty();
+        list=eval('('+list+')');
+        $.each(list,function(k,v){
+            var content='<div class="li"><a id="'+ v.G_ID+'" data-id="">'+ v.G_NAME+'</a></div>';
+//            var content='<div class="group" id="'+ v.G_ID+'">'+ v.G_NAME+'</div>';
+            $('.item-list').append(content);
+        })
+    }
+</script>
 </body>
 </html>
