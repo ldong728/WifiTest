@@ -247,7 +247,8 @@ public abstract class UdpController extends Thread {
         if (socket != null) {
             try {
                 Log.i("godlee", "DATA_PORT------------------->" + DATA_PORT);
-//                Log.i("godlee","sendContent: "+Tool.bytesToHexString(pkg.getData()));
+                Log.i("godlee","sendContent: "+Tool.bytesToHexString(pkg.getData()));
+//                Log.i("godlee","sendToip":pkg.)
 //                DatagramPacket sendPacket = new DatagramPacket(msg, msg.length,
 //                        InetAddress.getByName(ip), DATA_PORT);
                 socket.send(pkg);

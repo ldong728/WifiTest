@@ -1,10 +1,6 @@
 package com.gooduo.wifitest;
 
-import android.net.DhcpInfo;
-import android.net.wifi.ScanResult;
-import android.net.wifi.WifiManager;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
@@ -12,7 +8,6 @@ import android.webkit.WebView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 /**
@@ -21,14 +16,14 @@ import java.util.ArrayList;
 public class JsWifiBridge extends JsBridge{
     public static final int JS=0xcafe;
     private UdpController mUdpController;
-    private WifiClass mWifiManager;
+    private WifiClass mWifiClass;
 //    private Handler mHandler;
     private Db mDb;
 
     public JsWifiBridge(UdpController uc,WifiClass wm,Handler handler,Db mDb){
         super(handler);
         mUdpController=uc;
-        mWifiManager=wm;
+        mWifiClass =wm;
 //        mHandler=handler;
         this.mDb=mDb;
     }
@@ -105,7 +100,7 @@ public class JsWifiBridge extends JsBridge{
     public void usrLink() {
         byte[] data = new byte[]{(byte) 0xff, 0x00, 0x01,
                 0x01, 0x02};
-        mUdpController.sendMsg(data, 48899);
+        mUdpController.sendMsg(data,UdpController.DEFALT_IP,48899);
     }
 
     @JavascriptInterface
@@ -118,10 +113,10 @@ public class JsWifiBridge extends JsBridge{
 
     @JavascriptInterface
     public void scanWifi(){
-        Log.i("godlee","start scan");
-        mWifiManager.startScan();
-        Log.i("godlee","scan over");
-        String info=mWifiManager.getResultJson();
+        Log.i("godlee", "start scan");
+        mWifiClass.startScan();
+        Log.i("godlee", "scan over");
+        String info= mWifiClass.getResultJson();
         postToJs("onGetWifiList", info);
     }
     @JavascriptInterface
@@ -131,12 +126,16 @@ public class JsWifiBridge extends JsBridge{
             String ssid=obj.getString("ssid");
 //            int id=obj.getInt("id");
             Log.i("godlee","linkedTo:"+ssid);
-            mWifiManager.connectBySSID(ssid);
+            mWifiClass.connectBySSID(ssid);
         }catch(JSONException e){
             Log.e("godlee",e.getMessage());
             e.printStackTrace();
         }
 
+    }
+    @JavascriptInterface
+    public void unlinkWifi(){
+        mWifiClass.disConnectionWifi(mWifiClass.getNetWorkId());
     }
 //    private void postToJs(String functionName,String value){
 //        JSONObject obj=new JSONObject();

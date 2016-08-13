@@ -7,9 +7,7 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
-import android.webkit.JavascriptInterface;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -98,7 +96,7 @@ public class WifiClass {
     }
 
     public void connectBySSID(String SSID) {
-        disConnectionWifi(getNetWordId());
+        disConnectionWifi(getNetWorkId());
         WifiConfiguration config = isExsits(SSID);
         final int id;
         boolean inlist=false;
@@ -178,7 +176,7 @@ public class WifiClass {
     }
 
     //得到连接的ID
-    public int getNetWordId() {
+    public int getNetWorkId() {
         return (mWifiInfo == null) ? 0 : mWifiInfo.getNetworkId();
     }
 

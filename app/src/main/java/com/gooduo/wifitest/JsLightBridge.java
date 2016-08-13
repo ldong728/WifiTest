@@ -52,6 +52,7 @@ public class JsLightBridge extends JsBridge {
     public void setManualCode(final String data) {
         JSONObject sJson;
         int color, level;
+        Log.i("godlee","manualCode");
         try {
             sJson = new JSONObject(data);
             color = Integer.parseInt(sJson.getString("color"));
@@ -114,7 +115,7 @@ public class JsLightBridge extends JsBridge {
     }
 
     @JavascriptInterface
-    public byte[] initTime() {
+    public void initTime() {
         Log.i("godlee","initTime");
         SimpleDateFormat data = new SimpleDateFormat("yyyy,MM,dd,HH,mm,ss");
         String sTime = data.format(new java.util.Date());
@@ -143,7 +144,6 @@ public class JsLightBridge extends JsBridge {
         Log.i("godlee", data.toPattern());
         Log.i("godlee", data.toLocalizedPattern());
         Log.i("godlee", data.format(new java.util.Date()));
-        return timeCode;
     }
     @JavascriptInterface
         public String tempMethod(){

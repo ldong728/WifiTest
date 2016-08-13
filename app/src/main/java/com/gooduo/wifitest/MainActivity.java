@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.DhcpInfo;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -197,24 +198,30 @@ public class MainActivity extends AppCompatActivity {
 //            Log.i("godlee",intent.getAction());
             switch(intent.getAction()){
                 case WifiManager.NETWORK_STATE_CHANGED_ACTION:
-                    WifiManager wm=(WifiManager)context.getSystemService(Context.WIFI_SERVICE);
-                    WifiInfo info=wm.getConnectionInfo();
-                    DhcpInfo dhcpInfo=wm.getDhcpInfo();
-                    String gateIp=Tool.intIpToString(dhcpInfo.serverAddress);
-                    Log.i("godlee","Ap Name:"+info.getSSID());
-                    Log.i("godlee", "Ap IP:" + gateIp);
-                    if(gateIp.equals(UdpController.DEFALT_IP)){
+                    NetworkInfo ntwInf=(NetworkInfo)intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                    if(null!=ntwInf){
+                        if(NetworkInfo.State.CONNECTED==ntwInf.getState()){
+                            WifiManager wm=(WifiManager)context.getSystemService(Context.WIFI_SERVICE);
+                            WifiInfo info=wm.getConnectionInfo();
+                            DhcpInfo dhcpInfo=wm.getDhcpInfo();
+                            String gateIp=Tool.intIpToString(dhcpInfo.serverAddress);
+                            Log.i("godlee","Ap Name:"+info.getSSID());
+                            Log.i("godlee", "Ap IP:" + gateIp);
+                            if(gateIp.equals(UdpController.DEFALT_IP)){
 //                        mLightBridge.initTime(UdpController.DEFALT_IP);
 //                        Log.i("godlee","inittimeOK");
-                       String ssid= mWifiBridge.linkedOk(info.getSSID());
+                                String ssid= mWifiBridge.linkedOk(info.getSSID());
 //                        Log.i("godlee","recallToUi");
-                        if(null!=ssid){
-                            WifiClass.ssid=ssid;
-                            Log.i("godlee","currentSSid:"+WifiClass.ssid);
-                        }
-                    }else{
+                                if(null!=ssid){
+                                    WifiClass.ssid=ssid;
+                                    Log.i("godlee","currentSSid:"+WifiClass.ssid);
+                                }
+                            }else{
 
+                            }
+                        }
                     }
+
                     break;
 //                case WifiManager.RSSI_CHANGED_ACTION:
 //

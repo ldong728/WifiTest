@@ -43,6 +43,10 @@
     if('local'==type){
         ssid=inf.ssid;
         window.wifi.linkWifi(getJsonString({ssid:ssid}));
+        app_tool.loading();
+        setTimeout(function(){
+            app_tool.loaded();
+        },10000);
     }else{
         window.light.initTime()
     }
@@ -52,9 +56,10 @@
 //            alert('ssid='+data+",localSSid="+ssid);
             if(data==ssid){
                 localLinked=true;
-                alert('localLinkedOk');
-
+                app_tool.loaded();
                 window.wifi.linkLights();
+            }else{
+                window.wifi.unlinkWifi();
             }
         }
     }
@@ -62,18 +67,22 @@
     function lightStandby(data){
         if(localLinked){
             alert('lightStanby');
-            window.light.initTime();
-            alert(window.light.tempMethod());
+            setTimeout(function(){window.light.initTime()},2000);
+//            alert(window.light.tempMethod());
+//            window.light.setManualCode(getJsonString({color:5,level:50}))
         }else{
 
         }
     }
+
+
     $('#linkLight').click(function(){
         window.wifi.linkLights();
     })
     $('#time').click(function(){
         window.light.initTime();
     })
+
 //    var deviceList=window.light.get
 
 

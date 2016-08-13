@@ -17,6 +17,7 @@ import java.util.Map;
  * 此类通过内置UDP控制器对群组灯光进行控制
  */
 public class LightControllerGroup {
+    public static final int RECEIVE_PORT=21195;
     private boolean mLocal = true;
     private boolean mGroupOnLine = false;
     private boolean sendOk = true;
@@ -32,7 +33,7 @@ public class LightControllerGroup {
         mSendBuffer = new HashMap<String, ArrayList<byte[]>>(16);
         buffer = new HashMap<String, DataPack>();
         mLightsController = new LightsController();
-        mUdpController = new UdpController(handler, 21195) {
+        mUdpController = new UdpController(handler, RECEIVE_PORT) {
             @Override
             public void onReceive(Handler handler, DataPack pack) {
                 DataPack fullPack = formatReceive(pack);

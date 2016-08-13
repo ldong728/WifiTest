@@ -76,7 +76,7 @@ public class Light {
         data[8]=(byte)0x00;
         data[9]=(byte)0x00;
         data[10]=(byte)0x00;
-        data[11]=(byte)(0x03+0x0a+mColor+level);
+        data[11]=(byte)(0x01+0x0a+mColor+level);
         mLevel=level;
         return data;
     }

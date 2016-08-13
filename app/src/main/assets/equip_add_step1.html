@@ -33,23 +33,27 @@
     var ssid="";
     app_tool.loading();
     window.wifi.scanWifi();
+
     $(document).on('click','.device-ssid',function(){
         app_tool.loading();
         ssid=$(this).text();
         alert('ready to link :'+ssid);
         window.wifi.linkWifi(getJsonString({ssid:ssid}));
-
+        setTimeout(linkedFail(),5000);
     });
+
 
     function onLinked(data){
         if(data==ssid){
             alert('ssid equal :'+data);
             app_tool.loaded();
             headerTo('equip_add_step2.html');
-
         }else{
 
         }
+    }
+    function linkedFail(){
+        app_tool.loaded();
     }
     function onGetWifiList(data){
         app_tool.loaded();
