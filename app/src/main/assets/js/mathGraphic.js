@@ -39,13 +39,13 @@ function initCanvas() {
     bufferCanvas.width = canvasWidth;
     bufferCanvas.height = canvasHeight;
     myCanvas.addEventListener('touchstart', touchStart, false);
-    document.addEventListener('touchmove', touchMove, false);
+    myCanvas.addEventListener('touchmove', touchMove, false);
     myCanvas.addEventListener('touchend', touchEnd, false);
     $('.colorSelect').click(function () {
         var id = $(this).attr('id');
         currentColor = id;
         drawBuffer();
-    })
+    });
     for (var i = 0; i < 7; i++) {
         drawList[i] = new color(i, colorList[i]);
     }
@@ -56,7 +56,7 @@ function drawBuffer() {
     bufferCanvas.width = bufferCanvas.width;
     $.each(drawList, function (k, v) {
         if (k != currentColor) {
-            //alert(v.color);
+            //alert(v.manualColor);
             v.drawSelf(bufferContext);
         }
     });
@@ -87,7 +87,7 @@ function touchStart(e) {
         continue;
     }
     drawList[currentColor].add(new point(x, y));
-    //window.wifi.sendCode(JSON.stringify({color:currentColor,time:index,level:105}))//必须代码
+    //window.wifi.sendCode(JSON.stringify({manualColor:currentColor,time:index,level:105}))//必须代码
 }
 function touchMove(e) {
     if (edgeIndex < 0) {
@@ -166,7 +166,7 @@ function color(index, color) {
         var cu = this.index == currentColor ? true : false;
         context.beginPath();
         context.strokeStyle = this.color;
-        //context.fillStyle=this.color;
+        context.fillStyle=this.color;
         context.lineWidth = 2;
         context.moveTo(this.controlPoints[0].x, this.controlPoints[0].y);
         $.each(this.controlPoints, function (k, v) {
@@ -182,9 +182,9 @@ function color(index, color) {
             $.each(this.controlPoints, function (k, v) {
                 if (k > -1 && v) {
                     context.beginPath();
-                    context.lineWidth = 10;
+                    //context.lineWidth = 10;
                     context.arc(v.x, v.y, 5, 0, Math.PI * 2);
-                    context.stroke();
+                    context.fill();
                 }
 
             })
@@ -308,7 +308,7 @@ function drawDotedLine(p1, p2) {
 //            test('closePath');
 }
 function sendCode(color,time,level){
-    //alert("color:"+currentColor+",index:"+time+",level:"+level);
+    //alert("manualColor:"+currentColor+",index:"+time+",level:"+level);
 }
 
 function initCode(data){

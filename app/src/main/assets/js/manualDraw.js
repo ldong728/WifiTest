@@ -3,14 +3,17 @@
  */
 
 var colorNumber = 7;//控制点数组长度
-var colorList = ['#A61583', '#571785', '#0D308E', '#0085C8', '#43AF37', '#B7080A', '#B1D0E2'];//颜色列表
-var colorNameList=['UV', '紫色', '深蓝', '蓝色', '绿色', '深红', '白色'];
+//var colorList = ['#A61583', '#571785', '#0D308E', '#0085C8', '#43AF37', '#B7080A', '#B1D0E2'];//颜色列表
+var colorList = ['#0D308E','#B1D0E2', '#B7080A','#A61583','#571785', '#0085C8', '#43AF37']
+var colorNameList=[ '深蓝','白色', '深红', 'UV', '紫色', '蓝色', '绿色'];
 var drawList = new Array(colorNumber);
+var tempLevel;
 var margin=20;
 var padding=10;
 var marginH = 10;
 var marginV = 10;
-var textSize=20;
+var textSize=14;
+var baseLineBorder=1;
 var baseValue=padding+textSize*3;
 var valueRange;
 var colorHeight;
@@ -29,13 +32,13 @@ $(document).ready(function () {
     window.requestAnimationFrame(draw);
 });
 function initCanvas() {
-    var sCanvas = $('.canvas_wrap').get(0);
+    var sCanvas = $('.manual_canvas_wrap').get(0);
     canvasWidth = sCanvas.clientWidth;
     canvasHeight = sCanvas.clientHeight;
     canvasLeft = sCanvas.getBoundingClientRect().left;
     canvasTop = sCanvas.getBoundingClientRect().top;
     //pOffset = (canvasWidth - marginV * 2) / colorNumber;
-    myCanvas = $('#drawing').get(0);
+    myCanvas = $('#manual_canvas').get(0);
     myCanvas.width = canvasWidth;
     myCanvas.height = canvasHeight;
     valueRange=canvasWidth-marginH*2-padding*3-textSize*4.5;
@@ -46,10 +49,10 @@ function initCanvas() {
     bufferCanvas.width = canvasWidth;
     bufferCanvas.height = canvasHeight;
     myCanvas.addEventListener('touchstart', touchStart, false);
-    document.addEventListener('touchmove', touchMove, false);
+    myCanvas.addEventListener('touchmove', touchMove, false);
     myCanvas.addEventListener('touchend', touchEnd, false);
     for (var i = 0; i < 7; i++) {
-        drawList[i] = new color(i, colorList[i]);
+        drawList[i] = new manualColor(i, colorList[i]);
     }
     drawBuffer();
 }
@@ -57,7 +60,7 @@ function drawBuffer() {
     bufferCanvas.width = bufferCanvas.width;
     $.each(drawList, function (k, v) {
         if (k != currentColor) {
-            //alert(v.color);
+            //alert(v.manualColor);
             v.drawSelf(bufferContext);
         }
     });
@@ -81,8 +84,17 @@ function touchStart(e) {
 function touchMove(e) {
         var x = e.touches[0].clientX - canvasLeft;
         var value = x - baseValue;
+
     if(value>=0&&value<=valueRange){
-        drawList[currentColor].setLevel(value);
+        drawList[currentColor].setValue(value);
+    }else if(value<0){
+        drawList[currentColor].setValue(0);
+    }else if(value>valueRange){
+        drawList[currentColor].setValue(valueRange);
+    }
+    if(tempLevel!=drawList[currentColor].level){
+        window.light.setManualCode(JSON.stringify({color:currentColor,level:drawList[currentColor].level}));
+        tempLevel=drawList[currentColor].level;
     }
 
         //$('#temp').text(level);
@@ -104,60 +116,53 @@ function getIndex(y) {
     return index;
 }
 
-function color(index, color) {
-    this.index = index;
-    this.color = color;
-    colorHeight=canvasHeight/7;
-    this.top=index*colorHeight;
-    this.value=0;
-    this.level=0;
+            function manualColor(index, color) {
+                this.index = index;
+                this.color = color;
+                colorHeight=canvasHeight/7;
+                this.top=index*colorHeight;
+                this.value=0;
+                this.level=0;
 
-    //this.controlPoints = new Array(pNumber);
-    //this.drawPoints = new Array();
-    //this.add = add;
-    //this.drawSelf = drawSelf;
-    //this.clearRange = clearRange;
-    //this.add(new point(marginH, canvasHeight - marginV));
-    //this.add(new point(canvasWidth - marginH, canvasHeight - marginV));
-    //function add(p) {
-    //    var index = getIndex(p.x);
-    //    this.controlPoints[index] = p;
-    //}
-    this.setLevel=function(value){
-        this.value=value;
-        this.level=parseInt(value * 100 / valueRange)
-    }
+                this.setValue=function(value){
+                    this.value=value;
+                    this.level=parseInt(value * 100 / valueRange)
+                }
 
-    this.drawSelf=function(context) {
-        var drawTop=this.top+padding;
-        context.beginPath();
-        context.lineWidth=3;
-        context.strokeStyle='#828282';
-        context.moveTo(baseValue,this.top+padding+5);
-        context.lineTo(baseValue+valueRange,this.top+padding+5);
-        context.stroke();
-        context.strokeStyle = this.color;
-        context.fillStyle=this.color;
-        context.lineWidth = 10;
-        context.beginPath();
-        context.moveTo(baseValue,drawTop+5)
-        context.lineTo(baseValue+this.value,this.top+padding+5);
-        context.arc(baseValue+this.value,this.top+padding+5,8, 0, Math.PI * 2);
-        context.stroke();
-        context.closePath();
-        context.beginPath();
-        context.strokeStyle='#ffffff';
-        context.lineWidth=6
-        context.arc(baseValue+this.value,this.top+padding+5,3, 0, Math.PI * 2,true);
-        context.stroke();
-        context.closePath();
-        context.font=textSize+"px '微软雅黑'";
-        context.fillText(colorNameList[this.index],padding,drawTop+textSize/2);
-        context.fillText(this.level+'%',baseValue+valueRange+padding*1.5,drawTop+textSize/2);
+                this.drawSelf=function(context) {
+                    var drawTop=this.top+padding;
+                    context.beginPath();
+                    context.lineWidth=baseLineBorder;
+                    context.strokeStyle='#CCCCCC';
+                    context.moveTo(baseValue,this.top+padding+5);
+                    context.lineTo(baseValue+valueRange,this.top+padding+5);
+                    context.stroke();
+                    context.strokeStyle = this.color;
+                    context.fillStyle=this.color;
+                    context.lineWidth = 3;
+                    context.beginPath();
+                    context.moveTo(baseValue,drawTop+5)
+                    context.lineTo(baseValue+this.value,this.top+padding+5);
+                    context.stroke();
+                    context.closePath();
+                    context.arc(baseValue+this.value,this.top+padding+5,6, 0, Math.PI * 2, true);
+                    context.fill();
+                    context.font='bold '+textSize+"px 'Helvetica,Arial'";
+                    context.fillText(colorNameList[this.index],padding,drawTop+textSize/2);
+                    context.fillText(this.level+'%',baseValue+valueRange+padding*1.5,drawTop+textSize/2);
+                    context.beginPath();
+                    context.fillStyle='#ffffff';
+                    context.lineWidth =2;
+                    context.arc(baseValue+this.value,this.top+padding+5, 2, 0, Math.PI * 2,true);
+                    context.fill();
+                    context.closePath();
 
-    }
 
-}
+
+
+                }
+
+            }
 
 
 

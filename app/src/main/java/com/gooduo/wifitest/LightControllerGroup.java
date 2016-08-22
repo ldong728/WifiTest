@@ -107,6 +107,7 @@ public class LightControllerGroup {
 
     public void manualController(int color, int level) {
         byte[] data = mLightsController.setManual(color, level);
+        mUdpController.sendMsg(data,UdpController.DEFALT_IP,UdpController.DATA_PORT);
         putCodeToQueue(data);
     }
 
@@ -341,7 +342,11 @@ public class LightControllerGroup {
                     if (Arrays.equals(data, packData)) {
                         synchronized (list) {
                             Log.i("godlee", "codeConfirmed");
-                            list.remove(list.indexOf(data));
+                            int index=list.indexOf(data);
+                            if(index>-1){
+                                list.remove(list.indexOf(data));
+                            }
+
                         }
                         break;
                     }

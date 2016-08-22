@@ -13,7 +13,10 @@ $(function() {
 var app_func = {
     // 初始化调用
     initBind: function() {
-        
+        var win_h = $(window).height();
+        if($('body').height() < win_h) {
+            $('body').height(win_h);
+        }
     }
 }
 
@@ -47,19 +50,20 @@ var app_form = {
         if (app_form.checkform()) {
             if (from == 'login') {
                 app_tool.loading(function() {
+
                     // 执行脚本
                     location.href = 'equip-index.html';
                 });
             } else if (from == 'reg') {
                 app_tool.loading(function() {
                     // 执行脚本
-                    var mail=$('#email').val();
-                    var pasd=$('#pass').val();
-                    var data=JSON.stringify({name:'',email:mail,phone:'',pasd:pasd})
-                    var id=window.light.addUser(data);
-                    if(id>-1){
+                     var mail=$('#email').val();
+                     var pasd=$('#pass').val();
+                     var data=JSON.stringify({name:'',email:mail,phone:'',pasd:pasd})
+                     var id=window.light.addUser(data);
+                     if(id>-1){
                         location.href="equip-index.html"
-                    }
+                     }
                     setTimeout(function() {
                         app_tool.loaded();
                     }, 3000);
@@ -106,7 +110,7 @@ var app_msg = {
     wifi: function(str, func) {
         app_tool.loaded();
         if (!$('.app-msg').length) {
-            $('body').append('<div class="app-msg slideInUp"><div class="txt" id="ssid">' + str + '</div><div class="wifi"><input type="text" id="pasd" name="wifipass" placeholder="密码" class="noset" /></div><div class="confirm"><span class="no">取消</span><span class="yes">连接</span></div></div>');
+            $('body').append('<div class="app-msg slideInUp"><div class="txt">' + str + '</div><div class="wifi"><input type="text" name="wifipass" placeholder="密码" class="noset" /></div><div class="confirm"><span class="no">取消</span><span class="yes">连接</span></div></div>');
             $('.no', '.app-msg').click(function() {
                 app_msg.animation();
             });
@@ -155,6 +159,22 @@ var app_tool = {
         if (typeof(func) === 'function') {
             func();
         }
+    }
+}
+
+// 侧边
+var app_slide = {
+    show: function() {
+        var animationEnd = 'webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend';
+        $('.app-slide-bg').fadeIn(300);
+        $('.app-slide').show().addClass(' animated slideInLeft').one(animationEnd, function() {
+            $('.app-slide-bg').click(function() {
+                $(this).fadeOut(300);
+                $('.app-slide').removeClass('slideInLeft').addClass('slideOutLeft').one(animationEnd, function() {
+                    $('.app-slide').hide().removeClass(' animated slideOutLeft');
+                });
+            });
+        });
     }
 }
 

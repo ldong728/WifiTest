@@ -57,6 +57,7 @@ public class JsLightBridge extends JsBridge {
             sJson = new JSONObject(data);
             color = Integer.parseInt(sJson.getString("color"));
             level = Integer.parseInt(sJson.getString("level"));
+            Log.i("godlee","color:"+color+" level:"+level);
             mLightControllerGroup.manualController(color, level);
         } catch (JSONException e) {
             Log.e("godlee", e.getMessage());
