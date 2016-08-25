@@ -31,6 +31,7 @@ public class WifiClass {
         this.mHandler=mHandler;
         mWifiManager = (WifiManager) mActivity.getSystemService(Context.WIFI_SERVICE);
         mWifiInfo = mWifiManager.getConnectionInfo();
+        ssid="";
     }
 
     public void switchWifi(boolean stu) {
@@ -96,6 +97,10 @@ public class WifiClass {
     }
 
     public void connectBySSID(String SSID) {
+        if(ssid.equals(SSID)){
+            Log.i("godlee","aready linked");
+            return;
+        }
         disConnectionWifi(getNetWorkId());
         WifiConfiguration config = isExsits(SSID);
         final int id;

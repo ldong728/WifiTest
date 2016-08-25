@@ -12,7 +12,7 @@ var margin=20;
 var padding=10;
 var marginH = 10;
 var marginV = 10;
-var textSize=14;
+var textSize=14*2;
 var baseLineBorder=1;
 var baseValue=padding+textSize*3;
 var valueRange;
@@ -33,8 +33,8 @@ $(document).ready(function () {
 });
 function initCanvas() {
     var sCanvas = $('.manual_canvas_wrap').get(0);
-    canvasWidth = sCanvas.clientWidth;
-    canvasHeight = sCanvas.clientHeight;
+    canvasWidth = sCanvas.clientWidth*2;
+    canvasHeight = sCanvas.clientHeight*2;
     canvasLeft = sCanvas.getBoundingClientRect().left;
     canvasTop = sCanvas.getBoundingClientRect().top;
     //pOffset = (canvasWidth - marginV * 2) / colorNumber;
@@ -54,6 +54,8 @@ function initCanvas() {
     for (var i = 0; i < 7; i++) {
         drawList[i] = new manualColor(i, colorList[i]);
     }
+    $('#manual_canvas').css('width',canvasWidth/2+'px');
+    $('#manual_canvas').css('height',canvasHeight/2+'px');
     drawBuffer();
 }
 function drawBuffer() {
@@ -72,7 +74,7 @@ function draw() {
     requestAnimationFrame(draw);
 }
 function touchStart(e) {
-    var y = e.touches[0].clientY - canvasTop;
+    var y = (e.touches[0].clientY - canvasTop)*2;
     var index = getIndex(y);
     if(index>-1){
         currentColor=index;
@@ -82,7 +84,7 @@ function touchStart(e) {
 
 }
 function touchMove(e) {
-        var x = e.touches[0].clientX - canvasLeft;
+        var x = (e.touches[0].clientX - canvasLeft)*2;
         var value = x - baseValue;
 
     if(value>=0&&value<=valueRange){
@@ -102,8 +104,8 @@ function touchMove(e) {
 
 }
 function touchEnd(e) {
-    var x= e.changedTouches[0].clientX - canvasLeft;
-    var y = e.changedTouches[0].clientY - canvasTop;
+    var x= (e.changedTouches[0].clientX - canvasLeft)*2;
+    var y = (e.changedTouches[0].clientY - canvasTop)*2;
 
 
 
@@ -130,22 +132,22 @@ function getIndex(y) {
                 }
 
                 this.drawSelf=function(context) {
-                    var drawTop=this.top+padding;
+                    var drawTop=this.top+padding*2;
                     context.beginPath();
-                    context.lineWidth=baseLineBorder;
+                    context.lineWidth=baseLineBorder*2;
                     context.strokeStyle='#CCCCCC';
-                    context.moveTo(baseValue,this.top+padding+5);
-                    context.lineTo(baseValue+valueRange,this.top+padding+5);
+                    context.moveTo(baseValue,this.top+padding*2+5);
+                    context.lineTo(baseValue+valueRange,this.top+padding*2+5);
                     context.stroke();
                     context.strokeStyle = this.color;
                     context.fillStyle=this.color;
-                    context.lineWidth = 3;
+                    context.lineWidth = 3*2;
                     context.beginPath();
                     context.moveTo(baseValue,drawTop+5)
-                    context.lineTo(baseValue+this.value,this.top+padding+5);
+                    context.lineTo(baseValue+this.value,this.top+padding*2+5);
                     context.stroke();
                     context.closePath();
-                    context.arc(baseValue+this.value,this.top+padding+5,6, 0, Math.PI * 2, true);
+                    context.arc(baseValue+this.value,this.top+padding*2+5,6*2, 0, Math.PI * 2, true);
                     context.fill();
                     context.font='bold '+textSize+"px 'Helvetica,Arial'";
                     context.fillText(colorNameList[this.index],padding,drawTop+textSize/2);
@@ -153,7 +155,7 @@ function getIndex(y) {
                     context.beginPath();
                     context.fillStyle='#ffffff';
                     context.lineWidth =2;
-                    context.arc(baseValue+this.value,this.top+padding+5, 2, 0, Math.PI * 2,true);
+                    context.arc(baseValue+this.value,this.top+padding*2+5, 2*2, 0, Math.PI * 2,true);
                     context.fill();
                     context.closePath();
 

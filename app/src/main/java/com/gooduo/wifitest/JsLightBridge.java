@@ -267,15 +267,18 @@ public class JsLightBridge extends JsBridge {
         }
     }
 
-//    @JavascriptInterface
-//    public void changeGroupType(final String inf){
-//        try{
-//            JSONObject obj=new JSONObject(inf);
-//
-//        }catch(JSONException e){
-//            e.printStackTrace();
-//        }
-//    }
+    @JavascriptInterface
+    public void changeGroupType(final String inf){
+        try{
+            JSONObject obj=new JSONObject(inf);
+            String ssid=obj.getString("ssid");
+            String pasd=obj.getString("pasd");
+            mDb.changeGroupType(ssid,pasd);
+
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+    }
 
     @JavascriptInterface
     public void addDevice(final String inf) {

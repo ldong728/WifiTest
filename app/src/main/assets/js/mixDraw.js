@@ -5,7 +5,7 @@
 var pNumber = 48;//控制点数组长度
 var colorNumber=7;
 var colorList = ['#0D308E','#B1D0E2', '#B7080A','#A61583','#571785', '#0085C8', '#43AF37'];
-var colorNameList=[ '深蓝','白色', '深红', 'UV', '紫色', '蓝色', '绿色'];
+var colorNameList=[ '深蓝','白色', '深红', 'U V', '紫色', '蓝色', '绿色'];
 var edgeL = 0;
 var edgeR = pNumber - 1;
 var drawList = new Array(7);
@@ -42,37 +42,24 @@ var marginV = 10;
 var paddingBottom;
 var edgeIndex = -1;
 var bgImg;
-var aRatio;
-var bRatio;
+//var ratio;
 $(document).ready(function () {
     initCanvas();
     window.requestAnimationFrame(draw);
 });
-var getPixelRatio = function(context) {
-    var backingStore = context.backingStorePixelRatio ||
-        context.webkitBackingStorePixelRatio ||
-        context.mozBackingStorePixelRatio ||
-        context.msBackingStorePixelRatio ||
-        context.oBackingStorePixelRatio ||
-        context.backingStorePixelRatio || 1;
-    return (window.devicePixelRatio || 1) / backingStore;
-};
 
 function initCanvas() {
-
+    var aCanvasWrap=$('.wrapA').get(0);
+    var bCanvasWrap=$('.wrapB').get(0);
     aCanvas = $('#aCanvas').get(0);
     aContext = aCanvas.getContext('2d');
     bCanvas = $('#bCanvas').get(0);
     bContext = bCanvas.getContext('2d');
-    //aRatio=getPixelRatio(aContext);
-    //bRatio=getPixelRatio(bContext);
-
-
     bgImg=$('#timeImg').get(0);
-    aCanvasWidth = aCanvas.clientWidth;
-    aCanvasHeight = aCanvas.clientHeight;
-    aCanvasLeft = aCanvas.getBoundingClientRect().left;
-    aCanvasTop = aCanvas.getBoundingClientRect().top;
+    aCanvasWidth = aCanvasWrap.clientWidth*2;
+    aCanvasHeight = aCanvasWrap.clientHeight*2;
+    aCanvasLeft = aCanvasWrap.getBoundingClientRect().left;
+    aCanvasTop = aCanvasWrap.getBoundingClientRect().top;
     pOffset = (aCanvasWidth - marginH * 2) / pNumber;
     //aCanvas = $('#drawing').get(0);
     aCanvas.width = aCanvasWidth;
@@ -83,10 +70,10 @@ function initCanvas() {
     aBufferCanvas.width = aCanvasWidth;
     aBufferCanvas.height = aCanvasHeight;
     paddingBottom=parseInt((aCanvasHeight-marginV)*30/230)
-    bCanvasWidth = bCanvas.clientWidth;
-    bCanvasHeight = bCanvas.clientHeight;
-    bCanvasLeft = bCanvas.getBoundingClientRect().left;
-    bCanvasTop = bCanvas.getBoundingClientRect().top;
+    bCanvasWidth = bCanvasWrap.clientWidth*2;
+    bCanvasHeight = bCanvasWrap.clientHeight*2;
+    bCanvasLeft = bCanvasWrap.getBoundingClientRect().left;
+    bCanvasTop = bCanvasWrap.getBoundingClientRect().top;
     //bCanvas = $('#manual_canvas').get(0);
     bCanvas.width = bCanvasWidth;
     bCanvas.height = bCanvasHeight;
@@ -99,13 +86,14 @@ function initCanvas() {
     colorHeight=bCanvasHeight-marginV*2;
     innerPaddingV=parseInt(colorHeight*0.05);
     innerPaddingH=parseInt(colorWidth*0.05);
-    textSize=parseInt(colorHeight*0.05);
-    valueRange=colorHeight*0.78;
+    textSize=parseInt(colorHeight*0.1);
+    valueRange=colorHeight*0.60;
 
     //colorHeight = (bCanvasHeight-marginV*2)/colorNumber;
     aCanvas.addEventListener('touchstart', touchStart, false);
     aCanvas.addEventListener('touchmove', touchMove, true);
     aCanvas.addEventListener('touchend', touchEnd, false);
+    bCanvas.addEventListener('touchstart',colorSelectTouch,false);
     //$('.colorSelect').click(function () {
     //    var id = $(this).attr('id');
     //    currentColor = id;
@@ -115,6 +103,10 @@ function initCanvas() {
         drawList[i] = new color(i, colorList[i]);
         palette[i]= new manualColor(i,colorList[i]);
     }
+    $('#aCanvas').css('width',aCanvasWidth/2+'px');
+    $('#aCanvas').css('height',aCanvasHeight/2+'px');
+    $('#bCanvas').css('width',bCanvasWidth/2+'px');
+    $('#bCanvas').css('height',bCanvasHeight/2+'px');
 
     drawBuffer();
 }
@@ -122,8 +114,8 @@ function drawBuffer() {
     //aaBufferContext.clearRect(0,0,aCanvasWidth,aCanvasHeight);
     aBufferCanvas.width = aBufferCanvas.width;
     bBufferCanvas.width = bBufferCanvas.width;
-    //aBufferContext.drawImage(bgImg,0,marginV,aCanvasWidth*aRatio,(aCanvasHeight-marginV)*aRatio);
     aBufferContext.drawImage(bgImg,0,marginV,aCanvasWidth,(aCanvasHeight-marginV));
+    //aBufferContext.drawImage(bgImg,0,marginV,aCanvasWidth,(aCanvasHeight-marginV));
     for(var i=0;i<colorNumber;i++){
         if(i!=currentColor){
             drawList[i].drawSelf(aBufferContext);
@@ -143,19 +135,22 @@ function drawBuffer() {
 function draw() {
     aCanvas.width = aCanvas.width;
     bCanvas.width = bCanvas.width;
+    aContext.drawImage(bgImg,0,marginV,aCanvasWidth,(aCanvasHeight-marginV));
     aContext.drawImage(aBufferCanvas, 0, 0,aCanvasWidth,aCanvasHeight);
     bContext.drawImage(bBufferCanvas,0,0,bCanvasWidth,bCanvasHeight);
     //aContext.drawImage(aBufferCanvas, 0, 0,aCanvasWidth,aCanvasHeight);
     //bContext.drawImage(bBufferCanvas,0,0,bCanvasWidth,bCanvasHeight);
     drawList[currentColor].drawSelf(aContext);
+    palette[currentColor].drawSelf(bContext);
     requestAnimationFrame(draw);
 }
 function touchStart(e) {
-    $('html,body').css('overflow','hidden');
-    var p = getTouchP(e);
-    var x = p.x;
-    var y = p.y;
-    var index = getIndex(x);
+    //$('html,body').css('overflow','hidden');
+    var x = (e.touches[0].clientX - aCanvasLeft)*2;
+    var y = (e.touches[0].clientY - aCanvasTop)*2;
+    //var x = p.x;
+    //var y = p.y;
+    var index = getCtrIndex(x);
     if (0 == index || pNumber - 1 == index) {
         edgeIndex = index;
     } else {
@@ -171,79 +166,120 @@ function touchStart(e) {
         continue;
     }
     drawList[currentColor].add(new point(x, y));
-    //window.wifi.sendCode(JSON.stringify({manualColor:currentColor,time:index,level:105}))//必须代码
+    window.light.sendAutoCode(JSON.stringify({color:currentColor,time:index,level:105,mode:'not'}))//必须代码
 }
 function touchMove(e) {
+    var level;
     if (edgeIndex < 0) {
-        var x = e.touches[0].clientX - aCanvasLeft;
-        var y = e.touches[0].clientY - aCanvasTop;
-        var index = getIndex(x);
+        var x = (e.touches[0].clientX - aCanvasLeft)*2;
+        var y = (e.touches[0].clientY - aCanvasTop)*2;
+        var index = getCtrIndex(x);
         if (index > edgeL && index < edgeR) {
             drawList[currentColor].clearRange(edgeL, edgeR);
             drawList[currentColor].add(new point(x, y));
+            //level=parseInt((aCanvasHeight -paddingBottom - y) / (aCanvasHeight - marginV-paddingBottom) * 100);
+            //palette[currentColor].setLevel(level);
+
         }
     } else {
         var index = edgeIndex;
-        var x = index * pOffset + marginH;
-        var y = e.touches[0].clientY - aCanvasTop;
+        var x = (index * pOffset + marginH);
+        var y = (e.touches[0].clientY - aCanvasTop)*2;
         drawList[currentColor].clearRange(edgeL, edgeR);
         drawList[currentColor].add(new point(x, y));
+
     }
+    level=parseInt((aCanvasHeight -paddingBottom - y) / (aCanvasHeight - marginV-paddingBottom) * 100);
+    if(level<0)level=0;
+    if(level>100)level=100;
+    palette[currentColor].setLevel(level);
 
 
 }
 function touchEnd(e) {
-    var y = e.changedTouches[0].clientY - aCanvasTop;
+    var level=0;
+    var x=0;
+    var index;
+    var y = (e.changedTouches[0].clientY - aCanvasTop)*2;
     //var level = parseInt((aCanvasHeight - marginV - y) / (aCanvasHeight - marginV * 2) * 100);
     if (edgeIndex < 0) {
-        var x = e.changedTouches[0].clientX - aCanvasLeft;
-        var index = getIndex(x);
+        x = (e.changedTouches[0].clientX - aCanvasLeft)*2;
+        index = getCtrIndex(x);
         if (index <=edgeL || index >= edgeR|| y<0) {
             drawList[currentColor].clearRange(edgeL, edgeR);
+            drawList[currentColor].fillLevelList(edgeL,edgeR);
             return;
         }else{
-            if(y<marginV)y=marginV;
-            if(y>aCanvasHeight-paddingBottom)y=aCanvasHeight-paddingBottom;
-            //if(x<marginH)x=marginH;
-            //if(x>aCanvasWidth-marginH)x=aCanvasWidth-marginH;
-            var level=parseInt((aCanvasHeight -paddingBottom - y) / (aCanvasHeight - marginV-paddingBottom) * 100);
+            if(y<(marginV))y=(marginV);
+            if(y>(aCanvasHeight-paddingBottom))y=(aCanvasHeight-paddingBottom);
+            level=parseInt((aCanvasHeight -paddingBottom - y) / (aCanvasHeight - marginV-paddingBottom) * 100);
             drawList[currentColor].add(new point(x, y));
-            sendCode(currentColor,index,level);
+            drawList[currentColor].fillLevelList(edgeL,index);
+            drawList[currentColor].fillLevelList(index,edgeR);
         }
 
     } else {
-        var index=edgeIndex;
-        if(y<marginV)y=marginV;
-        if(y>aCanvasHeight-paddingBottom)y=aCanvasHeight-paddingBottom;
-        var level=parseInt((aCanvasHeight - marginV - y) / (aCanvasHeight - marginV * 2) * 100);
-        var x = index * pOffset + marginH;
+        index=edgeIndex;
+        if(y<(marginV))y=(marginV);
+        if(y>(aCanvasHeight-paddingBottom))y=(aCanvasHeight-paddingBottom);
+        level=parseInt((aCanvasHeight - paddingBottom - y) / (aCanvasHeight - marginV-paddingBottom) * 100);
+        x = (index * pOffset + marginH);
         drawList[currentColor].add(new point(x, y));
-        sendCode(currentColor,index,level);
+        //if()
+
     }
-    //alert(level);
+        console.log("level:"+drawList[currentColor].getLevel(index));
+        window.light.sendAutoCode(JSON.stringify({color:currentColor,time:index,level:level,mode:'confirm'}))
 
 }
-function getIndex(x) {
+function colorSelectTouch(e){
+    var x = (e.touches[0].clientX - aCanvasLeft)*2;
+    var y = (e.touches[0].clientY - aCanvasTop)*2;
+    var colorIndex=getColorIndex(x);
+    if(colorIndex!=currentColor){
+        currentColor = colorIndex;
+        drawBuffer();
+    }
+}
+function getCtrIndex(x) {
     var index = ((x - marginH) / pOffset + 0.5) | 0;
     if (index > pNumber - 1)index = pNumber - 1;
     if (index < 0)index = 0;
     return index;
 }
+function getColorIndex(x){
+    var index = ((x - marginH) / colorWidth + 0.5) | 0;
+    if (index > colorNumber-1)index =  -1;
+    if (index < 0)index =-1;
+    return index;
+}
+function culculateLevel(index){
 
-function color(index, color) {
+}
+
+function color(index, colorIndex) {
+    var _=this;
     this.index = index;
-    this.color = color;
+    this.color = colorIndex;
     this.controlPoints = new Array(pNumber);
-    this.drawPoints = new Array();
+    this.levelList= new Array(pNumber);
+
+    this.fillLevelList=fillLevelList;
+    //this.drawPoints = new Array();
     this.add = add;
     this.drawSelf = drawSelf;
     this.clearRange = clearRange;
-    this.add(new point(marginH, aCanvasHeight - paddingBottom));
-    this.add(new point(aCanvasWidth - marginH, aCanvasHeight - paddingBottom));
+    this.add(new point(marginH, (aCanvasHeight - paddingBottom)));
+    this.add(new point((aCanvasWidth - marginH), (aCanvasHeight - paddingBottom)));
+
     function add(p) {
-        var index = getIndex(p.x);
-        this.controlPoints[index] = p;
+
+        var index1 = getCtrIndex(p.x);
+        this.controlPoints[index1] = p;
+        var y= p.y
+        this.levelList[index1]=getLevel(index1);
     }
+    this.getLevel=getLevel;
 
     function drawSelf(context) {
         var cu = this.index == currentColor ? true : false;
@@ -280,12 +316,31 @@ function color(index, color) {
             this.controlPoints[i] = null;
         }
     }
+    function fillLevelList(l,r){
+        var le=getLevel(l)
+        var tValue=getLevel(r)-le;
+        var tIndex=r-l;
+        var offset=tValue/tIndex;
+        for(var i=l+1;i<r;i++){
+            _.levelList[i]=le+(i-l)*offset;
+            console.log(i+': '+ _.levelList[i]||0);
+        }
+
+
+    }
+
+    function getLevel(ctrIndex){
+        var p=_.controlPoints[ctrIndex];
+        var y= p.y;
+        return parseInt((aCanvasHeight - paddingBottom - y) / (aCanvasHeight - marginV-paddingBottom) * 100)
+    }
 }
 function manualColor(index, color) {
     this.index = index;
     this.color = color;
     this.top=marginV;
-    this.left=index*colorWidth;
+    this.left=index*colorWidth+marginH;
+    this.lineWidth=colorWidth/4
     this.value=0;
     this.level=0;
 
@@ -294,7 +349,7 @@ function manualColor(index, color) {
         this.level=parseInt(value * 100 / valueRange)
     }
     this.setLevel=function(level){
-        this.level=level;
+        this.level=parseInt(level);
         this.value=parseInt(level*valueRange / 100);
     }
 
@@ -303,34 +358,15 @@ function manualColor(index, color) {
         context.strokeStyle = this.color;
         context.fillStyle=this.color;
         context.font='bold '+textSize+"px 'Helvetica,Arial'";
+        context.lineWidth=this.lineWidth;
         context.fillText(colorNameList[this.index],this.left+innerPaddingH,colorHeight-innerPaddingV);
         context.fillText(this.level+'%',this.left+innerPaddingH,textSize+innerPaddingV);
+        context.beginPath();
+        context.moveTo(this.left+this.lineWidth,colorHeight-innerPaddingV*2-textSize);
+        context.lineTo(this.left+this.lineWidth,colorHeight-innerPaddingV*2-textSize-(valueRange/100*this.level));
+        context.stroke();
+        context.closePath();
 
-        //context.beginPath();
-        //context.lineWidth=baseLineBorder;
-        //context.strokeStyle='#CCCCCC';
-        //context.moveTo(baseValue,this.top+bPadding+5);
-        //context.lineTo(baseValue+valueRange,this.top+bPadding+5);
-        //context.stroke();
-        //
-        //context.lineWidth = 3;
-        //context.beginPath();
-        //context.moveTo(baseValue,drawTop+5)
-        //context.lineTo(baseValue+this.value,this.top+bPadding+5);
-        //context.stroke();
-        //context.closePath();
-        //context.arc(baseValue+this.value,this.top+bPadding+5,6, 0, Math.PI * 2, true);
-        //context.fill();
-
-
-
-
-        //context.beginPath();
-        //context.fillStyle='#ffffff';
-        //context.lineWidth =2;
-        //context.arc(baseValue+this.value,this.top+bPadding+5, 2, 0, Math.PI * 2,true);
-        //context.fill();
-        //context.closePath();
     }
 
 }
