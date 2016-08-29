@@ -34,7 +34,7 @@
     var localLinked=false;
     var inf=window.light.initGroup();
     var ssid;
-    alert(inf);
+//    alert(inf);
     inf=eval('('+inf+')');
     var deviceList=inf.device;
     var type=inf.type;
@@ -44,19 +44,26 @@
         window.wifi.linkWifi(getJsonString({ssid:ssid}));
         app_tool.loading();
         setTimeout(function(){
-            app_tool.loaded();
+            if(!localLinked){
+
+                app_tool.loaded();
+                $('body').append('<div class="app-msg slideInUp"><div class="txt" id="ssid">自动连接失败，请在wifi设置界面选择“' + ssid + '”</div><div class="confirm"><span class="no">取消</span><span class="yes">连接</span></div></div>');
+            }
+
         },10000);
     }else{
         window.light.initTime()
     }
     function onLinked(data){
-//        alert('linked')
         if(!localLinked){
-//            alert('ssid='+data+",localSSid="+ssid);
             if(data==ssid){
                 localLinked=true;
                 app_tool.loaded();
-                window.wifi.linkLights();
+                setTimeout(function(){
+                    app_msg.animation();
+                    window.wifi.linkLights();
+                },1000);
+
             }else{
                 window.wifi.unlinkWifi();
             }
@@ -77,9 +84,16 @@
 
     $('#linkLight').click(function(){
         window.wifi.linkLights();
-    })
+    });
     $('#time').click(function(){
-        window.light.initTime();
+
+    });
+    $(document).on('click','.yes',function(){
+        window.wifi.wifiOpt();
+
+    });
+    $(document).on('click','.no',function(){
+        app_msg.animation();
     })
 
 //    var deviceList=window.light.get

@@ -116,8 +116,8 @@ public class LightControllerGroup {
         putCodeToQueue(code);
     }
 
-    public void setFlash(int level, int probability) {
-        byte[] code = mLightsController.setFlash(level, probability);
+    public void setFlash(int stu, int level, int probability) {
+        byte[] code = mLightsController.setFlash(stu,level, probability);
         putCodeToQueue(code);
     }
 

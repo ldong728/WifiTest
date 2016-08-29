@@ -337,11 +337,12 @@ public abstract class UdpController extends Thread {
         public void run() {
 
                 while (send) {
-                    if (sendMsgQueue.size() > 0) {
+//                    if (sendMsgQueue.size() > 0) {
                         synchronized (sendMsgQueue) {
                             DatagramPacket msg = sendMsgQueue.poll();
-                            UdpController.this.sendMsg(msg);
-
+                            if(null!=msg){
+                                UdpController.this.sendMsg(msg);
+                            }
 //                        Log.i("godlee", "sendMmsg:");
                             try {
                                 sleep(25);
@@ -349,7 +350,7 @@ public abstract class UdpController extends Thread {
                                 e.printStackTrace();
                             }
                         }
-                    }
+//                    }
 //                    try {
 //                        wait();
 //                    } catch (InterruptedException e) {

@@ -42,6 +42,7 @@ var marginV = 10;
 var paddingBottom;
 var edgeIndex = -1;
 var bgImg;
+var currentX=0;
 //var ratio;
 $(document).ready(function () {
     initCanvas();
@@ -64,11 +65,12 @@ function initCanvas() {
     //aCanvas = $('#drawing').get(0);
     aCanvas.width = aCanvasWidth;
     aCanvas.height = aCanvasHeight;
-
     aBufferCanvas = document.createElement('canvas');
     aBufferContext = aBufferCanvas.getContext('2d');
     aBufferCanvas.width = aCanvasWidth;
     aBufferCanvas.height = aCanvasHeight;
+    $('#aCanvas').css('width',aCanvasWidth/2+'px');
+    $('#aCanvas').css('height',aCanvasHeight/2+'px');
     paddingBottom=parseInt((aCanvasHeight-marginV)*30/230)
     bCanvasWidth = bCanvasWrap.clientWidth*2;
     bCanvasHeight = bCanvasWrap.clientHeight*2;
@@ -94,6 +96,8 @@ function initCanvas() {
     aCanvas.addEventListener('touchmove', touchMove, true);
     aCanvas.addEventListener('touchend', touchEnd, false);
     bCanvas.addEventListener('touchstart',colorSelectTouch,false);
+    bCanvas.addEventListener("touchmove",colorSelectMove,false);
+    bCanvas.addEventListener('touchend',colorSelectEnd,false);
     //$('.colorSelect').click(function () {
     //    var id = $(this).attr('id');
     //    currentColor = id;
@@ -103,8 +107,7 @@ function initCanvas() {
         drawList[i] = new color(i, colorList[i]);
         palette[i]= new manualColor(i,colorList[i]);
     }
-    $('#aCanvas').css('width',aCanvasWidth/2+'px');
-    $('#aCanvas').css('height',aCanvasHeight/2+'px');
+
     $('#bCanvas').css('width',bCanvasWidth/2+'px');
     $('#bCanvas').css('height',bCanvasHeight/2+'px');
 
@@ -113,24 +116,16 @@ function initCanvas() {
 function drawBuffer() {
     //aaBufferContext.clearRect(0,0,aCanvasWidth,aCanvasHeight);
     aBufferCanvas.width = aBufferCanvas.width;
-    bBufferCanvas.width = bBufferCanvas.width;
+    //bBufferCanvas.width = bBufferCanvas.width;
     aBufferContext.drawImage(bgImg,0,marginV,aCanvasWidth,(aCanvasHeight-marginV));
     //aBufferContext.drawImage(bgImg,0,marginV,aCanvasWidth,(aCanvasHeight-marginV));
     for(var i=0;i<colorNumber;i++){
         if(i!=currentColor){
             drawList[i].drawSelf(aBufferContext);
-            palette[i].drawSelf(bBufferContext);
+            //palette[i].drawSelf(bBufferContext);
         }
     }
-    //$.each(drawList, function (k, v) {
-    //    if (k != currentColor) {
-    //        //alert(v.manualColor);
-    //        v.drawSelf(aBufferContext);
-    //    }
-    //});
-    //$.each(palette,function(k,v){
-    //    )
-    //})
+
 }
 function draw() {
     aCanvas.width = aCanvas.width;
@@ -138,57 +133,52 @@ function draw() {
     aContext.drawImage(bgImg,0,marginV,aCanvasWidth,(aCanvasHeight-marginV));
     aContext.drawImage(aBufferCanvas, 0, 0,aCanvasWidth,aCanvasHeight);
     bContext.drawImage(bBufferCanvas,0,0,bCanvasWidth,bCanvasHeight);
-    //aContext.drawImage(aBufferCanvas, 0, 0,aCanvasWidth,aCanvasHeight);
-    //bContext.drawImage(bBufferCanvas,0,0,bCanvasWidth,bCanvasHeight);
     drawList[currentColor].drawSelf(aContext);
-    palette[currentColor].drawSelf(bContext);
+    for(var i=0;i<colorNumber;i++){
+            palette[i].drawSelf(bContext);
+    }
     requestAnimationFrame(draw);
 }
 function touchStart(e) {
-    //$('html,body').css('overflow','hidden');
     var x = (e.touches[0].clientX - aCanvasLeft)*2;
     var y = (e.touches[0].clientY - aCanvasTop)*2;
-    //var x = p.x;
-    //var y = p.y;
     var index = getCtrIndex(x);
     if (0 == index || pNumber - 1 == index) {
         edgeIndex = index;
     } else {
         edgeIndex = -1;
     }
-    edgeL = index;
-    edgeR = index;
-    if (index == pNumber - 1)edgeR = index - 1;
-    while (index > 0 && !drawList[currentColor].controlPoints[--edgeL]) {
-        continue;
-    }
-    while (index < pNumber - 1 && !drawList[currentColor].controlPoints[++edgeR]) {
-        continue;
-    }
+    if(drawList[currentColor].controlPoints[index-1])index-=1;
+    if(drawList[currentColor].controlPoints[index+1])index+=1;
+    getEdge(index);
     drawList[currentColor].add(new point(x, y));
-    window.light.sendAutoCode(JSON.stringify({color:currentColor,time:index,level:105,mode:'not'}))//必须代码
+    //window.light.sendAutoCode(JSON.stringify({color:currentColor,time:index,level:105,mode:'not'}))//必须代码
+    sendAutoCode(currentColor,index,105,false);
 }
 function touchMove(e) {
     var level;
+    var index;
     if (edgeIndex < 0) {
         var x = (e.touches[0].clientX - aCanvasLeft)*2;
         var y = (e.touches[0].clientY - aCanvasTop)*2;
-        var index = getCtrIndex(x);
+        index = getCtrIndex(x);
         if (index > edgeL && index < edgeR) {
             drawList[currentColor].clearRange(edgeL, edgeR);
             drawList[currentColor].add(new point(x, y));
             //level=parseInt((aCanvasHeight -paddingBottom - y) / (aCanvasHeight - marginV-paddingBottom) * 100);
             //palette[currentColor].setLevel(level);
+            culculateLevel(index);
 
         }
     } else {
-        var index = edgeIndex;
+        index = edgeIndex;
         var x = (index * pOffset + marginH);
         var y = (e.touches[0].clientY - aCanvasTop)*2;
         drawList[currentColor].clearRange(edgeL, edgeR);
         drawList[currentColor].add(new point(x, y));
-
+        culculateLevel(index)
     }
+
     level=parseInt((aCanvasHeight -paddingBottom - y) / (aCanvasHeight - marginV-paddingBottom) * 100);
     if(level<0)level=0;
     if(level>100)level=100;
@@ -208,6 +198,9 @@ function touchEnd(e) {
         if (index <=edgeL || index >= edgeR|| y<0) {
             drawList[currentColor].clearRange(edgeL, edgeR);
             drawList[currentColor].fillLevelList(edgeL,edgeR);
+            //window.light.sendAutoCode(JSON.stringify({color:currentColor,time:edgeL+1,level:110,mode:'confirm'}))
+            sendAutoCode(currentColor,edgeL+1,110,true);
+            currentX=-1;
             return;
         }else{
             if(y<(marginV))y=(marginV);
@@ -216,29 +209,77 @@ function touchEnd(e) {
             drawList[currentColor].add(new point(x, y));
             drawList[currentColor].fillLevelList(edgeL,index);
             drawList[currentColor].fillLevelList(index,edgeR);
+            currentX=x;
         }
 
     } else {
         index=edgeIndex;
+        var edge=index;
         if(y<(marginV))y=(marginV);
         if(y>(aCanvasHeight-paddingBottom))y=(aCanvasHeight-paddingBottom);
         level=parseInt((aCanvasHeight - paddingBottom - y) / (aCanvasHeight - marginV-paddingBottom) * 100);
         x = (index * pOffset + marginH);
         drawList[currentColor].add(new point(x, y));
-        //if()
-
+        if(0==index){
+            while (!drawList[currentColor].controlPoints[++edge]) {
+                continue;
+            }
+            drawList[currentColor].fillLevelList(index,edge);
+        }else if(pNumber-1==index){
+            while (!drawList[currentColor].controlPoints[--edge]) {
+                continue;
+            }
+            drawList[currentColor].fillLevelList(edge,index);
+        }
+        currentX=x;
     }
-        console.log("level:"+drawList[currentColor].getLevel(index));
-        window.light.sendAutoCode(JSON.stringify({color:currentColor,time:index,level:level,mode:'confirm'}))
+
+        //console.log("level:"+drawList[currentColor].getLevel(index));
+        //window.light.sendAutoCode(JSON.stringify({color:currentColor,time:index,level:level,mode:'confirm'}))
+        sendAutoCode(currentColor,index,level);
 
 }
 function colorSelectTouch(e){
-    var x = (e.touches[0].clientX - aCanvasLeft)*2;
-    var y = (e.touches[0].clientY - aCanvasTop)*2;
+    var x = (e.touches[0].clientX - bCanvasLeft)*2;
     var colorIndex=getColorIndex(x);
+    console.log(colorIndex);
     if(colorIndex!=currentColor){
         currentColor = colorIndex;
         drawBuffer();
+    }
+    if(currentX>-1){
+        var index=getCtrIndex(currentX);
+        getEdge(index);
+    }
+}
+function colorSelectMove(e){
+    var y = (e.touches[0].clientY - bCanvasTop)*2;
+    var level=parseInt((colorHeight-innerPaddingV*2-textSize-y)*100/valueRange);
+    if(level<0)level=0;
+     if(level>100)level=100;
+    palette[currentColor].setLevel(level);
+    if(currentX>-1){
+        var y=parseInt((aCanvasHeight -paddingBottom)- level * (aCanvasHeight - marginV-paddingBottom) / 100);
+        drawList[currentColor].clearRange(edgeL, edgeR);
+        drawList[currentColor].add(new point(currentX, y));
+
+        //palette[.]
+    }
+}
+function colorSelectEnd(e){
+    var y = (e.changedTouches[0].clientY - bCanvasTop)*2;
+    var level=parseInt((colorHeight-innerPaddingV*2-textSize-y)*100/valueRange);
+    if(level<0)level=0;
+    if(level>100)level=100;
+    palette[currentColor].setLevel(level);
+    if(currentX>-1){
+        var y=parseInt((aCanvasHeight -paddingBottom)- level * (aCanvasHeight - marginV-paddingBottom) / 100);
+        drawList[currentColor].clearRange(edgeL, edgeR);
+        var sIndex=drawList[currentColor].add(new point(currentX, y));
+        drawList[currentColor].fillLevelList(edgeL,sIndex);
+        drawList[currentColor].fillLevelList(sIndex,edgeR);
+        //window.light.sendAutoCode(JSON.stringify({color:currentColor,time:sIndex,level:level,mode:'confirm'}));
+        sendAutoCode(currentColor,sIndex,level,true);
     }
 }
 function getCtrIndex(x) {
@@ -249,12 +290,27 @@ function getCtrIndex(x) {
 }
 function getColorIndex(x){
     var index = ((x - marginH) / colorWidth + 0.5) | 0;
-    if (index > colorNumber-1)index =  -1;
+    if (index > colorNumber-1)index =  colorNumber-1;
     if (index < 0)index =-1;
     return index;
 }
 function culculateLevel(index){
-
+    for(var i=0; i<colorNumber;i++){
+        if(i!=currentColor){
+            palette[i].setLevel(drawList[i].levelList[index]||0)
+        }
+    }
+}
+function getEdge(index){
+    edgeL = index;
+    edgeR = index;
+    if (index == pNumber - 1)edgeR = index - 1;
+    while (index > 0 && !drawList[currentColor].controlPoints[--edgeL]) {
+        continue;
+    }
+    while (index < pNumber - 1 && !drawList[currentColor].controlPoints[++edgeR]) {
+        continue;
+    }
 }
 
 function color(index, colorIndex) {
@@ -278,6 +334,7 @@ function color(index, colorIndex) {
         this.controlPoints[index1] = p;
         var y= p.y
         this.levelList[index1]=getLevel(index1);
+        return index1;
     }
     this.getLevel=getLevel;
 
@@ -323,7 +380,7 @@ function color(index, colorIndex) {
         var offset=tValue/tIndex;
         for(var i=l+1;i<r;i++){
             _.levelList[i]=le+(i-l)*offset;
-            console.log(i+': '+ _.levelList[i]||0);
+            //console.log(i+': '+ _.levelList[i]||0);
         }
 
 
@@ -354,7 +411,7 @@ function manualColor(index, color) {
     }
 
     this.drawSelf=function(context) {
-        var drawTop=this.top+bPadding;
+        //var drawTop=this.top+bPadding;
         context.strokeStyle = this.color;
         context.fillStyle=this.color;
         context.font='bold '+textSize+"px 'Helvetica,Arial'";
@@ -442,19 +499,25 @@ function drawDotedLine(p1, p2) {
     aContext.closePath();
 //            test('closePath');
 }
-function sendCode(color,time,level){
+//function sendCode(color,time,level){
     //alert("manualColor:"+currentColor+",index:"+time+",level:"+level);
-}
+//}
 
 function initCode(data){
     var json=eval("("+data+")");
     $.each(json,function(color,stu){
+        var startIndex=0;
+        this.add(new point(marginH, (aCanvasHeight - paddingBottom)));
+        this.add(new point((aCanvasWidth - marginH), (aCanvasHeight - paddingBottom)));
         $.each(stu,function(time,level){
-            var x = index * pOffset + marginH;
+            var x = time * pOffset + marginH;
             //parseInt((aCanvasHeight - marginV - y) / (aCanvasHeight - marginV * 2) * 100);
-            var y= parseInt(canvas-marginV-level*(aCanvasHeight-marginV *2 )/100)
+            var y= parseInt(aCanvasHeight-paddingBottom-level*(aCanvasHeight-marginV -paddingBottom )/100)
             drawList[color].add(new point(x,y));
+            drawList[color].fillLevelList(startIndex,time);
+            startIndex=time;
         })
+        drawList[color].fillLevelList[startIndex,pNumber-1]
     });
 }
 

@@ -1,6 +1,7 @@
 package com.gooduo.wifitest;
 
 import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
  * Created by Administrator on 2016/7/15.
  */
 public class JsWifiBridge extends JsBridge{
-    public static final int JS=0xcafe;
+    
     private UdpController mUdpController;
     private WifiClass mWifiClass;
 //    private Handler mHandler;
@@ -26,6 +27,15 @@ public class JsWifiBridge extends JsBridge{
         mWifiClass =wm;
 //        mHandler=handler;
         this.mDb=mDb;
+    }
+    public static String trimSSid(String ssid){
+        String sData;
+        if(ssid.startsWith("\"")){
+            sData=ssid.replace("\"","");
+        }else{
+            sData=ssid;
+        }
+        return sData;
     }
     public void getList(byte[] data, WebView mWebView) {
         if(0x81==(data[3] & 0xff)){
@@ -61,12 +71,12 @@ public class JsWifiBridge extends JsBridge{
     }
     public String linkedOk(String data){
         if(null!=data){
-            String sData;
-            if(data.startsWith("\"")){
-                sData=data.replace("\"","");
-            }else{
-                sData=data;
-            }
+            String sData=trimSSid(data);
+//            if(data.startsWith("\"")){
+//                sData=data.replace("\"","");
+//            }else{
+//                sData=data;
+//            }
 
             postToJs("onLinked",sData);
             return sData;
@@ -137,21 +147,12 @@ public class JsWifiBridge extends JsBridge{
     public void unlinkWifi(){
         mWifiClass.disConnectionWifi(mWifiClass.getNetWorkId());
     }
-//    private void postToJs(String functionName,String value){
-//        JSONObject obj=new JSONObject();
-//        try{
-//            obj.accumulate("function",functionName);
-//            obj.accumulate("value",value);
-//            Message msg=mHandler.obtainMessage(JS,obj);
-//            mHandler.sendMessage(msg);
-//        }catch(JSONException e){
-//            Log.e("godlee",e.getMessage());
-//            e.printStackTrace();
-//        }
-//
-//
-//    }
 
+    @JavascriptInterface
+    public void wifiOpt(){
+//        Log.i("godlee","jump");
+       mHandler.sendEmptyMessage(TO_OPT);
+    }
 
 
 }

@@ -12,6 +12,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
+//import java.security.MessageDigest;
 
 /**
  * Created by Administrator on 2016/6/30.
@@ -82,10 +84,10 @@ public class LightsController {
         mCloudCode=data;
         return data;
     }
-    public byte[] setFlash(int level,int probability){
+    public byte[] setFlash(int stu, int level,int probability){
         int sLevel=level,sProbability=probability;
         byte[] data=new byte[12];
-        if(0==level){
+        if(0==stu){
             sLevel=0;
             sProbability=0;
         }
@@ -93,14 +95,14 @@ public class LightsController {
         data[1]=(byte)0x08;
         data[2]=(byte)0x0a;
         data[3]=(byte)0x05;
-        data[4]=(byte)sProbability;
-        data[5]=(byte)sLevel;
-        data[6]=(byte)0x00;
+        data[4]=(byte)stu;
+        data[5]=(byte)sProbability;
+        data[6]=(byte)sLevel;
         data[7]=(byte)0x00;
         data[8]=(byte)0x00;
         data[9]=(byte)0x00;
         data[10]=(byte)0x00;
-        data[11]=(byte)(0x05+0x0a+sProbability+sLevel);
+        data[11]=(byte)(0x05+0x0a+stu+sProbability+sLevel);
         mFlashCode=data;
         return data;
 
@@ -179,6 +181,26 @@ public class LightsController {
             }catch(ClassNotFoundException e){
                 Log.e("godlee",e.getMessage());
             }
+    }
+    public void setAutoMap(JSONObject data){
+        Iterator<String> colorIt=data.keys();
+        try{
+            while(colorIt.hasNext()){
+                String key=colorIt.next();
+                int color = Integer.parseInt(key);
+                JSONObject sub=data.getJSONObject(key);
+                Iterator<String> subIt=sub.keys();
+                while(subIt.hasNext()){
+                    String timeString= subIt.next();
+                    int time=Integer.parseInt(timeString);
+                    int level=sub.getInt(timeString);
+                    set(color,time,level);
+                }
+
+            }
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
     }
     public void initAutoMap(){
         for(int i=0;i<COLOR_NUM;i++){

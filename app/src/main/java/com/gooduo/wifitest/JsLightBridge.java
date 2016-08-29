@@ -86,12 +86,13 @@ public class JsLightBridge extends JsBridge {
     @JavascriptInterface
     public void setFlashCode(final String data) {
         JSONObject sJson;
-        int level, prob;
+        int level, prob,stu;
         try {
             sJson = new JSONObject(data);
+            stu = Integer.parseInt(sJson.getString("stu"));
             prob = Integer.parseInt(sJson.getString("prob"));
             level = Integer.parseInt(sJson.getString("level"));
-            mLightControllerGroup.setFlash(prob, level);
+            mLightControllerGroup.setFlash(stu,prob, level);
         } catch (JSONException e) {
             Log.e("godlee", e.getMessage());
             e.printStackTrace();
@@ -221,7 +222,7 @@ public class JsLightBridge extends JsBridge {
 
     @JavascriptInterface
     public String getUserInf() {
-//        Log.i("godlee","getInf");
+        Log.i("godlee","getInf");
         JSONObject obj = mDb.getUserInf();
         if (null != obj) {
             return obj.toString();
@@ -279,6 +280,18 @@ public class JsLightBridge extends JsBridge {
             e.printStackTrace();
         }
     }
+    @JavascriptInterface
+    public void mergeGroup(final String inf){
+        try{
+            JSONObject obj=new JSONObject(inf);
+            String ssid=obj.getString("ssid");
+            String pasd=obj.getString("pasd");
+            mDb.changeGroupType(ssid,pasd);
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+    }
+
 
     @JavascriptInterface
     public void addDevice(final String inf) {

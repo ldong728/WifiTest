@@ -178,9 +178,28 @@ public class Db extends SQLiteOpenHelper {
         ContentValues cv=new ContentValues();
         cv.put(G_SSID,ssid);
         cv.put(G_SSID_PASD,pasd);
-        cv.put(G_TYPE,GROUP_TYPE_ONLINE);
-        db.update(GROUP_TBL,cv,G_ID+"=?",new String[]{""+mCurrentGroupId});
+        cv.put(G_TYPE, GROUP_TYPE_ONLINE);
+        db.update(GROUP_TBL, cv, G_ID + "=?", new String[]{"" + mCurrentGroupId});
         db.close();
+    }
+    public void mergeGroup(int targetGid){
+
+        SQLiteDatabase db = getWritableDatabase();
+        String selection="G_ID=?";
+        String[] selectionArg=new String[]{""+ mCurrentGroupId};
+        Cursor sCursor=db.query(DEVICE_TBL, new String[]{D_MAC}, selection, selectionArg, null, null, null);
+        JSONObject[] deviceList=getStringQuery(sCursor);
+        try{
+            for(JSONObject obj : deviceList){
+                String dMac=obj.getString(D_MAC);
+
+            }
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+        ContentValues cv = new ContentValues();
+        cv.put(G_ID, mCurrentGroupId);
+
     }
     public JSONObject[] getGroupList(String type){
         String selection="U_ID=?";
@@ -239,6 +258,15 @@ public class Db extends SQLiteOpenHelper {
             db.close();
             return null;
         }
+    }
+
+    public void setCode(String type,byte[] code){
+        SQLiteDatabase db=getWritableDatabase();
+        ContentValues cv=new ContentValues();
+        cv.put(G_ID,mCurrentGroupId);
+        cv.put(C_TYPE,type);
+        cv.put(C_CODE,code);
+        db.replace(CODE_TBL,null,cv);
     }
     public String[] getValue(String tableName,String[] columes,String selection,String[] selectionArg){
         SQLiteDatabase db=getReadableDatabase();

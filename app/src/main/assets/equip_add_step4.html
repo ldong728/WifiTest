@@ -57,17 +57,17 @@
     $(document).on('click','.no',function(){
         app_msg.animation();
     })
-    function changeType(){
-        var ssid=$('#ssid').text();
-        var pasd=$('#pasd').val();
-
-    }
+//    function changeType(){
+//        var ssid=$('#ssid').text();
+//        var pasd=$('#pasd').val();
+//
+//    }
     function ap2staResult(back){
         var jsonData=eval('('+back+')');
         alert(jsonData.apStu);
         alert(jsonData.pasdStu);
         if(1==jsonData.apStu&&jsonData.pasdStu){
-
+            changeType()
         }
     }
 </script>

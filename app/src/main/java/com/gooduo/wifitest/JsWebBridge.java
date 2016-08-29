@@ -22,8 +22,12 @@ import java.util.Map;
  * Created by Administrator on 2016/7/26.
  */
 public class JsWebBridge extends JsBridge {
+    public static final String URL="192.168.0.53";
+    public static final String DEFAULT_CALLBACK="callback";
+    public static final String DEFAULT_CALLFAIL="callfail";
     private Db mDb;
     private RequestQueue mRequestQueue;
+
 
     public JsWebBridge(Handler handler, Db mDb, RequestQueue rq){
         super(handler);
@@ -33,10 +37,11 @@ public class JsWebBridge extends JsBridge {
     public void syncUserInf(){
 
     }
-    @JavascriptInterface
     private void sendRequest(JsonObjectRequest jor){
         mRequestQueue.add(jor);
     }
+
+
     private JsonObjectRequest createRequest(String url,String postParmJson, final String callBackName,final String callFailName){
         JSONObject postParm;
         try{
@@ -64,5 +69,22 @@ public class JsWebBridge extends JsBridge {
         }
 
     }
+
+//    private void postData
+
+    @JavascriptInterface
+    public void postData(final String data){
+        try{
+            JSONObject obj=new JSONObject(data);
+            String callBack=obj.getString("callBack");
+            String callFail=obj.getString("callFail");
+            String postData=obj.getString("data");
+            JsonObjectRequest jor=createRequest(URL, postData, callBack, callFail);
+            sendRequest(jor);
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+    }
+
 
 }

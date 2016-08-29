@@ -11,6 +11,7 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -66,6 +67,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                     break;
                 }
+                case JsBridge.TO_OPT:
+                    Intent sIntent=new Intent(Settings.ACTION_WIFI_SETTINGS);
+                    sActivity.startActivity(sIntent);
+                    break;
 
                 default:
                     break;
@@ -81,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         mRequestQueue= Volley.newRequestQueue(this);
         mWifiManage=new WifiClass(this,mHander);
+
         mUdpController = new UdpController(mHander) {
             @Override
             public void onReceive(Handler handler, DataPack pack) {
@@ -175,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
         mUdpController.setReceive(false);
         mUdpController.close();
         mLightControllerGroup.finishAll();
+        System.exit(0);
     }
 
     /**
