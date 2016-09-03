@@ -17,17 +17,19 @@
             <span class="pos-m">选择鱼缸</span>
         </div>
         <div class="item-list">
-            <div class="li">
-                <a href="equip-info.html" data-id="">鱼缸#1</a>
-            </div>
+            <!--<div class="li">-->
+                <!--<a href="equip-info.html" data-id="">鱼缸#1</a>-->
+            <!--</div>-->
 
-            <div class="li">
-                <a data-id="">鱼缸#3</a>
-            </div>
+            <!--<div class="li">-->
+                <!--<a data-id="">鱼缸#3</a>-->
+            <!--</div>-->
         </div>
     </div>
 <script>
-    var list=window.light.getGroupList("online")
+    var list=getGroupList("online");
+    var ssid,pasd,mac;
+    alert(list);
     if('[]'==list){
 //        alert('jump')
         headerTo('equip_add_step3.html')
@@ -35,11 +37,44 @@
         $('.item-list').empty();
         list=eval('('+list+')');
         $.each(list,function(k,v){
-            var content='<div class="li"><a id="'+ v.G_ID+'" data-id="">'+ v.G_NAME+'</a></div>';
-//            var content='<div class="group" id="'+ v.G_ID+'">'+ v.G_NAME+'</div>';
+            var content='<div class="li"><a class="group" id="'+ v.G_ID+'" data-id="">'+ v.G_NAME+'</a></div>';
+
             $('.item-list').append(content);
-        })
+        });
+        $('.item-list').append('<div class="li"><a href="equip_add_step3.html" data-id="">新建鱼缸</a></div>')
     }
+
+    $(document).on('click','.group',function(){
+        chooseGroup($(this).attr('id'));
+        var groupInf=eval('('+getGroupInf()+')');
+        ssid=groupInf.G_SSID;
+        pasd=groupInf.G_SSID_PASD;
+        if(!mac){
+            searchLight();
+        }else{
+            lightStandby(mac);
+        }
+    });
+    function lightStandby(data){
+            alert('lightStanby');
+            mac=data;
+            alert(mac);
+            alert(ssid);
+            alert(pasd);
+            setTimeout(function(){ap2sta(ssid,pasd)},2000);
+    }
+    function ap2staResult(back){
+        var jsonData=eval('('+back+')');
+        if(1==jsonData.apStu&&jsonData.pasdStu){
+            addDeviceToGroup({mac:mac});
+            headerTo('equip-info.html');
+        }else{
+
+        }
+    }
+
+
+
 </script>
 </body>
 </html>

@@ -27,32 +27,35 @@
     </div>
     <div class="app-nav">
         <a href="equip-index.html" class="n1">我的设备</a>
-        <a href="control_index.html" class="n2">控制中心</a>
+        <a href="control_mix.html" class="n2">控制中心</a>
         <a href="set_index.html" class="n4">个人中心</a>
     </div>
 <script>
     var localLinked=false;
     var inf=window.light.initGroup();
-    var ssid;
-//    alert(inf);
+    alert(inf);
     inf=eval('('+inf+')');
     var deviceList=inf.device;
     var type=inf.type;
+    var ssid=inf.ssid;
+    var currentSSid=getCurrentSSID();
+    if(ssid==currentSSid){
+        onLinked(ssid);
+    }
+    if(!localLinked){
+        if('local'==type){  //离线模式
 
-    if('local'==type){
-        ssid=inf.ssid;
-        window.wifi.linkWifi(getJsonString({ssid:ssid}));
-        app_tool.loading();
-        setTimeout(function(){
-            if(!localLinked){
-
-                app_tool.loaded();
-                $('body').append('<div class="app-msg slideInUp"><div class="txt" id="ssid">自动连接失败，请在wifi设置界面选择“' + ssid + '”</div><div class="confirm"><span class="no">取消</span><span class="yes">连接</span></div></div>');
-            }
-
-        },10000);
-    }else{
-        window.light.initTime()
+            window.wifi.linkWifi(getJsonString({ssid:ssid}));
+            app_tool.loading();
+            setTimeout(function(){
+                if(!localLinked){
+                    app_tool.loaded();
+                    $('body').append('<div class="app-msg slideInUp"><div class="txt" id="ssid">自动连接失败，请在wifi设置界面选择“' + ssid + '”</div><div class="confirm"><span class="no">取消</span><span class="yes">连接</span></div></div>');
+                }
+            },10000);
+        }else{
+            $('body').append('<div class="app-msg slideInUp"><div class="txt" id="ssid">请在wifi设置界面选择“' + ssid + '”</div><div class="confirm"><span class="no">取消</span><span class="yes">连接</span></div></div>');
+        }
     }
     function onLinked(data){
         if(!localLinked){
@@ -61,9 +64,8 @@
                 app_tool.loaded();
                 setTimeout(function(){
                     app_msg.animation();
-                    window.wifi.linkLights();
+                    searchLight();
                 },1000);
-
             }else{
                 window.wifi.unlinkWifi();
             }
@@ -94,7 +96,10 @@
     });
     $(document).on('click','.no',function(){
         app_msg.animation();
-    })
+    });
+    $(document).on('click','.n1',function(){
+
+    });
 
 //    var deviceList=window.light.get
 

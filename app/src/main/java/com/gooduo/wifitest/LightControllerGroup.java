@@ -1,6 +1,7 @@
 package com.gooduo.wifitest;
 
 import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -17,11 +18,13 @@ import java.util.Map;
  * 此类通过内置UDP控制器对群组灯光进行控制
  */
 public class LightControllerGroup {
-    public static final int RECEIVE_PORT=21195;
+    public static final int SEND_OK = 0xf0c0;
+    public static final int RECEIVE_PORT = 21195;
     private boolean mLocal = true;
     private boolean mGroupOnLine = false;
     private boolean sendOk = true;
     private boolean threadFlag = true;
+    private final Handler mHandle;
     public UdpController mUdpController;
     private final HashMap<String, String> mIPMap;//组内灯具表（Mac->IP）
     private final HashMap<String, ArrayList<byte[]>> mSendBuffer;//待发指令缓存（IP地址->指令列表）
@@ -29,6 +32,7 @@ public class LightControllerGroup {
     public LightsController mLightsController;
 
     public LightControllerGroup(Handler handler) {
+        mHandle = handler;
         mIPMap = new HashMap<String, String>(16);
         mSendBuffer = new HashMap<String, ArrayList<byte[]>>(16);
         buffer = new HashMap<String, DataPack>();
@@ -39,7 +43,7 @@ public class LightControllerGroup {
                 DataPack fullPack = formatReceive(pack);
 
                 if (null != fullPack) {
-                    if(Light.CODE_LENGTH==fullPack.getLength()){
+                    if (Light.CODE_LENGTH == fullPack.getLength()) {
 
                     }
                     reGroupSendQueue(fullPack);
@@ -56,10 +60,10 @@ public class LightControllerGroup {
         mSendBuffer.clear();
         buffer.clear();
         JSONObject sObj = mDb.getGroupInf();
-        JSONObject[] sDeviceObj= mDb.getDeviceList();
-        if (null != sObj&&sDeviceObj.length>0) {
+        JSONObject[] sDeviceObj = mDb.getDeviceList();
+        if (null != sObj && sDeviceObj.length > 0) {
             mLocal = true;
-            JSONObject returnData=new JSONObject();
+            JSONObject returnData = new JSONObject();
             try {
                 setAutoStu(mDb.getCode(Db.TYPE_AUTO));
                 setManualStu(mDb.getCode(Db.TYPE_MANUAL));
@@ -67,15 +71,17 @@ public class LightControllerGroup {
                 setFlashStu(mDb.getCode(Db.TYPE_FLASH));
                 setMoonStu(mDb.getCode(Db.TYPE_MOON));
                 String sGroupType = sObj.getString(Db.G_TYPE);
-                int index=0;
-                for(JSONObject obj:sDeviceObj){
-                    String mac=obj.getString(Db.D_MAC);
-                    if(sGroupType.equals(Db.GROUP_TYPE_LOCAL)){
-                        addGroupMember(mac,UdpController.DEFALT_IP);
-                    }else{
+//                Log.i("godlee","GroupType:"+sGroupType);
+                int index = 0;
+                for (JSONObject obj : sDeviceObj) {
+                    String mac = obj.getString(Db.D_MAC);
+//                    Log.i("godlee","deviceId:"+mac);
+                    if (sGroupType.equals(Db.GROUP_TYPE_LOCAL)) {
+                        addGroupMember(mac, UdpController.DEFALT_IP);
+                    } else {
                         addGroupMember(mac);
                     }
-                    returnData.accumulate(""+index,obj);
+                    returnData.accumulate("" + index, obj);
                     index++;
                 }
                 return returnData.toString();
@@ -107,7 +113,7 @@ public class LightControllerGroup {
 
     public void manualController(int color, int level) {
         byte[] data = mLightsController.setManual(color, level);
-        mUdpController.sendMsg(data,UdpController.DEFALT_IP,UdpController.DATA_PORT);
+        mUdpController.sendMsg(data, UdpController.DEFALT_IP, UdpController.DATA_PORT);
         putCodeToQueue(data);
     }
 
@@ -117,7 +123,7 @@ public class LightControllerGroup {
     }
 
     public void setFlash(int stu, int level, int probability) {
-        byte[] code = mLightsController.setFlash(stu,level, probability);
+        byte[] code = mLightsController.setFlash(stu, level, probability);
         putCodeToQueue(code);
     }
 
@@ -126,28 +132,51 @@ public class LightControllerGroup {
         putCodeToQueue(code);
     }
 
-    public String getAutoStu() {
-        return mLightsController.getJsonControlMap();
+//    public String getAutoStu() {
+//        return mLightsController.getJsonControlMap();
+//    }
+//
+//    public String getManualStu() {
+//        return mLightsController.getJsonManual();
+//    }
+//
+//    public String getCloudStu() {
+//        return mLightsController.getJsonCloud();
+//    }
+//
+//    public String getFlashStu() {
+//        return mLightsController.getJsonFlash();
+//    }
+//
+//    public String getMoonStu() {
+//        return mLightsController.getJsonMoon();
+//    }
+
+    public String getControlCodeJson(String controlType) {
+        switch (controlType) {
+            case Db.TYPE_AUTO: {
+                return mLightsController.getJsonControlMap();
+            }
+            case Db.TYPE_MANUAL: {
+                return mLightsController.getJsonManual();
+            }
+            case Db.TYPE_CLOUD: {
+                return mLightsController.getJsonCloud();
+            }
+            case Db.TYPE_FLASH: {
+                return mLightsController.getJsonFlash();
+            }
+            case Db.TYPE_MOON: {
+                return mLightsController.getJsonMoon();
+            }
+        }
+
+
+        return null;
     }
 
-    public String getManualStu() {
-        return mLightsController.getJsonManual();
-    }
-
-    public String getCloudStu() {
-        return mLightsController.getJsonCloud();
-    }
-
-    public String getFlashStu() {
-        return mLightsController.getJsonFlash();
-    }
-
-    public String getMoonStu() {
-        return mLightsController.getJsonMoon();
-    }
-
-    public byte[] getAutoMap() {
-        return mLightsController.getAutoMap();
+    public byte[] getControlMap(String type) {
+        return mLightsController.getControlCode(type);
     }
 
     public void setManualStu(byte[] data) {
@@ -156,7 +185,6 @@ public class LightControllerGroup {
 
     }
 
-    //    public void set
     public void setAutoStu(byte[] data) {
         if (null != data) mLightsController.setAutoMap(data);
         else mLightsController.initAutoMap();
@@ -212,7 +240,6 @@ public class LightControllerGroup {
                     }
                 }
                 if (inf[0].equals(UdpController.DEFALT_IP)) {//AP模式连接
-
                     synchronized (mIPMap) {
                         Iterator it = mIPMap.entrySet().iterator();
                         while (it.hasNext()) {
@@ -271,32 +298,38 @@ public class LightControllerGroup {
      */
     private void putCodeToQueue(byte[] code) {
         sendOk = false;
+//        Log.i("godlee","put code sendStuation:"+sendOk);
+
         ArrayList<byte[]> list = new ArrayList<byte[]>(48);
         for (int offset = 0; offset < code.length; offset += Light.CODE_LENGTH) {
             byte[] subCode = new byte[Light.CODE_LENGTH];
             System.arraycopy(code, offset, subCode, 0, Light.CODE_LENGTH);
             list.add(subCode);
         }
-        int mode=code[3]&0xff;
-        int colorOrValue=code[4]&0xff;//获取新指令特征，用以删除待发序列中相同指令或过时指令
+        int mode = code[3] & 0xff;
+        int colorOrValue = code[4] & 0xff;//获取新指令特征，用以删除待发序列中相同指令或过时指令
         synchronized (mSendBuffer) {
             Iterator it = mIPMap.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry<String, String> e = (Map.Entry<String, String>) it.next();
-                if (!e.getValue().equals("0,0,0,0")) {
-                    ArrayList<byte[]> oldList = mSendBuffer.get(e.getValue());
+                String targetIp = e.getValue();
+                if (!targetIp.equals("0,0,0,0")) {
+                    ArrayList<byte[]> oldList = mSendBuffer.get(targetIp);
                     if (oldList != null) {
                         synchronized (oldList) {
-                            for(byte[] oldCode:oldList){
-                                if((oldCode[3]&0xff)==mode&&(oldCode[4]&0xff)==colorOrValue){//删除待发序列中重复或过时指令
+                            for (byte[] oldCode : oldList) {
+                                if ((oldCode[3] & 0xff) == mode && (oldCode[4] & 0xff) == colorOrValue) {//删除待发序列中重复或过时指令
+                                    Log.i("godlee", "delete old code " + Tool.bytesToHexString(oldCode));
                                     oldList.remove(oldList.indexOf(oldCode));
+                                } else {
+//                                    Log.i("godlee","mode:new: "+mode+" old: "+(oldCode[3]&0xff)+" value:new: "+colorOrValue+" old: "+(oldCode[4]&0xff));
                                 }
                             }
                             oldList.addAll(list);
                         }
-                        mSendBuffer.put(e.getValue(), oldList);
+                        mSendBuffer.put(targetIp, oldList);
                     } else {
-                        mSendBuffer.put(e.getValue(), new ArrayList<byte[]>(list));
+                        mSendBuffer.put(targetIp, new ArrayList<byte[]>(list));
                     }
                 }
             }
@@ -341,9 +374,9 @@ public class LightControllerGroup {
                 for (byte[] data : list) {
                     if (Arrays.equals(data, packData)) {
                         synchronized (list) {
-                            Log.i("godlee", "codeConfirmed");
-                            int index=list.indexOf(data);
-                            if(index>-1){
+//                            Log.i("godlee", "codeConfirmed");
+                            int index = list.indexOf(data);
+                            if (index > -1) {
                                 list.remove(list.indexOf(data));
                             }
 
@@ -354,7 +387,8 @@ public class LightControllerGroup {
             }
         }
     }
-    private void reGroupSendQueue(byte[] data){
+
+    private void reGroupSendQueue(byte[] data) {
 
     }
 
@@ -362,23 +396,34 @@ public class LightControllerGroup {
         @Override
         public void run() {
             while (threadFlag) {
-                Iterator it = mSendBuffer.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry<String, ArrayList<byte[]>> e = (Map.Entry<String, ArrayList<byte[]>>) it.next();
-                    ArrayList<byte[]> list = e.getValue();
-                    String ip = e.getKey();
-                    if (null != list && (!ip.equals("0.0.0.0"))) {
-                        if (list.size() > 0) {
-                            synchronized (list) {
-                                for (byte[] data : list) {
+                if (mSendBuffer.size() > 0) {
+                    Iterator it = mSendBuffer.entrySet().iterator();
+                    while (it.hasNext()) {
+                        Map.Entry<String, ArrayList<byte[]>> e = (Map.Entry<String, ArrayList<byte[]>>) it.next();
+                        ArrayList<byte[]> list = e.getValue();
+                        String ip = e.getKey();
+                        if (null != list && (!ip.equals("0.0.0.0"))) {
+                            if (list.size() > 0) {
+                                synchronized (list) {
+                                    for (byte[] data : list) {
 //                                    Log.i("godlee","sendQueue: "+Tool.bytesToHexString(data));
-                                    mUdpController.putMsg(data, ip);
+                                        mUdpController.putMsg(data, ip);
+                                    }
+                                }
+                            } else {
+                                synchronized (mSendBuffer) {
+                                    mSendBuffer.remove(ip);
+//                                    Message msg=mHandle.obtainMessage(SEND_OK,ip);
                                 }
                             }
                         }
-
                     }
-
+                } else {
+//                    Log.i("godlee","is send ok? " +sendOk);
+                    if (!sendOk) {
+                        sendOk = true;
+                        mHandle.sendEmptyMessage(SEND_OK);
+                    }
 
                 }
                 try {

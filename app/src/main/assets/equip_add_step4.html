@@ -50,9 +50,9 @@
     })
     $(document).on('click','.yes',function(){
         pasd=$('#pasd').val();
+//        changeGroupType(ssid,pasd,false);
         window.wifi.ap2sta(getJsonString({ssid:ssid,pasd:pasd}));
-//        alert(ssid);
-//        alert(pasd)
+
     });
     $(document).on('click','.no',function(){
         app_msg.animation();
@@ -67,7 +67,7 @@
         alert(jsonData.apStu);
         alert(jsonData.pasdStu);
         if(1==jsonData.apStu&&jsonData.pasdStu){
-            changeType()
+           changeGroupType(ssid,pasd,false);
         }
     }
 </script>

@@ -45,13 +45,13 @@ public class LightsController {
     }
     public byte[] set(int color,int time,int level){
       byte[] temp= mLightsList[color].setPoint(time, level);
-        Log.i("godlee","shortCode: "+Tool.bytesToHexString(temp));
+        Log.i("godlee","set shortCode: "+Tool.bytesToHexString(temp));
 //        return mLightsList[color].getAutoCode();
         return temp;
     }
     public byte[] unset(int color,int time){
        byte[] temp= mLightsList[color].removeKey(time);
-        Log.i("godlee","shortCode: "+Tool.bytesToHexString(temp));
+        Log.i("godlee","unset shortCode: "+Tool.bytesToHexString(temp));
         return temp;
 //        return  mLightsList[color].getAutoCode();
     }
@@ -131,9 +131,39 @@ public class LightsController {
         mMoonCode=data;
         return data;
     }
+    public byte[] saveCode(){
+        byte[] data=new byte[]{(byte)0xaa,
+            (byte)0x08,
+            (byte)0x0a,
+            (byte)0x07,
+            (byte)0xa5,
+            (byte)0x00,
+            (byte)0x00,
+            (byte)0x00,
+            (byte)0x00,
+            (byte)0x00,
+            (byte)0x00,
+            (byte)0xb6};
+        return data;
+    }
+    public byte[] runCode(){
+        byte[] data=new byte[]{(byte)0xaa,
+                (byte)0x08,
+                (byte)0x0a,
+                (byte)0x08,
+                (byte)0x01,
+                (byte)0x00,
+                (byte)0x00,
+                (byte)0x00,
+                (byte)0x00,
+                (byte)0x00,
+                (byte)0x00,
+                (byte)0x13};
+        return data;
+    }
 
     /**
-     * 将自动模式的状态序列化成字节码便于储存（非控制字节码）
+     * 将自动模式的状态序列化成字节码便于储存（非控制字节码）（已过时）
      * @return 转换后的字节码
      */
     public byte[] getAutoMap(){
@@ -157,9 +187,9 @@ public class LightsController {
             return null;
         }
     }
-    public byte[] getManualMap(){
-        return mManualCode;
-    }
+//    public byte[] getManualMap(){
+//        return mManualCode;
+//    }
 
     /**
      * 将自动化控制的状态字节码转化成控制状态
@@ -179,7 +209,7 @@ public class LightsController {
             }catch(IOException e){
                 Log.e("godlee",e.getMessage());
             }catch(ClassNotFoundException e){
-                Log.e("godlee",e.getMessage());
+                Log.e("godlee", e.getMessage());
             }
     }
     public void setAutoMap(JSONObject data){
@@ -303,17 +333,13 @@ public class LightsController {
             return null;
         }
     }
-    public byte[] getmCloudCode() {
-        return mCloudCode;
-    }
+
 
     public void setmCloudCode(byte[] mCloudCode) {
         this.mCloudCode = mCloudCode;
     }
 
-    public byte[] getmFlashCode() {
-        return mFlashCode;
-    }
+
 
     public void setmFlashCode(byte[] mFlashCode) {
         this.mFlashCode = mFlashCode;
@@ -322,6 +348,57 @@ public class LightsController {
     public byte[] getmMoonCode() {
         return mMoonCode;
     }
+
+    /**
+     * 获取可保存如数据库的控制指令
+     * @param codeType 指令类型，包括，手动，自动及各种情景模式
+     * @return byte[] byte数组，可直接保存入数据库
+     */
+    public byte[] getControlCode(String codeType){
+        switch(codeType){
+            case Db.TYPE_AUTO:{
+                ArrayList<ControllerPoint> sList= new ArrayList<ControllerPoint>(COLOR_NUM*Light.TOTAL);
+                int offset=0;
+                for(int i=0; i<COLOR_NUM; i++){
+                    ControllerPoint[] src = mLightsList[i].getControlMap();
+                    for(ControllerPoint c : src){
+                        sList.add(c);
+                    }
+                }
+                Log.i("godlee",""+sList.get(245).getLevel());
+                ByteArrayOutputStream obj=new ByteArrayOutputStream();
+                try{
+                    ObjectOutputStream out=new ObjectOutputStream(obj);
+                    out.writeObject(sList);
+                    return obj.toByteArray();
+//            return new byte[]{(byte)0x12,0x45};
+                }catch(IOException e){
+                    Log.e("godlee",e.getMessage());
+                    return null;
+                }
+            }
+            case Db.TYPE_MANUAL:{
+                byte[] data=new byte[COLOR_NUM];
+                for(int i=0; i<COLOR_NUM;i++){
+                    data[i]=mLightsList[i].getManuelLevel();
+                }
+                return data;
+            }
+            case Db.TYPE_CLOUD:{
+                return mCloudCode;
+            }
+            case Db.TYPE_FLASH:{
+                return mFlashCode;
+            }
+            case Db.TYPE_MOON:{
+                return mMoonCode;
+            }
+        }
+        return null;
+    }
+
+
+
 
     public void setmMoonCode(byte[] mMoonCode) {
         this.mMoonCode = mMoonCode;
@@ -338,13 +415,13 @@ public class LightsController {
         data.flip();
         return data.array();
     }
-    public byte[] getmManualCode(){
-        byte[] data=new byte[COLOR_NUM];
-        for(int i=0; i<COLOR_NUM;i++){
-            data[i]=mLightsList[i].getManuelLevel();
-        }
-        return data;
-    }
+//    public byte[] getmManualCode(){
+//        byte[] data=new byte[COLOR_NUM];
+//        for(int i=0; i<COLOR_NUM;i++){
+//            data[i]=mLightsList[i].getManuelLevel();
+//        }
+//        return data;
+//    }
 
     public void displayTemp(){
         for(Light l: mLightsList){

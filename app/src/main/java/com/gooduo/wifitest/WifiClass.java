@@ -172,8 +172,8 @@ public class WifiClass {
         return (mWifiInfo == null) ? "NULL" : mWifiInfo.getMacAddress();
     }
 
-    public String getBSSID() {
-        return (mWifiInfo == null) ? "NULL" : mWifiInfo.getBSSID();
+    public String getSSID() {
+        return (mWifiInfo == null) ? "NULL" : mWifiInfo.getSSID();
     }
 
     public int getIpAddress() {

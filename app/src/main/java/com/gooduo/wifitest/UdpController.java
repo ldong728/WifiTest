@@ -123,12 +123,12 @@ public abstract class UdpController extends Thread {
                 socket.receive(revPacket);
                 String fromIp=revPacket.getAddress().getHostAddress();
                 int fromPort=revPacket.getPort();
-                Log.i("godlee","receiveLength:"+revPacket.getLength());
+//                Log.i("godlee","receiveLength:"+revPacket.getLength());
                 if(broadcast||ip.equals(fromIp)){
                     if (null != handler) {
                         byte[] realData = new byte[revPacket.getLength()];
                         System.arraycopy(data, 0, realData, 0, revPacket.getLength());
-                        Log.i("godlee",Tool.bytesToHexString(realData));
+//                        Log.i("godlee",Tool.bytesToHexString(realData));
                         onReceive(handler,new DataPack(fromIp,fromPort,realData));
                     }
                 }
@@ -246,8 +246,8 @@ public abstract class UdpController extends Thread {
     private void sendMsg(DatagramPacket pkg) {
         if (socket != null) {
             try {
-                Log.i("godlee", "DATA_PORT------------------->" + DATA_PORT);
-                Log.i("godlee","sendContent: "+Tool.bytesToHexString(pkg.getData()));
+//                Log.i("godlee", "DATA_PORT------------------->" + DATA_PORT);
+//                Log.i("godlee","sendContent: "+Tool.bytesToHexString(pkg.getData()));
 //                Log.i("godlee","sendToip":pkg.)
 //                DatagramPacket sendPacket = new DatagramPacket(msg, msg.length,
 //                        InetAddress.getByName(ip), DATA_PORT);
@@ -267,8 +267,8 @@ public abstract class UdpController extends Thread {
     public void sendMsg(byte[] msg,String ip,int port) {
         if (socket != null) {
             try {
-                Log.i("godlee", "sendtoPort------------------->" + port);
-                Log.i("godlee","sendContent: "+msg );
+//                Log.i("godlee", "sendtoPort------------------->" + port);
+//                Log.i("godlee","sendContent: "+msg );
                 DatagramPacket sendPacket = new DatagramPacket(msg, msg.length,
                         InetAddress.getByName(ip), port);
                 socket.send(sendPacket);
@@ -345,7 +345,7 @@ public abstract class UdpController extends Thread {
                             }
 //                        Log.i("godlee", "sendMmsg:");
                             try {
-                                sleep(25);
+                                sleep(21);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }

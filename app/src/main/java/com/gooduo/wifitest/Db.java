@@ -208,11 +208,11 @@ public class Db extends SQLiteOpenHelper {
         switch(type){
             case GROUP_TYPE_LOCAL:
                 selection=U_ID+"=? and "+G_TYPE+"=?";
-                selectionArgs=new String[]{GROUP_TYPE_LOCAL};
+                selectionArgs=new String[]{""+mCurrentUserId,GROUP_TYPE_LOCAL};
                 break;
             case GROUP_TYPE_ONLINE:
                 selection=U_ID+"=? and "+G_TYPE+"=?";
-                selectionArgs=new String[]{GROUP_TYPE_ONLINE};
+                selectionArgs=new String[]{""+mCurrentUserId,GROUP_TYPE_ONLINE};
                 break;
             default:
                 break;

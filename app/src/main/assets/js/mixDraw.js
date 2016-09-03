@@ -43,6 +43,7 @@ var paddingBottom;
 var edgeIndex = -1;
 var bgImg;
 var currentX=0;
+var colorControlable=false;
 //var ratio;
 $(document).ready(function () {
     initCanvas();
@@ -62,7 +63,6 @@ function initCanvas() {
     aCanvasLeft = aCanvasWrap.getBoundingClientRect().left;
     aCanvasTop = aCanvasWrap.getBoundingClientRect().top;
     pOffset = (aCanvasWidth - marginH * 2) / pNumber;
-    //aCanvas = $('#drawing').get(0);
     aCanvas.width = aCanvasWidth;
     aCanvas.height = aCanvasHeight;
     aBufferCanvas = document.createElement('canvas');
@@ -76,7 +76,6 @@ function initCanvas() {
     bCanvasHeight = bCanvasWrap.clientHeight*2;
     bCanvasLeft = bCanvasWrap.getBoundingClientRect().left;
     bCanvasTop = bCanvasWrap.getBoundingClientRect().top;
-    //bCanvas = $('#manual_canvas').get(0);
     bCanvas.width = bCanvasWidth;
     bCanvas.height = bCanvasHeight;
 
@@ -91,18 +90,14 @@ function initCanvas() {
     textSize=parseInt(colorHeight*0.1);
     valueRange=colorHeight*0.60;
 
-    //colorHeight = (bCanvasHeight-marginV*2)/colorNumber;
     aCanvas.addEventListener('touchstart', touchStart, false);
     aCanvas.addEventListener('touchmove', touchMove, true);
     aCanvas.addEventListener('touchend', touchEnd, false);
     bCanvas.addEventListener('touchstart',colorSelectTouch,false);
     bCanvas.addEventListener("touchmove",colorSelectMove,false);
     bCanvas.addEventListener('touchend',colorSelectEnd,false);
-    //$('.colorSelect').click(function () {
-    //    var id = $(this).attr('id');
-    //    currentColor = id;
-    //    drawBuffer();
-    //});
+
+
     for (var i = 0; i < 7; i++) {
         drawList[i] = new color(i, colorList[i]);
         palette[i]= new manualColor(i,colorList[i]);
@@ -110,19 +105,16 @@ function initCanvas() {
 
     $('#bCanvas').css('width',bCanvasWidth/2+'px');
     $('#bCanvas').css('height',bCanvasHeight/2+'px');
-
+    initCode(getCode("TYPE_AUTO"));
     drawBuffer();
+
 }
 function drawBuffer() {
-    //aaBufferContext.clearRect(0,0,aCanvasWidth,aCanvasHeight);
     aBufferCanvas.width = aBufferCanvas.width;
-    //bBufferCanvas.width = bBufferCanvas.width;
     aBufferContext.drawImage(bgImg,0,marginV,aCanvasWidth,(aCanvasHeight-marginV));
-    //aBufferContext.drawImage(bgImg,0,marginV,aCanvasWidth,(aCanvasHeight-marginV));
     for(var i=0;i<colorNumber;i++){
         if(i!=currentColor){
             drawList[i].drawSelf(aBufferContext);
-            //palette[i].drawSelf(bBufferContext);
         }
     }
 
@@ -199,7 +191,8 @@ function touchEnd(e) {
             drawList[currentColor].clearRange(edgeL, edgeR);
             drawList[currentColor].fillLevelList(edgeL,edgeR);
             //window.light.sendAutoCode(JSON.stringify({color:currentColor,time:edgeL+1,level:110,mode:'confirm'}))
-            sendAutoCode(currentColor,edgeL+1,110,true);
+            sendAutoCode(currentColor,edgeR-1,110,true);
+            palette[currentColor].setLevel(0);
             currentX=-1;
             return;
         }else{
@@ -236,7 +229,7 @@ function touchEnd(e) {
 
         //console.log("level:"+drawList[currentColor].getLevel(index));
         //window.light.sendAutoCode(JSON.stringify({color:currentColor,time:index,level:level,mode:'confirm'}))
-        sendAutoCode(currentColor,index,level);
+        sendAutoCode(currentColor,index,level,true);
 
 }
 function colorSelectTouch(e){
@@ -250,37 +243,48 @@ function colorSelectTouch(e){
     if(currentX>-1){
         var index=getCtrIndex(currentX);
         getEdge(index);
+        var y = (e.touches[0].clientY - bCanvasTop)*2;
+        var level=parseInt((colorHeight-innerPaddingV*2-textSize-y)*100/valueRange);
+        if(level>-1&&level<101){
+            colorControlable=true;
+        }else{
+            colorControlable=false;
+        }
     }
+
 }
 function colorSelectMove(e){
-    var y = (e.touches[0].clientY - bCanvasTop)*2;
-    var level=parseInt((colorHeight-innerPaddingV*2-textSize-y)*100/valueRange);
-    if(level<0)level=0;
-     if(level>100)level=100;
-    palette[currentColor].setLevel(level);
-    if(currentX>-1){
-        var y=parseInt((aCanvasHeight -paddingBottom)- level * (aCanvasHeight - marginV-paddingBottom) / 100);
-        drawList[currentColor].clearRange(edgeL, edgeR);
-        drawList[currentColor].add(new point(currentX, y));
-
-        //palette[.]
+    if(colorControlable){
+        var y = (e.touches[0].clientY - bCanvasTop)*2;
+        var level=parseInt((colorHeight-innerPaddingV*2-textSize-y)*100/valueRange);
+        if(level<0)level=0;
+        if(level>100)level=100;
+        palette[currentColor].setLevel(level);
+        if(currentX>-1){
+            var y=parseInt((aCanvasHeight -paddingBottom)- level * (aCanvasHeight - marginV-paddingBottom) / 100);
+            drawList[currentColor].clearRange(edgeL, edgeR);
+            drawList[currentColor].add(new point(currentX, y));
+        }
     }
 }
 function colorSelectEnd(e){
-    var y = (e.changedTouches[0].clientY - bCanvasTop)*2;
-    var level=parseInt((colorHeight-innerPaddingV*2-textSize-y)*100/valueRange);
-    if(level<0)level=0;
-    if(level>100)level=100;
-    palette[currentColor].setLevel(level);
-    if(currentX>-1){
-        var y=parseInt((aCanvasHeight -paddingBottom)- level * (aCanvasHeight - marginV-paddingBottom) / 100);
-        drawList[currentColor].clearRange(edgeL, edgeR);
-        var sIndex=drawList[currentColor].add(new point(currentX, y));
-        drawList[currentColor].fillLevelList(edgeL,sIndex);
-        drawList[currentColor].fillLevelList(sIndex,edgeR);
-        //window.light.sendAutoCode(JSON.stringify({color:currentColor,time:sIndex,level:level,mode:'confirm'}));
-        sendAutoCode(currentColor,sIndex,level,true);
+    if(colorControlable){
+        var y = (e.changedTouches[0].clientY - bCanvasTop)*2;
+        var level=parseInt((colorHeight-innerPaddingV*2-textSize-y)*100/valueRange);
+        if(level<0)level=0;
+        if(level>100)level=100;
+        palette[currentColor].setLevel(level);
+        if(currentX>-1){
+            var y=parseInt((aCanvasHeight -paddingBottom)- level * (aCanvasHeight - marginV-paddingBottom) / 100);
+            drawList[currentColor].clearRange(edgeL, edgeR);
+            var sIndex=drawList[currentColor].add(new point(currentX, y));
+            drawList[currentColor].fillLevelList(edgeL,sIndex);
+            drawList[currentColor].fillLevelList(sIndex,edgeR);
+            //window.light.sendAutoCode(JSON.stringify({color:currentColor,time:sIndex,level:level,mode:'confirm'}));
+            sendAutoCode(currentColor,sIndex,level,true);
+        }
     }
+
 }
 function getCtrIndex(x) {
     var index = ((x - marginH) / pOffset + 0.5) | 0;
@@ -374,6 +378,9 @@ function color(index, colorIndex) {
         }
     }
     function fillLevelList(l,r){
+        console.log("haha");
+        l=parseInt(l);
+        r=parseInt(r);
         var le=getLevel(l)
         var tValue=getLevel(r)-le;
         var tIndex=r-l;
@@ -507,8 +514,8 @@ function initCode(data){
     var json=eval("("+data+")");
     $.each(json,function(color,stu){
         var startIndex=0;
-        this.add(new point(marginH, (aCanvasHeight - paddingBottom)));
-        this.add(new point((aCanvasWidth - marginH), (aCanvasHeight - paddingBottom)));
+        drawList[color].add(new point(marginH, (aCanvasHeight - paddingBottom)));
+        drawList[color].add(new point((aCanvasWidth - marginH), (aCanvasHeight - paddingBottom)));
         $.each(stu,function(time,level){
             var x = time * pOffset + marginH;
             //parseInt((aCanvasHeight - marginV - y) / (aCanvasHeight - marginV * 2) * 100);
@@ -516,8 +523,8 @@ function initCode(data){
             drawList[color].add(new point(x,y));
             drawList[color].fillLevelList(startIndex,time);
             startIndex=time;
-        })
-        drawList[color].fillLevelList[startIndex,pNumber-1]
+        });
+        drawList[color].fillLevelList(startIndex,pNumber-1);
     });
 }
 

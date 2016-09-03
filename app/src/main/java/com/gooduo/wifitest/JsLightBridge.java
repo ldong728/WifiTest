@@ -25,13 +25,13 @@ public class JsLightBridge extends JsBridge {
     }
 
     @JavascriptInterface
-    public void sendAutoCode(final String data) {
+    public String sendAutoCode(final String data) {
 
-        byte[] map = mLightControllerGroup.getAutoMap();
-        Log.i("godlee", "put code" + Tool.bytesToHexString(map));
+//        byte[] map = mLightControllerGroup.getAutoMap();
+//        Log.i("godlee", "put code" + Tool.bytesToHexString(map));
 //        mDb.temp();
 //        mDb.saveCode(Db.TYPE_AUTO, map);
-        Log.i("godlee", "put ok");
+//        Log.i("godlee", "put ok");
         JSONObject sJson;
         int color, time, level;
         boolean send;
@@ -41,12 +41,17 @@ public class JsLightBridge extends JsBridge {
             time = Integer.parseInt(sJson.getString("time"));
             level = Integer.parseInt(sJson.getString("level"));
             send = sJson.getString("mode").equals("confirm") ? true : false;
+            Log.i("godlee", "color: " + color + " time: " + time + " level: " + level);
             mLightControllerGroup.autoController(color, time, level, send);
+            return "1";
         } catch (JSONException e) {
             Log.e("godlee", e.getMessage());
             e.printStackTrace();
+            return "0";
         }
     }
+
+
 
     @JavascriptInterface
     public void setManualCode(final String data) {
@@ -92,9 +97,10 @@ public class JsLightBridge extends JsBridge {
             stu = Integer.parseInt(sJson.getString("stu"));
             prob = Integer.parseInt(sJson.getString("prob"));
             level = Integer.parseInt(sJson.getString("level"));
-            mLightControllerGroup.setFlash(stu,prob, level);
+            mLightControllerGroup.setFlash(stu, prob, level);
         } catch (JSONException e) {
             Log.e("godlee", e.getMessage());
+
             e.printStackTrace();
         }
     }
@@ -153,29 +159,39 @@ public class JsLightBridge extends JsBridge {
         return "ok";
     }
     @JavascriptInterface
-    public String getAutoCode() {
-        return mLightControllerGroup.getAutoStu();
+    public String getControlCode(final String type){
+        return mLightControllerGroup.getControlCodeJson(type);
+    }
+    @JavascriptInterface
+    public void saveCodeToDb(final String type){
+        byte[] code=mLightControllerGroup.getControlMap(type);
+        mDb.setCode(type,code);
     }
 
-    @JavascriptInterface
-    public String getManualCode() {
-        return mLightControllerGroup.getManualStu();
-    }
-
-    @JavascriptInterface
-    public String getCloudCode() {
-        return mLightControllerGroup.getCloudStu();
-    }
-
-    @JavascriptInterface
-    public String getFlashCode() {
-        return mLightControllerGroup.getFlashStu();
-    }
-
-    @JavascriptInterface
-    public String getMoonCode() {
-        return mLightControllerGroup.getMoonStu();
-    }
+//    @JavascriptInterface
+//    public String getAutoCode() {
+//        return mLightControllerGroup.getAutoStu();
+//    }
+//
+//    @JavascriptInterface
+//    public String getManualCode() {
+//        return mLightControllerGroup.getManualStu();
+//    }
+//
+//    @JavascriptInterface
+//    public String getCloudCode() {
+//        return mLightControllerGroup.getCloudStu();
+//    }
+//
+//    @JavascriptInterface
+//    public String getFlashCode() {
+//        return mLightControllerGroup.getFlashStu();
+//    }
+//
+//    @JavascriptInterface
+//    public String getMoonCode() {
+//        return mLightControllerGroup.getMoonStu();
+//    }
 
     @JavascriptInterface
     public String getLightList() {
@@ -235,21 +251,12 @@ public class JsLightBridge extends JsBridge {
     public String getGroupList(String type) {
         JSONObject[] objs = mDb.getGroupList(type);
         return Tool.jsonArray2String(objs);
-//        String list="[";
-//        if(null!=objs){
-//            int count=0;
-//            for(JSONObject obj:objs){
-//                list+=obj.toString();
-//                count++;
-//                if(count<objs.length)list+=",";
-//            }
-//            list+="]";
-//            Log.i("godlee","get GroupList:"+list);
-//            return list;
-//        }
-//        Log.i("godlee","there have no GroupList");
-//        return "[]";
+    }
 
+    @JavascriptInterface
+    public String getGroupInf(){
+        JSONObject obj=mDb.getGroupInf();
+        return obj.toString();
     }
 
     @JavascriptInterface
@@ -316,7 +323,8 @@ public class JsLightBridge extends JsBridge {
     public String initGroup() {
         JSONObject groupInf = mDb.getGroupInf();
         JSONObject returnInf = new JSONObject();
-        String deviceList=mLightControllerGroup.initGroup(mDb);;
+        String deviceList=mLightControllerGroup.initGroup(mDb);
+//        Log.i("godlee","deviceList: "+deviceList);
         try {
             String sGroupType = groupInf.getString(Db.G_TYPE);
             returnInf.accumulate("device",deviceList);
@@ -334,18 +342,32 @@ public class JsLightBridge extends JsBridge {
                     return returnInf.toString();
 
                 case Db.GROUP_TYPE_ONLINE:
+//                    ssid=groupInf.getString(Db.G_SSID);
                     returnInf.accumulate("type", Db.GROUP_TYPE_ONLINE);
+                    returnInf.accumulate("ssid",groupInf.getString(Db.G_SSID));
+//                    msg=mHandler.obtainMessage(JsBridge.ONLINE_LINK,ssid);
+
 //                    mLightControllerGroup.initGroup(mDb);
-                    return "";
+
+                    return returnInf.toString();
 
             }
         } catch (JSONException e) {
             e.printStackTrace();
-
         }
         return "";
+    }
+    @JavascriptInterface
+    public void saveCode(){
 
     }
+
+    @JavascriptInterface
+    public void runCode(){
+
+    }
+
+
 
 
 //    public String addGroup()

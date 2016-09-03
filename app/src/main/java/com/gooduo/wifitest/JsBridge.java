@@ -13,6 +13,7 @@ import org.json.JSONObject;
 public class JsBridge {
     public static final int JS=0xcafe;
     public static final int LOCAL_LINK=0xabcd;
+    public static final int ONLINE_LINK=0xdcba;
     public static final int TO_OPT=0xbabe2;
     protected Handler mHandler;
 

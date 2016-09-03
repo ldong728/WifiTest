@@ -38,6 +38,10 @@
         app_tool.loading();
         ssid=$(this).text();
         alert('ready to link :'+ssid);
+        var currentSSid=getCurrentSSID();
+        if(ssid==currentSSid){
+            onLinked(currentSSid)
+        }
         window.wifi.linkWifi(getJsonString({ssid:ssid}));
         setTimeout(linkedFail(),5000);
     });
@@ -54,6 +58,7 @@
     }
     function linkedFail(){
         app_tool.loaded();
+        $('body').append('<div class="app-msg slideInUp"><div class="txt" id="ssid">自动连接失败，请在wifi设置界面选择“' + ssid + '”</div><div class="confirm"><span class="no">取消</span><span class="yes">连接</span></div></div>');
     }
     function onGetWifiList(data){
         app_tool.loaded();

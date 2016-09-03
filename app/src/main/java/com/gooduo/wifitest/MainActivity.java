@@ -72,6 +72,28 @@ public class MainActivity extends AppCompatActivity {
                     sActivity.startActivity(sIntent);
                     break;
 
+                case LightControllerGroup.SEND_OK:
+                    Log.i("godlee","send all over");
+//                    new Thread(){
+//                        @Override
+//                        public void run(){
+//                            mUdpController.sendMsg(new byte[]{(byte)0xaa,
+//                                    (byte)0x08,
+//                                    (byte)0x0a,
+//                                    (byte)0x07,
+//                                    (byte)0xa5,
+//                                    (byte)0x00,
+//                                    (byte)0x00,
+//                                    (byte)0x00,
+//                                    (byte)0x00,
+//                                    (byte)0x00,
+//                                    (byte)0x00,
+//                                    (byte)0xb6},UdpController.DATA_PORT);
+//                        }
+//                    }.start();
+
+                    break;
+
                 default:
                     break;
             }
@@ -123,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 Log.i("godlee",Tool.bytesToHexString(pack.getData()));
-                Log.i("godlee",new String(pack.getData()));
+//                Log.i("godlee",new String(pack.getData()));
                 return;
             }
         };
@@ -214,11 +236,8 @@ public class MainActivity extends AppCompatActivity {
                             String gateIp=Tool.intIpToString(dhcpInfo.serverAddress);
                             Log.i("godlee","Ap Name:"+info.getSSID());
                             Log.i("godlee", "Ap IP:" + gateIp);
-                            if(gateIp.equals(UdpController.DEFALT_IP)){
-//                        mLightBridge.initTime(UdpController.DEFALT_IP);
-//                        Log.i("godlee","inittimeOK");
-                                String ssid= mWifiBridge.linkedOk(info.getSSID());
-//                        Log.i("godlee","recallToUi");
+                            String ssid= mWifiBridge.linkedOk(info.getSSID());
+                            if(gateIp.equals(UdpController.DEFALT_IP)){//如果路由器IP为默认IP，即连接的设备为AP模式
                                 if(null!=ssid){
                                     WifiClass.ssid=ssid;
                                     Log.i("godlee","currentSSid:"+WifiClass.ssid);

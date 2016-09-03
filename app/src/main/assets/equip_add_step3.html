@@ -37,13 +37,12 @@
         if(groupId>-1) {
             window.light.chooseGroup(groupId);
             window.wifi.linkLights();
-
         }
     }
     function lightStandby(data){
         if(!islightStandby){
             var mac=data;
-            window.light.addDevice(getJsonString({mac:mac}))
+            addDeviceToGroup({mac:mac})
             lightStandby=true;
             if (local) {
                 headerTo('equip-info.html');
@@ -52,8 +51,13 @@
             }
 
         }
-
-
+    }
+    function ap2staResult(back){
+        var jsonData=eval('('+back+')');
+        if(1==jsonData.apStu&&jsonData.pasdStu){
+            changeGroupType(ssid,pasd,false);
+            headerTo('equip-info.html');
+        }
     }
 
 </script>

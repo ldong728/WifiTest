@@ -154,14 +154,14 @@ public class Light {
     public byte[] removeKey(int index){
         if(mControlMap[index].isKey()){
             mControlMap[index].setKey(false);
-            for(int i=index;i>-1;i--){
-                if(mControlMap[i].isKey()){
-                    return setLevel(i,mControlMap[i].getLevel());
-                }else if(i==0){
-                    byte[] data=setLevel(i,0);
-                    mControlMap[i].setKey(false);
-                    return data;
-                }
+        }
+        for(int i=index;i>-1;i--){
+            if(mControlMap[i].isKey()){
+                return setLevel(i,mControlMap[i].getLevel());
+            }else if(i==0){
+                byte[] data=setLevel(i,0);
+                mControlMap[i].setKey(false);
+                return data;
             }
         }
         return null;

@@ -102,6 +102,7 @@ public class JsWifiBridge extends JsBridge{
             code = Tool.
                     generate_02_data(ssid, pasd, index);
             mUdpController.sendMsg(code, 48899);
+            Log.i("godlee","order:"+Tool.bytesToHexString(code));
         } catch (JSONException e) {
             Log.e("godlee", e.getMessage());
         }
@@ -152,6 +153,12 @@ public class JsWifiBridge extends JsBridge{
     public void wifiOpt(){
 //        Log.i("godlee","jump");
        mHandler.sendEmptyMessage(TO_OPT);
+    }
+
+    @JavascriptInterface
+
+    public String getCurrentSSID(){
+        return trimSSid(mWifiClass.getSSID());
     }
 
 
