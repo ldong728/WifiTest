@@ -52,7 +52,7 @@ var app_form = {
                 app_tool.loading(function() {
 
                     // 执行脚本
-                    location.href = 'equip-index.html';
+                    location.href = '../equip_index.html';
                 });
             } else if (from == 'reg') {
                 app_tool.loading(function() {
@@ -62,7 +62,7 @@ var app_form = {
                      var data=JSON.stringify({name:'',email:mail,phone:'',pasd:pasd})
                      var id=window.light.addUser(data);
                      if(id>-1){
-                        location.href="equip-index.html"
+                        location.href="../equip_index.html"
                      }
                     setTimeout(function() {
                         app_tool.loaded();

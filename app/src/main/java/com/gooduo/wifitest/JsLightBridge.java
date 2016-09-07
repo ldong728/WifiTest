@@ -15,6 +15,10 @@ import java.text.SimpleDateFormat;
  */
 
 public class JsLightBridge extends JsBridge {
+    public  boolean ismReadyToSend() {
+        return mReadyToSend;
+    }
+    private boolean mReadyToSend=false;
     private LightControllerGroup mLightControllerGroup;
     private Db mDb;
 
@@ -359,13 +363,19 @@ public class JsLightBridge extends JsBridge {
     }
     @JavascriptInterface
     public void saveCode(){
-
+        mReadyToSend=true;
+        if(mLightControllerGroup.isSendOk()){
+            mHandler.sendEmptyMessage(LightControllerGroup.SEND_OK);
+        }
     }
 
     @JavascriptInterface
     public void runCode(){
 
     }
+
+
+
 
 
 

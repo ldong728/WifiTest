@@ -73,25 +73,30 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case LightControllerGroup.SEND_OK:
-                    Log.i("godlee","send all over");
-//                    new Thread(){
-//                        @Override
-//                        public void run(){
-//                            mUdpController.sendMsg(new byte[]{(byte)0xaa,
-//                                    (byte)0x08,
-//                                    (byte)0x0a,
-//                                    (byte)0x07,
-//                                    (byte)0xa5,
-//                                    (byte)0x00,
-//                                    (byte)0x00,
-//                                    (byte)0x00,
-//                                    (byte)0x00,
-//                                    (byte)0x00,
-//                                    (byte)0x00,
-//                                    (byte)0xb6},UdpController.DATA_PORT);
-//                        }
-//                    }.start();
-
+                    Log.i("godlee", "send all over");
+                    if(mLightBridge.ismReadyToSend()){
+                        new Thread(){
+                            @Override
+                            public void run(){
+                                mUdpController.sendMsg(new byte[]{(byte)0xaa,
+                                        (byte)0x08,
+                                        (byte)0x0a,
+                                        (byte)0x07,
+                                        (byte)0xa5,
+                                        (byte)0x00,
+                                        (byte)0x00,
+                                        (byte)0x00,
+                                        (byte)0x00,
+                                        (byte)0x00,
+                                        (byte)0x00,
+                                        (byte)0xb6},UdpController.DATA_PORT);
+                            }
+                        }.start();
+                    }
+                    break;
+                case LightControllerGroup.SINGLE_SEND_OK:
+                    String ip=(String)msg.obj;
+                    Log.i("godlee","send To "+ip+" ok!");
                     break;
 
                 default:

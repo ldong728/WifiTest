@@ -19,9 +19,15 @@ import java.util.Map;
  */
 public class LightControllerGroup {
     public static final int SEND_OK = 0xf0c0;
+    public static final int SINGLE_SEND_OK=0xcdfe;
     public static final int RECEIVE_PORT = 21195;
     private boolean mLocal = true;
     private boolean mGroupOnLine = false;
+
+    public boolean isSendOk() {
+        return sendOk;
+    }
+
     private boolean sendOk = true;
     private boolean threadFlag = true;
     private final Handler mHandle;
@@ -413,7 +419,9 @@ public class LightControllerGroup {
                             } else {
                                 synchronized (mSendBuffer) {
                                     mSendBuffer.remove(ip);
-//                                    Message msg=mHandle.obtainMessage(SEND_OK,ip);
+//                                    String mac=mIPMap.
+                                    Message msg=mHandle.obtainMessage(SINGLE_SEND_OK,ip);
+                                    mHandle.sendMessage(msg);
                                 }
                             }
                         }
