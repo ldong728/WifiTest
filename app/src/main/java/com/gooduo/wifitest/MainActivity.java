@@ -163,7 +163,6 @@ public class MainActivity extends AppCompatActivity {
         mLightControllerGroup.addGroupMember("C4BE8474C223");
         mLightControllerGroup.addGroupMember("F4B85E45D9F1");
         mWebView = new WebView(this);
-//        mDb.onCreate(mDb.getWritableDatabase());
         mWebSetting = mWebView.getSettings();
         mWebSetting.setJavaScriptEnabled(true);
         mWebView.setWebChromeClient(new WebChromeClient());
