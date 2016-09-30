@@ -1,7 +1,6 @@
 package com.gooduo.wifitest;
 
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
@@ -19,14 +18,14 @@ public class JsWifiBridge extends JsBridge{
     private UdpController mUdpController;
     private WifiClass mWifiClass;
 //    private Handler mHandler;
-    private Db mDb;
+//    private Db mDb;
 
-    public JsWifiBridge(UdpController uc,WifiClass wm,Handler handler,Db mDb){
+    public JsWifiBridge(UdpController uc,WifiClass wm,Handler handler){
         super(handler);
         mUdpController=uc;
         mWifiClass =wm;
 //        mHandler=handler;
-        this.mDb=mDb;
+//        this.mDb=mDb;
     }
     public static String trimSSid(String ssid){
         String sData;

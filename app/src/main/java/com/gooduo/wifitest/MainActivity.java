@@ -29,6 +29,7 @@ import java.lang.ref.WeakReference;
 
 
 public class MainActivity extends AppCompatActivity {
+    public static final boolean IS_DEBUG=true;
     private static WifiClass mWifiManage;
     private static Db mDb;
     private static WebView mWebView;
@@ -36,7 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private static LightControllerGroup mLightControllerGroup;
     private static JsLightBridge mLightBridge;
     private static JsWifiBridge mWifiBridge;
-    private static JsWebBridge mWebBridge;
+//    private static JsWebBridge mWebBridge;
+    private static WebSocketController mWebController;
     private static WifiReceiver mReceiver;
     private MyHandler mHander = new MyHandler(this);
     private RequestQueue mRequestQueue;
@@ -62,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
                         String value=obj.getString("value");
                         mWebView.loadUrl("javascript:"+function+"('"+value+"')");
                     }catch(JSONException e){
-                        Log.e("godlee",e.getMessage());
+                        D.e(e.getMessage());
                         e.printStackTrace();
                     }
                     break;
@@ -157,11 +159,13 @@ public class MainActivity extends AppCompatActivity {
         mUdpController.start();
         mDb=new Db(this,Db.DB_NAME,null,2);
         mLightControllerGroup=new LightControllerGroup(mHander);
-        mWifiBridge=new JsWifiBridge(mUdpController,mWifiManage,mHander,mDb);
-        mLightBridge=new JsLightBridge(mHander,mLightControllerGroup,mDb);
-        mWebBridge =new JsWebBridge(mHander,mDb,mRequestQueue);
-        mLightControllerGroup.addGroupMember("C4BE8474C223");
-        mLightControllerGroup.addGroupMember("F4B85E45D9F1");
+        mWebController = new WebSocketController(mHander);
+        mWifiBridge=new JsWifiBridge(mUdpController,mWifiManage,mHander);
+        mLightBridge=new JsLightBridge(mHander,mLightControllerGroup,mDb, mWebController);
+//        mWebBridge =new JsWebBridge(mHander,mDb,mRequestQueue);
+
+//        mLightControllerGroup.addGroupMember("C4BE8474C223");
+//        mLightControllerGroup.addGroupMember("F4B85E45D9F1");
         mWebView = new WebView(this);
         mWebSetting = mWebView.getSettings();
         mWebSetting.setJavaScriptEnabled(true);
@@ -171,13 +175,15 @@ public class MainActivity extends AppCompatActivity {
         mWebView.loadUrl("file:///android_asset/index.html");
         mWebView.addJavascriptInterface(mWifiBridge, "wifi");
         mWebView.addJavascriptInterface(mLightBridge, "light");
-        mWebView.addJavascriptInterface(mWebBridge,"web");
+//        mWebView.addJavascriptInterface(mWebBridge,"web");
+//        mWebView.addJavascriptInterface(mWebController,"web");
         mReceiver=new WifiReceiver();
         IntentFilter filter=new IntentFilter();
 //        filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
         filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
         filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
         registerReceiver(mReceiver,filter);
+        mWebController.connect();
         Log.i("godlee", "wifiTest started");
     }
 

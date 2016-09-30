@@ -368,6 +368,7 @@ public class LightControllerGroup {
     }
 
     private void reGroupSendQueue(DataPack pack) {
+        D.i("back:"+Tool.bytesToHexString(pack.getData()));
         String ip = pack.getIp();
         ArrayList<byte[]> list = mSendBuffer.get(ip);
         if (null != list) {

@@ -25,6 +25,7 @@ public class Db extends SQLiteOpenHelper {
     public final static String U_PHONE="U_PHONE";
     public final static String U_PASD="U_PASD";
     public final static String U_DEFAULT="U_DEFAULT";
+    public final static String U_SN="U_SN";
     public final static String G_ID="G_ID";
     public final static String G_INF="G_INF";
     public final static String G_NAME="G_NAME";
@@ -46,28 +47,37 @@ public class Db extends SQLiteOpenHelper {
     public final static String TYPE_CLOUD="TYPE_CLOUD";
     public final static String TYPE_FLASH="TYPE_FLASH";
     public final static String TYPE_MOON="TYPE_MOON";
+    public final static String SYN="SYN";
+//    public WebSocketController mWsc;
     private int mCurrentUserId=-1;
+
+    public String getmCurrentUsn() {
+        return mCurrentUsn;
+    }
+
+    private String mCurrentUsn;
     private int mCurrentGroupId;
+
 
 
 
     public Db(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
-        Log.i("godlee", "db");
+//        Log.i("godlee", "db");
 
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String str="CREATE TABLE IF NOT EXISTS USER_TBL (U_ID integer primary key autoincrement,U_NAME text,U_EMAIL text,U_PHONE text,U_PASD text,U_DEFAULT integer)";
+        String str="CREATE TABLE IF NOT EXISTS USER_TBL (U_ID integer primary key autoincrement,U_NAME text,U_EMAIL text,U_PHONE text,U_PASD text,U_DEFAULT integer,U_SN text,SYN integer)";
         db.execSQL(str);
         Log.i("godlee","created");
-        str="CREATE TABLE IF NOT EXISTS GROUP_TBL (G_ID integer primary key autoincrement,G_NAME text,U_ID integer,G_INF text,G_TYPE text,G_SSID text,G_SSID_PASD text)";
+        str="CREATE TABLE IF NOT EXISTS GROUP_TBL (G_ID integer primary key autoincrement,G_NAME text,U_ID integer,G_INF text,G_TYPE text,G_SSID text,G_SSID_PASD text,SYN integer)";
         Log.i("godlee","create");
         db.execSQL(str);
-        str="CREATE TABLE IF NOT EXISTS DEVICE_TBL (D_MAC text primary key,D_SSID text,G_ID integer,D_TYPE text,D_NAME text)";
+        str="CREATE TABLE IF NOT EXISTS DEVICE_TBL (D_MAC text primary key,D_SSID text,G_ID integer,D_TYPE text,D_NAME text,SYN integer)";
         db.execSQL(str);
-        str="CREATE TABLE IF NOT EXISTS CODE_TBL (C_ID integer primary key autoincrement,G_ID integer,C_TYPE text,C_CODE BLOB,UNIQUE(G_ID,C_TYPE))";
+        str="CREATE TABLE IF NOT EXISTS CODE_TBL (C_ID integer primary key autoincrement,G_ID integer,C_TYPE text,C_CODE BLOB,SYN integer,UNIQUE(G_ID,C_TYPE))";
         db.execSQL(str);
     }
 
@@ -82,10 +92,11 @@ public class Db extends SQLiteOpenHelper {
         Log.i("godlee", "dataBase Open");
         if(-1==mCurrentUserId){
             Log.i("godlee","not hav userInf,read from db");
-            Cursor cursor=db.query(USER_TBL, new String[]{U_ID}, U_DEFAULT + "=?", new String[]{"" + 1}, null, null, null, null);
+            Cursor cursor=db.query(USER_TBL, new String[]{U_ID,U_SN}, U_DEFAULT + "=?", new String[]{"" + 1}, null, null, null, null);
             if(cursor.getCount()>0){
                 cursor.moveToFirst();
                 mCurrentUserId=cursor.getInt(0);
+                mCurrentUsn=cursor.getString(1);
             }else{
                 Log.i("godlee","no userInf in Db");
                 mCurrentUserId=-1;
@@ -99,12 +110,15 @@ public class Db extends SQLiteOpenHelper {
         SQLiteDatabase db=getWritableDatabase();
         ContentValues cv=new ContentValues();
         String sql="update "+USER_TBL+" set "+U_DEFAULT+"=0";
+
+
         db.execSQL(sql);
         cv.put(U_NAME, name);
         cv.put(U_EMAIL, mail);
         cv.put(U_PHONE, phone);
         cv.put(U_PASD,pasd);
         cv.put(U_DEFAULT,1);
+        cv.put(SYN,0);
         db.insert(USER_TBL, null, cv);
         Log.i("godlee","userInf put Db ok");
         Cursor cursor = db.rawQuery("select last_insert_rowid() from "+USER_TBL,null);
@@ -118,7 +132,7 @@ public class Db extends SQLiteOpenHelper {
         Log.i("godlee","get added UserId="+mCurrentUserId);
         return strid;
     }
-    public void chooseUser(int userId){
+    public String chooseUser(int userId){
         SQLiteDatabase db = getWritableDatabase();
         ContentValues cv=new ContentValues();
         cv.put(U_DEFAULT,0);
@@ -126,17 +140,30 @@ public class Db extends SQLiteOpenHelper {
         cv.clear();
         cv.put(U_DEFAULT, 1);
         db.update(USER_TBL, cv, U_ID, new String[]{"" + userId});
+        Cursor sCursor=db.query(USER_TBL,new String[]{U_SN},U_ID,new String[]{U_ID},null,null,null);
+        sCursor.moveToFirst();
+        String sn=sCursor.getString(0);
+        sCursor.close();
         db.close();
+
         mCurrentUserId=userId;
+        return sn;
     }
-    public boolean signIn(String mail,String pasd){
+    public void synUser(String uSn){
+        SQLiteDatabase db=getWritableDatabase();
+        ContentValues cv=new ContentValues();
+        cv.put(U_SN, uSn);
+        cv.put(SYN,1);
+        db.update(USER_TBL, cv, U_ID+"=?", new String[]{"" + mCurrentUserId});
+        db.close();
+    }
+    public String signIn(String mail,String pasd){
         String selection=U_EMAIL+"=? and "+U_PASD+"=?";
         String[] selectionArg=new String[]{mail,pasd};
         String[] userInf=getValue(USER_TBL,new String[]{U_ID},selection,selectionArg);
-        if(null==userInf)return false;
+        if(null==userInf)return null;
         int userId=Integer.parseInt(userInf[0]);
-        chooseUser(userId);
-        return true;
+        return chooseUser(userId);
     }
     public JSONObject[] getUserList(){
         SQLiteDatabase db = getReadableDatabase();

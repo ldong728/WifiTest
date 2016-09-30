@@ -15,17 +15,50 @@ import java.text.SimpleDateFormat;
  */
 
 public class JsLightBridge extends JsBridge {
+    public static final String STATUS="status";
+    public static final String INF="inf";
+    public static final String STATUS_DEL_DEVICE="delDevice";
+    public static final String STATUS_USER_ADD="SN";
     public  boolean ismReadyToSend() {
         return mReadyToSend;
     }
+    private String mSn;
     private boolean mReadyToSend=false;
     private LightControllerGroup mLightControllerGroup;
+    private WebSocketController mWsc;
     private Db mDb;
+    private WebSocketController.ReceiveMessage mReceive=new WebSocketController.ReceiveMessage(){
+        @Override
+        public void onTextMessage(String payload) {
+            D.i(payload);
+            try{
+                JSONObject sJpayload=new JSONObject(payload);
+                String sStatus=sJpayload.getString(STATUS);
+                String sInf=sJpayload.getString(INF);
+                if(sInf.equals("ok")){
+                    switch (sStatus){
+                        case STATUS_USER_ADD:
+                            mSn=sJpayload.getString("content");
+                            mDb.synUser(mSn);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }catch(JSONException e){
+                D.e(e.getMessage());
+            }
 
-    public JsLightBridge(Handler mHandler, LightControllerGroup lightControllerGroup, Db mDb) {
+        }
+    };
+
+    public JsLightBridge(Handler mHandler, LightControllerGroup lightControllerGroup, Db mDb,WebSocketController mWsc) {
         super(mHandler);
         mLightControllerGroup = lightControllerGroup;
         this.mDb = mDb;
+        mSn=mDb.getmCurrentUsn();
+        this.mWsc=mWsc;
+        mWsc.setReceiver(mReceive);
     }
 
     @JavascriptInterface
@@ -47,6 +80,18 @@ public class JsLightBridge extends JsBridge {
             send = sJson.getString("mode").equals("confirm") ? true : false;
             Log.i("godlee", "color: " + color + " time: " + time + " level: " + level);
             mLightControllerGroup.autoController(color, time, level, send);
+//            mLightControllerGroup.autoController(color, time, level, false);
+            JSONObject sCodeMap=new JSONObject(mLightControllerGroup.getControlCodeJson(Db.TYPE_AUTO));
+            JSONObject sCodeContent=new JSONObject();
+            sCodeContent.accumulate("C_TYPE","TYPE_AUTO");
+            sCodeContent.accumulate("code",sCodeMap);
+            JSONObject obj=new JSONObject();
+            obj.accumulate("mode","codeSet");
+            obj.accumulate("G_ID",mDb.getGroupId());
+            obj.accumulate("code",sCodeContent);
+            obj.accumulate("U_SN","160830114210176");
+            D.i("U_SN:"+"160830114210176");
+            mWsc.sendData(obj);
             return "1";
         } catch (JSONException e) {
             Log.e("godlee", e.getMessage());
@@ -212,6 +257,13 @@ public class JsLightBridge extends JsBridge {
             String phone = obj.getString("phone");
             String pasd = obj.getString("pasd");
             id = mDb.addUser(name, email, phone, pasd);
+            if(mWsc.isConnect()){
+                String str="{\"mode\":\"reg\",\"U_EMAIL\":\""+email+"\",\"U_PHONE\":\""+phone+"\",\"U_NAME\":\""+name+"\",\"U_PASD\":\""+pasd+"\",\"signature\":\"\"}";
+                D.i(str);
+                mWsc.sendData(str);
+            }
+
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -224,8 +276,12 @@ public class JsLightBridge extends JsBridge {
             JSONObject obj = new JSONObject(inf);
             String mail = obj.getString("email");
             String pasd = obj.getString("pasd");
-            boolean stu = mDb.signIn(mail, pasd);
-            if (stu) return "1";
+            String stu = mDb.signIn(mail, pasd);
+//            mDb=obj.getString(Db.)
+            if (stu!=null){
+                mSn=stu;
+                return "1";
+            }
             return "0";
         } catch (JSONException e) {
             e.printStackTrace();
