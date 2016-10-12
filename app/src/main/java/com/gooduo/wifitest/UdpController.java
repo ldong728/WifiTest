@@ -24,7 +24,8 @@ public abstract class UdpController extends Thread {
     public static final int DATA_PORT =8899;
     public static final int CTR_PORT=48899;
     public static final String BROADCAST_IP="255.255.255.255";
-    public static final String DEFALT_IP= "192.168.1.1";
+//    public static final String DEFALT_IP= "192.168.1.1";
+    public static final String DEFALT_IP= "172.22.11.1";
     private static int count;
     public  final int id;
     private boolean broadcast=false;
@@ -128,6 +129,7 @@ public abstract class UdpController extends Thread {
                     if (null != handler) {
                         byte[] realData = new byte[revPacket.getLength()];
                         System.arraycopy(data, 0, realData, 0, revPacket.getLength());
+//                        realData=formatReceive(realData);
 //                        Log.i("godlee",Tool.bytesToHexString(realData));
                         onReceive(handler,new DataPack(fromIp,fromPort,realData));
                     }
@@ -140,6 +142,7 @@ public abstract class UdpController extends Thread {
         }
     }
     private DataPack formatReceive( DataPack revPacket){
+//        D.i("format");
         if(revPacket.getLength()%Light.CODE_LENGTH!=0){
             DataPack sBuff=buffer.get(revPacket.getIp());
             if(sBuff!=null){

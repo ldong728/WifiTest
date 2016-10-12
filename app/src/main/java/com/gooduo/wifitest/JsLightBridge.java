@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
+import java.util.LinkedList;
 
 /**
  * Created by Administrator on 2016/7/14.
@@ -22,12 +23,25 @@ public class JsLightBridge extends JsBridge {
     public  boolean ismReadyToSend() {
         return mReadyToSend;
     }
+    private boolean isGroupOnLine=false;
+    private String mCurrentType;
+    private String mCurrentScene;
     private String mSn;
     private boolean mReadyToSend=false;
     private LightControllerGroup mLightControllerGroup;
     private WebSocketController mWsc;
     private Db mDb;
+    private LinkedList<String> mOfflineList;
+    //websocket 连接控制
     private WebSocketController.ReceiveMessage mReceive=new WebSocketController.ReceiveMessage(){
+        @Override
+        public void onClose(int code, String reason) {
+            mOfflineList=null;
+        }
+        @Override
+        public void onOpen() {
+            mOfflineList=mDb.getOfflineQueue();
+        }
         @Override
         public void onTextMessage(String payload) {
             D.i(payload);
@@ -46,8 +60,18 @@ public class JsLightBridge extends JsBridge {
                     }
                 }
             }catch(JSONException e){
-                D.e(e.getMessage());
+                D.i(e.getMessage());
+                D.i(payload);
             }
+            //处理因断线无法同步的数据
+            if(null!=mOfflineList){
+                String data=mOfflineList.poll();
+                if(null!=data){
+                    mWsc.sendData(data);
+                    mDb.deleteDataFromOffline(data);
+                }
+            }
+
 
         }
     };
@@ -57,9 +81,17 @@ public class JsLightBridge extends JsBridge {
         mLightControllerGroup = lightControllerGroup;
         this.mDb = mDb;
         mSn=mDb.getmCurrentUsn();
+//        D.i("sn="+mSn);
         this.mWsc=mWsc;
+
         mWsc.setReceiver(mReceive);
     }
+    private void syncCode(String type, String data){
+        if(isGroupOnLine){
+            mWsc.sendData(type,data,mDb);
+        }
+    }
+
 
     @JavascriptInterface
     public String sendAutoCode(final String data) {
@@ -80,18 +112,9 @@ public class JsLightBridge extends JsBridge {
             send = sJson.getString("mode").equals("confirm") ? true : false;
             Log.i("godlee", "color: " + color + " time: " + time + " level: " + level);
             mLightControllerGroup.autoController(color, time, level, send);
-//            mLightControllerGroup.autoController(color, time, level, false);
-            JSONObject sCodeMap=new JSONObject(mLightControllerGroup.getControlCodeJson(Db.TYPE_AUTO));
-            JSONObject sCodeContent=new JSONObject();
-            sCodeContent.accumulate("C_TYPE","TYPE_AUTO");
-            sCodeContent.accumulate("code",sCodeMap);
-            JSONObject obj=new JSONObject();
-            obj.accumulate("mode","codeSet");
-            obj.accumulate("G_ID",mDb.getGroupId());
-            obj.accumulate("code",sCodeContent);
-            obj.accumulate("U_SN","160830114210176");
-            D.i("U_SN:"+"160830114210176");
-            mWsc.sendData(obj);
+            mCurrentType=Db.TYPE_AUTO;
+//            JSONObject obj=mWsc.createCodeData(Db.TYPE_AUTO,mDb.getGroupId(),mLightControllerGroup.getControlCodeJson(Db.TYPE_AUTO),mSn);
+//            mWsc.sendData(obj);
             return "1";
         } catch (JSONException e) {
             Log.e("godlee", e.getMessage());
@@ -113,6 +136,10 @@ public class JsLightBridge extends JsBridge {
             level = Integer.parseInt(sJson.getString("level"));
             Log.i("godlee","color:"+color+" level:"+level);
             mLightControllerGroup.manualController(color, level);
+            mCurrentType=Db.TYPE_MANUAL;
+//            JSONObject obj=mWsc.createCodeData(Db.TYPE_MANUAL,mDb.getGroupId(),mLightControllerGroup.getControlCodeJson(Db.TYPE_MANUAL),mSn);
+//            mWsc.sendData(obj);
+
         } catch (JSONException e) {
             Log.e("godlee", e.getMessage());
             e.printStackTrace();
@@ -131,6 +158,7 @@ public class JsLightBridge extends JsBridge {
             prob = Integer.parseInt(sJson.getString("prob"));
             mask = Integer.parseInt(sJson.getString("mask"));
             mLightControllerGroup.setCloud(stu, prob, mask);
+            mCurrentScene=Db.TYPE_CLOUD;
         } catch (JSONException e) {
             Log.e("godlee", e.getMessage());
             e.printStackTrace();
@@ -147,18 +175,18 @@ public class JsLightBridge extends JsBridge {
             prob = Integer.parseInt(sJson.getString("prob"));
             level = Integer.parseInt(sJson.getString("level"));
             mLightControllerGroup.setFlash(stu, prob, level);
+            mCurrentScene=Db.TYPE_FLASH;
         } catch (JSONException e) {
             Log.e("godlee", e.getMessage());
 
             e.printStackTrace();
         }
     }
-
+    @JavascriptInterface
     public void setMoonCode(final String data) {
         JSONObject sJson;
         boolean stu;
         int start, end;
-
         try {
             sJson = new JSONObject(data);
             stu = Integer.parseInt(sJson.getString("stu")) == 0 ? false : true;
@@ -217,31 +245,6 @@ public class JsLightBridge extends JsBridge {
         mDb.setCode(type,code);
     }
 
-//    @JavascriptInterface
-//    public String getAutoCode() {
-//        return mLightControllerGroup.getAutoStu();
-//    }
-//
-//    @JavascriptInterface
-//    public String getManualCode() {
-//        return mLightControllerGroup.getManualStu();
-//    }
-//
-//    @JavascriptInterface
-//    public String getCloudCode() {
-//        return mLightControllerGroup.getCloudStu();
-//    }
-//
-//    @JavascriptInterface
-//    public String getFlashCode() {
-//        return mLightControllerGroup.getFlashStu();
-//    }
-//
-//    @JavascriptInterface
-//    public String getMoonCode() {
-//        return mLightControllerGroup.getMoonStu();
-//    }
-
     @JavascriptInterface
     public String getLightList() {
         return mLightControllerGroup.getLightsList();
@@ -259,6 +262,7 @@ public class JsLightBridge extends JsBridge {
             id = mDb.addUser(name, email, phone, pasd);
             if(mWsc.isConnect()){
                 String str="{\"mode\":\"reg\",\"U_EMAIL\":\""+email+"\",\"U_PHONE\":\""+phone+"\",\"U_NAME\":\""+name+"\",\"U_PASD\":\""+pasd+"\",\"signature\":\"\"}";
+                mWsc.sendData(Db.TYPE_OTHER,str,mDb);
                 D.i(str);
                 mWsc.sendData(str);
             }
@@ -326,7 +330,10 @@ public class JsLightBridge extends JsBridge {
             String groupName = obj.getString("name");
             String groupInf = obj.getString("inf");
             int groupId = mDb.addGroup(groupName, groupInf);
-            if (groupId > -1) mDb.setGroupId(groupId);
+            if (groupId > -1){
+                mDb.setGroupId(groupId);
+
+            }
             return groupId;
 
         } catch (JSONException e) {
@@ -342,7 +349,18 @@ public class JsLightBridge extends JsBridge {
             String ssid=obj.getString("ssid");
             String pasd=obj.getString("pasd");
             mDb.changeGroupType(ssid,pasd);
-
+            JSONObject gInf=mDb.getGroupInf();
+            JSONObject data=new JSONObject();
+            data.accumulate("mode","createGroup");
+            data.accumulate("G_ID",mDb.getGroupId());
+            data.accumulate(Db.G_NAME,gInf.getString(Db.G_NAME));
+            data.accumulate(Db.G_INF,gInf.getString(Db.G_INF));
+            data.accumulate(Db.G_TYPE,"online");
+            data.accumulate(Db.G_SSID,ssid);
+            data.accumulate(Db.G_SSID_PASD,pasd);
+            data.accumulate("device",mDb.getDeviceList()[0]);
+            data.accumulate("U_SN",mDb.getmCurrentUsn());
+            mWsc.sendData(Db.TYPE_OTHER,data.toString(),mDb);
         }catch(JSONException e){
             e.printStackTrace();
         }
@@ -354,6 +372,7 @@ public class JsLightBridge extends JsBridge {
             String ssid=obj.getString("ssid");
             String pasd=obj.getString("pasd");
             mDb.changeGroupType(ssid,pasd);
+
         }catch(JSONException e){
             e.printStackTrace();
         }
@@ -366,6 +385,16 @@ public class JsLightBridge extends JsBridge {
             JSONObject obj = new JSONObject(inf);
             String mac = obj.getString("mac");
             mDb.addDevice(mac, WifiClass.ssid, "light", "light");
+            JSONObject data=new JSONObject();
+            data.accumulate("mode","addDevice");
+            data.accumulate(Db.G_ID,mDb.getGroupId());
+            data.accumulate(Db.D_MAC,mac);
+            data.accumulate(Db.D_TYPE,"light");
+            data.accumulate(Db.D_NAME,"light");
+            data.accumulate(Db.U_SN,mDb.getmCurrentUsn());
+            mWsc.sendData(Db.TYPE_OTHER,data.toString(),mDb);
+
+
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -377,21 +406,24 @@ public class JsLightBridge extends JsBridge {
         Log.i("godlee", "choose Group");
         int groupId = Integer.parseInt(inf);
         mDb.setGroupId(groupId);
+
     }
 
     @JavascriptInterface
     public String initGroup() {
+//        D.i("initGroup");
         JSONObject groupInf = mDb.getGroupInf();
         JSONObject returnInf = new JSONObject();
         String deviceList=mLightControllerGroup.initGroup(mDb);
 //        Log.i("godlee","deviceList: "+deviceList);
         try {
             String sGroupType = groupInf.getString(Db.G_TYPE);
-            returnInf.accumulate("device",deviceList);
+            JSONObject deviceListJson=new JSONObject(deviceList);
+            returnInf.accumulate("device",deviceListJson);
+            returnInf.accumulate("inf",groupInf);
             switch (sGroupType) {
                 case Db.GROUP_TYPE_LOCAL:
                     returnInf.accumulate("type", Db.GROUP_TYPE_LOCAL);
-
 //                    mLightControllerGroup.initGroup(mDb);
                     String[] deviceInf = mDb.getValue(Db.DEVICE_TBL, new String[]{Db.D_SSID}, Db.G_ID + "=?", new String[]{"" + mDb.getGroupId()});
                     String ssid = deviceInf[0];
@@ -402,19 +434,17 @@ public class JsLightBridge extends JsBridge {
                     return returnInf.toString();
 
                 case Db.GROUP_TYPE_ONLINE:
-//                    ssid=groupInf.getString(Db.G_SSID);
                     returnInf.accumulate("type", Db.GROUP_TYPE_ONLINE);
                     returnInf.accumulate("ssid",groupInf.getString(Db.G_SSID));
-//                    msg=mHandler.obtainMessage(JsBridge.ONLINE_LINK,ssid);
-
-//                    mLightControllerGroup.initGroup(mDb);
-
+                    D.i(returnInf.toString());
+                    isGroupOnLine=true;
                     return returnInf.toString();
 
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
+        D.i("nothing");
         return "";
     }
     @JavascriptInterface
@@ -422,6 +452,10 @@ public class JsLightBridge extends JsBridge {
         mReadyToSend=true;
         if(mLightControllerGroup.isSendOk()){
             mHandler.sendEmptyMessage(LightControllerGroup.SEND_OK);
+        }
+        mWsc.sendData(mCurrentType,mLightControllerGroup.getControlCodeJson(mCurrentType),mDb);
+        if(null!=mCurrentScene){
+            mWsc.sendData(mCurrentScene,mLightControllerGroup.getControlCodeJson(mCurrentScene),mDb);
         }
     }
 

@@ -268,6 +268,7 @@ public class LightControllerGroup {
         putCodeToQueue(timeData);
 //        mUdpController.putMsg(timeData, ip);
     }
+//    public
 
 
     /**
@@ -368,7 +369,7 @@ public class LightControllerGroup {
     }
 
     private void reGroupSendQueue(DataPack pack) {
-        D.i("back:"+Tool.bytesToHexString(pack.getData()));
+        D.i("back:"+Tool.bytesToHexString(pack.getData())+" from IP:"+pack.getIp());
         String ip = pack.getIp();
         ArrayList<byte[]> list = mSendBuffer.get(ip);
         if (null != list) {
@@ -421,6 +422,8 @@ public class LightControllerGroup {
                                 synchronized (mSendBuffer) {
                                     mSendBuffer.remove(ip);
 //                                    String mac=mIPMap.
+                                    mUdpController.putMsg(new byte[]{(byte)0xAA,0x08,0x0A,0x08,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x13},ip);//执行指令,自动模式只有使用此指令才能开始运行
+                                    D.i("run");
                                     Message msg=mHandle.obtainMessage(SINGLE_SEND_OK,ip);
                                     mHandle.sendMessage(msg);
                                 }

@@ -2,6 +2,7 @@ package com.gooduo.wifitest;
 
 import android.os.Handler;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import de.tavendo.autobahn.WebSocketConnection;
@@ -13,7 +14,9 @@ import de.tavendo.autobahn.WebSocketHandler;
  */
 
 public class WebSocketController{
-    private static final String URL="ws://192.168.0.53:7272";
+//    public static final int WEB_SOCKET_CONNECT_OK=0xefabc;
+    private static final String URL="ws://192.168.0.78:7272";
+
     private WebSocketConnection mWsc;
     private Handler mHandler;
     private ReceiveMessage mReceive;
@@ -57,11 +60,62 @@ public class WebSocketController{
         D.i("data sended"+data);
         mWsc.sendTextMessage(data);
     }
-    public void sendData(JSONObject data){
-        String sData=data.toString();
-        sendData(sData);
+    private JSONObject createCodeData(String type,String code,Db db) throws JSONException{
+        if(null!=db.getmCurrentUsn()){
+            JSONObject sCodeMap=new JSONObject(code);
+            JSONObject sCodeContent=new JSONObject();
+            sCodeContent.accumulate("C_TYPE",type);
+            sCodeContent.accumulate("code",sCodeMap);
+            JSONObject obj=new JSONObject();
+            obj.accumulate("mode","codeSet");
+            obj.accumulate("G_ID",db.getGroupId());
+            obj.accumulate("code",sCodeContent);
+            obj.accumulate("U_SN",db.getmCurrentUsn());
+            return obj;
+        }
+        return null;
+    }
+    private JSONObject createOtherData(String data) throws JSONException{
+        return new JSONObject(data);
+//        return null;
     }
 
+    public void sendData(JSONObject data){
+        if(null!=data){
+            String sData=data.toString();
+            sendData(sData);
+        }
+    }
+//    public void syncData()
+    public void sendData(String type,String code,Db db){
+        if(isConnect()){
+            try{
+                JSONObject obj;
+                if(Db.TYPE_OTHER==type){
+                    obj=createOtherData(code);
+                }else{
+                    obj=createCodeData(type,code,db);
+                }
+
+                sendData(obj);
+            }catch(JSONException e){
+                D.e(e.getMessage());
+                e.printStackTrace();
+            }
+        }else{
+            db.putDataToOffline(type,code);
+        }
+    }
+//    public void sendOtherData(String code,Db db){
+//        if(isConnect()){
+//
+//        }else{
+//
+//        }
+//    }
+
+
+//    public void syncData(JSONObject data,)
 
 
     private WebSocketHandler mWscHandler = new WebSocketHandler() {
@@ -73,17 +127,17 @@ public class WebSocketController{
         @Override
         public void onClose(int code, String reason) {
             D.i("close code:"+code+" reason:"+reason);
-
+            if(mReceive!=null)mReceive.onClose(code,reason);
             super.onClose(code, reason);
         }
 
         @Override
         public void onOpen() {
             D.i("webSocket connected ok");
+            if(mReceive!=null)mReceive.onOpen();
+//            mHandler.sendEmptyMessage(WEB_SOCKET_CONNECT_OK);
             super.onOpen();
         }
-
-
 
         @Override
         public void onRawTextMessage(byte[] payload) {
@@ -95,13 +149,16 @@ public class WebSocketController{
         @Override
         public void onTextMessage(String payload) {
             D.i("onTextMessage");
-            D.i(payload);
+//            D.i(payload);
             if(mReceive!=null)mReceive.onTextMessage(payload);
             super.onTextMessage(payload);
         }
     };
     public interface ReceiveMessage{
         public void onTextMessage(String payload);
+        public void onClose(int code,String reason);
+        public void onOpen();
+
     }
 
 }

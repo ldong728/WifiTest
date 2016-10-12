@@ -14,8 +14,10 @@ import android.os.Message;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -100,7 +102,6 @@ public class MainActivity extends AppCompatActivity {
                     String ip=(String)msg.obj;
                     Log.i("godlee","send To "+ip+" ok!");
                     break;
-
                 default:
                     break;
             }
@@ -185,6 +186,19 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(mReceiver,filter);
         mWebController.connect();
         Log.i("godlee", "wifiTest started");
+        mWebView.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+//                D.i("canGoBack? "+mWebView.canGoBack());
+//                D.i("title:"+mWebView.getTitle());
+//                D.i("title:"+mWebView.getUrl());
+                if(keyCode == KeyEvent.KEYCODE_BACK && !mWebView.getUrl().equals("file:///android_asset/equip_index.html")){
+                    mWebView.goBack();
+                    return true;
+                }
+                return false;
+            }
+        });
     }
 
     @Override
@@ -229,6 +243,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+
     class WifiReceiver extends BroadcastReceiver{
 
         @Override
@@ -269,6 +284,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+
 
 
 }

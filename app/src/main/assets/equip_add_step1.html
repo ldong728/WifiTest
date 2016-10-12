@@ -32,18 +32,23 @@
 <script>
     var ssid="";
     app_tool.loading();
-    window.wifi.scanWifi();
+    scanWifi();
 
     $(document).on('click','.device-ssid',function(){
+
         app_tool.loading();
         ssid=$(this).text();
-        alert('ready to link :'+ssid);
+//        alert('ready to link :'+ssid);
         var currentSSid=getCurrentSSID();
         if(ssid==currentSSid){
             onLinked(currentSSid)
         }
-        window.wifi.linkWifi(getJsonString({ssid:ssid}));
-        setTimeout(linkedFail(),5000);
+        linkWifi(ssid);
+        setTimeout(function(){
+            linkedFail();
+        },10000);
+
+
     });
 
 

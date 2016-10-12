@@ -10,6 +10,8 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.LinkedList;
+
 /**
  * Created by Administrator on 2016/7/1.
  */
@@ -19,6 +21,7 @@ public class Db extends SQLiteOpenHelper {
     public final static String DEVICE_TBL="DEVICE_TBL";
     public final static String CODE_TBL="CODE_TBL";
     public final static String USER_TBL="USER_TBL";
+    public final static String OFFLINE_TBL="OFFLINE_TBL";
     public final static String U_ID="U_ID";
     public final static String U_NAME="U_NAME";
     public final static String U_EMAIL="U_EMAIL";
@@ -27,6 +30,7 @@ public class Db extends SQLiteOpenHelper {
     public final static String U_DEFAULT="U_DEFAULT";
     public final static String U_SN="U_SN";
     public final static String G_ID="G_ID";
+    public final static String OFFLINE_ID="OFFLINE_ID";
     public final static String G_INF="G_INF";
     public final static String G_NAME="G_NAME";
     public final static String G_SSID="G_SSID";
@@ -47,12 +51,23 @@ public class Db extends SQLiteOpenHelper {
     public final static String TYPE_CLOUD="TYPE_CLOUD";
     public final static String TYPE_FLASH="TYPE_FLASH";
     public final static String TYPE_MOON="TYPE_MOON";
+    public final static String DATA_TYPE="DATA_TYPE";
+    public final static String DATA="DATA";
+    public final static String TIMESTAMP="TIMESTAMP";
+    public final static String TYPE_OTHER="TYPE_OTHER";
+//    public final static int DATA_CTR=54321;
     public final static String SYN="SYN";
 //    public WebSocketController mWsc;
     private int mCurrentUserId=-1;
 
     public String getmCurrentUsn() {
-        return mCurrentUsn;
+        if(null!=mCurrentUsn){
+            return mCurrentUsn;
+        }else{
+            onOpen(getReadableDatabase());
+            return mCurrentUsn;
+        }
+
     }
 
     private String mCurrentUsn;
@@ -79,6 +94,9 @@ public class Db extends SQLiteOpenHelper {
         db.execSQL(str);
         str="CREATE TABLE IF NOT EXISTS CODE_TBL (C_ID integer primary key autoincrement,G_ID integer,C_TYPE text,C_CODE BLOB,SYN integer,UNIQUE(G_ID,C_TYPE))";
         db.execSQL(str);
+        //用来暂时储存因手机处于离线状态无法与服务器进行同步的数据
+        str="CREATE TABLE IF NOT EXISTS OFFLINE_TBL (OFFLINE_ID integer primary,U_ID integer,G_ID integer,DATA_TYPE text,TYPE text,DATA text,TIMESTAMP integer)";
+        db.execSQL(str);
     }
 
     @Override
@@ -97,6 +115,7 @@ public class Db extends SQLiteOpenHelper {
                 cursor.moveToFirst();
                 mCurrentUserId=cursor.getInt(0);
                 mCurrentUsn=cursor.getString(1);
+                D.i("uid:"+mCurrentUserId+"U_SN"+mCurrentUsn);
             }else{
                 Log.i("godlee","no userInf in Db");
                 mCurrentUserId=-1;
@@ -110,8 +129,6 @@ public class Db extends SQLiteOpenHelper {
         SQLiteDatabase db=getWritableDatabase();
         ContentValues cv=new ContentValues();
         String sql="update "+USER_TBL+" set "+U_DEFAULT+"=0";
-
-
         db.execSQL(sql);
         cv.put(U_NAME, name);
         cv.put(U_EMAIL, mail);
@@ -129,6 +146,7 @@ public class Db extends SQLiteOpenHelper {
         cursor.close();
         db.close();
         mCurrentUserId=strid;
+        tempTest();
         Log.i("godlee","get added UserId="+mCurrentUserId);
         return strid;
     }
@@ -140,9 +158,11 @@ public class Db extends SQLiteOpenHelper {
         cv.clear();
         cv.put(U_DEFAULT, 1);
         db.update(USER_TBL, cv, U_ID, new String[]{"" + userId});
-        Cursor sCursor=db.query(USER_TBL,new String[]{U_SN},U_ID,new String[]{U_ID},null,null,null);
+        Cursor sCursor=db.query(USER_TBL,new String[]{U_SN,SYN},U_ID,new String[]{U_ID},null,null,null);
         sCursor.moveToFirst();
         String sn=sCursor.getString(0);
+        int syntype=sCursor.getInt(1);
+        D.i("SynType="+syntype);
         sCursor.close();
         db.close();
 
@@ -155,6 +175,8 @@ public class Db extends SQLiteOpenHelper {
         cv.put(U_SN, uSn);
         cv.put(SYN,1);
         db.update(USER_TBL, cv, U_ID+"=?", new String[]{"" + mCurrentUserId});
+        mCurrentUsn=uSn;
+        D.i("syn User:"+uSn);
         db.close();
     }
     public String signIn(String mail,String pasd){
@@ -172,7 +194,6 @@ public class Db extends SQLiteOpenHelper {
         db.close();
         return returnData;
     }
-
     public int addGroup(String groupName,String inf){
         SQLiteDatabase db=getWritableDatabase();
         ContentValues cv=new ContentValues();
@@ -250,7 +271,14 @@ public class Db extends SQLiteOpenHelper {
         db.close();
         return returnData;
     }
+    public void tempTest(){
+        if(mCurrentUserId!=-1){
+            setGroupId(addGroup("高性能","inf"));
+            addDevice("C4BE8474EE31","USR-C322","light","light");
+            changeGroupType("TL-WVR450G","gooduo.net");
 
+        }
+    }
     public void addDevice(String mac,String SSID,String type,String name){
         SQLiteDatabase db = getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -263,9 +291,6 @@ public class Db extends SQLiteOpenHelper {
         Log.i("godlee","device add to db ok,mac:"+mac+", SSID:"+SSID);
         db.close();
     }
-
-
-
     public byte[] getCode(String type){
         String selection="G_ID=? and C_TYPE=?";
         String[] selectionArg=new String[]{""+ mCurrentGroupId,type};
@@ -286,7 +311,6 @@ public class Db extends SQLiteOpenHelper {
             return null;
         }
     }
-
     public void setCode(String type,byte[] code){
         SQLiteDatabase db=getWritableDatabase();
         ContentValues cv=new ContentValues();
@@ -312,7 +336,6 @@ public class Db extends SQLiteOpenHelper {
             return null;
         }
     }
-
     public JSONObject[] getDeviceList(){
         SQLiteDatabase db=getReadableDatabase();
         String selection="G_ID=?";
@@ -322,13 +345,12 @@ public class Db extends SQLiteOpenHelper {
         db.close();
         return returnData;
     }
-
     public int getGroupId() {
         return mCurrentGroupId;
     }
-
     public void setGroupId(int mCurrentId) {
         this.mCurrentGroupId = mCurrentId;
+        D.i("group id="+mCurrentId);
     }
     public int getUserId() {
         return this.mCurrentUserId;
@@ -353,6 +375,67 @@ public class Db extends SQLiteOpenHelper {
         Log.i("godlee", "replace"+Tool.bytesToHexString(code));
         db.close();
     }
+
+    /**
+     * 储存无法发送的网络同步数据
+     * @param dataType 数据类型,账户控制数据添加，控制数据替换
+     * @param data 需要替换的数据
+     */
+    public void putDataToOffline(String dataType,String data){
+        SQLiteDatabase db=getWritableDatabase();
+        ContentValues cv=new ContentValues();
+
+        cv.put(DATA,data);
+        cv.put(TIMESTAMP,System.currentTimeMillis());
+        if(dataType.equals(TYPE_OTHER)) {
+            cv.put(U_ID, mCurrentUserId);
+            cv.put(G_ID, mCurrentGroupId);
+            cv.put(DATA_TYPE, dataType);
+            db.insert(OFFLINE_TBL, null, cv);
+        }else {
+            String selection=U_ID+"=? and "+G_ID+"=? and "+DATA_TYPE+"=?";
+            String[] selectionArg=new String[]{""+mCurrentUserId,""+mCurrentGroupId,dataType};
+            Cursor cursor=db.query(OFFLINE_TBL,new String[]{DATA_TYPE},selection,selectionArg,null,null,null);
+            if(cursor.getCount()>0){
+                db.update(OFFLINE_TBL,cv,selection,selectionArg);
+            }else{
+                cv.put(U_ID, mCurrentUserId);
+                cv.put(G_ID, mCurrentGroupId);
+                cv.put(DATA_TYPE, dataType);
+                db.insert(OFFLINE_TBL,null,cv);
+            }
+            cursor.close();
+        }
+        db.close();
+    }
+
+    /**
+     *  从待发离线表中删除指定数据
+     * @param data 指定的数据
+     */
+    public void deleteDataFromOffline(String data){
+        SQLiteDatabase db=getWritableDatabase();
+        String selection=U_ID+"=? and "+G_ID+"=? and "+DATA+"=?";
+        String[] selectionArg=new String[]{""+mCurrentUserId,""+mCurrentGroupId,data};
+        db.delete(OFFLINE_TBL,selection,selectionArg);
+        db.close();
+    }
+
+    public LinkedList<String> getOfflineQueue(){
+        SQLiteDatabase db=getReadableDatabase();
+        Cursor cursor=db.query(OFFLINE_TBL,new String[]{DATA},U_ID+"=? and "+G_ID+"=?",new String[]{""+mCurrentUserId,""+mCurrentGroupId},null,null,TIMESTAMP+ " asc");
+        cursor.moveToFirst();
+        LinkedList<String> sList=new LinkedList<>();
+//        int index=0;
+        while (cursor.getPosition()!=cursor.getCount()){
+            sList.add(cursor.getString(0));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        db.close();
+        return sList;
+    }
+
     private JSONObject getStringRow(Cursor cursor){
         if(cursor.getCount()>0){
             if(cursor.isBeforeFirst())cursor.moveToFirst();

@@ -40,7 +40,7 @@ var bCanvasLeft,bCanvasTop;
 var marginH = 10;
 var marginV = 10;
 var paddingBottom;
-var edgeIndex = -1;
+var edgeIndex = -1;//标记点，如果触摸发生在最边缘，则让此变量保存所在边缘点的index
 var bgImg;
 var currentX=0;
 var colorControlable=false;
@@ -173,18 +173,24 @@ function touchMove(e) {
 
     level=parseInt((aCanvasHeight -paddingBottom - y) / (aCanvasHeight - marginV-paddingBottom) * 100);
     if(level<0)level=0;
-    if(level>100)level=100;
+    if(level>100&&level<105)level=100;
+    if(level>=105)level=0;
+    //console.log(level);
     palette[currentColor].setLevel(level);
 
 
 }
+/**
+ * 线图内触摸结束时调用的方法
+ * @param e触摸事件
+ */
 function touchEnd(e) {
     var level=0;
     var x=0;
     var index;
     var y = (e.changedTouches[0].clientY - aCanvasTop)*2;
     //var level = parseInt((aCanvasHeight - marginV - y) / (aCanvasHeight - marginV * 2) * 100);
-    if (edgeIndex < 0) {
+    if (edgeIndex < 0) {//触摸点不是在边缘的情况
         x = (e.changedTouches[0].clientX - aCanvasLeft)*2;
         index = getCtrIndex(x);
         if (index <=edgeL || index >= edgeR|| y<0) {
@@ -413,6 +419,7 @@ function manualColor(index, color) {
         this.level=parseInt(value * 100 / valueRange)
     }
     this.setLevel=function(level){
+        //if()
         this.level=parseInt(level);
         this.value=parseInt(level*valueRange / 100);
     }

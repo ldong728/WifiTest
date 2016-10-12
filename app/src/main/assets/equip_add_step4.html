@@ -17,21 +17,26 @@
             <span class="pos-m">选择网络</span>
         </div>
         <div class="item-list">
-            <div class="li">
-                <a class="wifi-item">WIFI #1</a>
-            </div>
-            <div class="li">
-                <a class="wifi-item">WIFI #2</a>
-            </div>
-            <div class="li">
-                <a class="wifi-item">WIFI #3</a>
-            </div>
+            <!--<div class="li">-->
+                <!--<a class="wifi-item">WIFI #1</a>-->
+            <!--</div>-->
+            <!--<div class="li">-->
+                <!--<a class="wifi-item">WIFI #2</a>-->
+            <!--</div>-->
+            <!--<div class="li">-->
+                <!--<a class="wifi-item">WIFI #3</a>-->
+            <!--</div>-->
         </div>
     </div>
 </body>
 <script>
     var ssid;
     var pasd;
+    var timeOutId;
+    app_tool.loading();
+    timeOutId=setTimeout(function(){
+        searchFailed();
+    },5000);
     window.wifi.usrLink();
     function getList(data){
         var list=eval('('+data+')');
@@ -56,19 +61,30 @@
     });
     $(document).on('click','.no',function(){
         app_msg.animation();
-    })
-//    function changeType(){
-//        var ssid=$('#ssid').text();
-//        var pasd=$('#pasd').val();
-//
-//    }
+    });
+    $(document).on('click','.yes',function(){
+//        window.wifi.wifiOpt();
+    });
+    $(document).on('click','.no',function(){
+
+//        window.light.chooseGroup($(this).attr('id'));
+        headerTo('equip_info.html');
+    });
+
+
     function ap2staResult(back){
+        app_tool.loaded();
+        clearTimeout(timeOutId);
         var jsonData=eval('('+back+')');
         alert(jsonData.apStu);
         alert(jsonData.pasdStu);
         if(1==jsonData.apStu&&jsonData.pasdStu){
            changeGroupType(ssid,pasd,false);
         }
+    }
+    function searchFailed(){
+        app_tool.loaded();
+        $('body').append('<div class="app-msg slideInUp"><div class="txt" id="ssid">设备无法搜索到无线网络</div><div class="confirm"><span class="no">取消</span><span class="yes">重试</span></div></div>');
     }
 </script>
 </html>

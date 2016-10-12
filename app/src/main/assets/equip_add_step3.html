@@ -45,7 +45,7 @@
             addDeviceToGroup({mac:mac})
             lightStandby=true;
             if (local) {
-                headerTo('equip-info.html');
+                headerTo('equip_info.html');
             } else {
                 headerTo('equip_add_step4.html');
             }
@@ -56,7 +56,7 @@
         var jsonData=eval('('+back+')');
         if(1==jsonData.apStu&&jsonData.pasdStu){
             changeGroupType(ssid,pasd,false);
-            headerTo('equip-info.html');
+            headerTo('equip_info.html');
         }
     }
 
