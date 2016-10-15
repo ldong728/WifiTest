@@ -17,7 +17,7 @@ public class WebSocketController{
 //    public static final int WEB_SOCKET_CONNECT_OK=0xefabc;
     private static final String URL="ws://192.168.0.78:7272";
 
-    private WebSocketConnection mWsc;
+    private WebSocketConnection mWsConnection;
     private Handler mHandler;
     private ReceiveMessage mReceive;
 
@@ -26,7 +26,7 @@ public class WebSocketController{
 
 
     public WebSocketController(Handler mHandler) {
-        mWsc = new WebSocketConnection();
+        mWsConnection = new WebSocketConnection();
         this.mHandler=mHandler;
     }
     public void setReceiver(ReceiveMessage l){
@@ -37,7 +37,7 @@ public class WebSocketController{
         D.i("connecting");
         if(!isConnect()){
             try {
-                mWsc.connect(URL, mWscHandler);
+                mWsConnection.connect(URL, mWscHandler);
 
             } catch (WebSocketException e) {
                 e.printStackTrace();
@@ -49,16 +49,16 @@ public class WebSocketController{
     }
     public void disConnected(){
         if(isConnect()){
-            mWsc.disconnect();
+            mWsConnection.disconnect();
         }
     }
 
     public boolean isConnect(){
-        return mWsc.isConnected();
+        return mWsConnection.isConnected();
     }
     public void sendData(String data){
         D.i("data sended"+data);
-        mWsc.sendTextMessage(data);
+        mWsConnection.sendTextMessage(data);
     }
     private JSONObject createCodeData(String type,String code,Db db) throws JSONException{
         if(null!=db.getmCurrentUsn()){
@@ -103,6 +103,7 @@ public class WebSocketController{
                 e.printStackTrace();
             }
         }else{
+            D.i("websocked conect fail,save to Db");
             db.putDataToOffline(type,code);
         }
     }

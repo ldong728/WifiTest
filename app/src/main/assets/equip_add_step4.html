@@ -39,6 +39,9 @@
     },5000);
     window.wifi.usrLink();
     function getList(data){
+//        alert('getList');
+        clearTimeout(timeOutId);
+        app_tool.loaded();
         var list=eval('('+data+')');
         $('.item-list').empty();
         $.each(list,function(k,v){
@@ -63,6 +66,7 @@
         app_msg.animation();
     });
     $(document).on('click','.yes',function(){
+        headerTo('equip_app_step4.html');
 //        window.wifi.wifiOpt();
     });
     $(document).on('click','.no',function(){
@@ -80,6 +84,7 @@
         alert(jsonData.pasdStu);
         if(1==jsonData.apStu&&jsonData.pasdStu){
            changeGroupType(ssid,pasd,false);
+            headerTo('equip_info.html');
         }
     }
     function searchFailed(){

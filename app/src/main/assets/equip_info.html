@@ -14,7 +14,7 @@
     <div class="app-equip shadow">
         <div class="app-tool clearfix">
             <a href="#" class="pos-l img"><img src="image/icon/6.png" alt=""></a>
-            <a href="equip_add_step1.html" class="pos-r img"><img src="image/icon/7.png" alt=""></a>
+            <a href="equip_add_step1.html" class="pos-r img add-device"><img src="image/icon/7.png" alt=""></a>
         </div>
         <div class="equip-info">
             <div class="e-head"><img src="image/bg/df-photo.png" alt=""></div>
@@ -34,13 +34,12 @@
 <script>
     var localLinked=false;
     var inf=1;
-    alert(inf);
     inf=initGroup();
     alert(inf);
     inf=eval('('+inf+')');
     var deviceInf=inf.device;
     var type=inf.type;
-    var ssid=inf.ssid;
+    var ssid=inf.ssid;//需要连接的wifi ssid
     var groupInf=inf.inf
     var currentSSid=getCurrentSSID();
     var deviceList=[];//组中总设备数
@@ -117,6 +116,13 @@
     $(document).on('click','.n1',function(){
 
     });
+    $(document).on('click','.add-device',function(){
+        if('local'==type){
+            headerTo('equip_add_step4.html');
+        }else{
+            headerTo('equip_add_step1.html');
+        }
+    })
 
     function device(mac){
         var _=this;

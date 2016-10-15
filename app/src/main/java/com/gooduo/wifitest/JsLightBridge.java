@@ -23,6 +23,9 @@ public class JsLightBridge extends JsBridge {
     public  boolean ismReadyToSend() {
         return mReadyToSend;
     }
+    public void setmReadyToSend(boolean mReadyToSend) {
+        this.mReadyToSend = mReadyToSend;
+    }
     private boolean isGroupOnLine=false;
     private String mCurrentType;
     private String mCurrentScene;
@@ -41,6 +44,7 @@ public class JsLightBridge extends JsBridge {
         @Override
         public void onOpen() {
             mOfflineList=mDb.getOfflineQueue();
+            D.i("webSocket connect ok");
         }
         @Override
         public void onTextMessage(String payload) {
@@ -66,6 +70,7 @@ public class JsLightBridge extends JsBridge {
             //处理因断线无法同步的数据
             if(null!=mOfflineList){
                 String data=mOfflineList.poll();
+                D.i("get data from offline_tbl: "+data);
                 if(null!=data){
                     mWsc.sendData(data);
                     mDb.deleteDataFromOffline(data);
@@ -260,12 +265,12 @@ public class JsLightBridge extends JsBridge {
             String phone = obj.getString("phone");
             String pasd = obj.getString("pasd");
             id = mDb.addUser(name, email, phone, pasd);
-            if(mWsc.isConnect()){
+//            if(mWsc.isConnect()){
                 String str="{\"mode\":\"reg\",\"U_EMAIL\":\""+email+"\",\"U_PHONE\":\""+phone+"\",\"U_NAME\":\""+name+"\",\"U_PASD\":\""+pasd+"\",\"signature\":\"\"}";
                 mWsc.sendData(Db.TYPE_OTHER,str,mDb);
                 D.i(str);
-                mWsc.sendData(str);
-            }
+//                mWsc.sendData(str);
+//            }
 
 
         } catch (JSONException e) {
@@ -452,6 +457,8 @@ public class JsLightBridge extends JsBridge {
         mReadyToSend=true;
         if(mLightControllerGroup.isSendOk()){
             mHandler.sendEmptyMessage(LightControllerGroup.SEND_OK);
+
+            D.i("save");
         }
         mWsc.sendData(mCurrentType,mLightControllerGroup.getControlCodeJson(mCurrentType),mDb);
         if(null!=mCurrentScene){

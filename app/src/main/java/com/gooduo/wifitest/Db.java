@@ -95,7 +95,7 @@ public class Db extends SQLiteOpenHelper {
         str="CREATE TABLE IF NOT EXISTS CODE_TBL (C_ID integer primary key autoincrement,G_ID integer,C_TYPE text,C_CODE BLOB,SYN integer,UNIQUE(G_ID,C_TYPE))";
         db.execSQL(str);
         //用来暂时储存因手机处于离线状态无法与服务器进行同步的数据
-        str="CREATE TABLE IF NOT EXISTS OFFLINE_TBL (OFFLINE_ID integer primary,U_ID integer,G_ID integer,DATA_TYPE text,TYPE text,DATA text,TIMESTAMP integer)";
+        str="CREATE TABLE IF NOT EXISTS OFFLINE_TBL (OFFLINE_ID integer primary key autoincrement,U_ID integer,G_ID integer,DATA_TYPE text,TYPE text,DATA text,TIMESTAMP integer)";
         db.execSQL(str);
     }
 
@@ -146,7 +146,7 @@ public class Db extends SQLiteOpenHelper {
         cursor.close();
         db.close();
         mCurrentUserId=strid;
-        tempTest();
+//        tempTest();//测试方法，将高性能灯作为联网模式添加
         Log.i("godlee","get added UserId="+mCurrentUserId);
         return strid;
     }
@@ -276,7 +276,6 @@ public class Db extends SQLiteOpenHelper {
             setGroupId(addGroup("高性能","inf"));
             addDevice("C4BE8474EE31","USR-C322","light","light");
             changeGroupType("TL-WVR450G","gooduo.net");
-
         }
     }
     public void addDevice(String mac,String SSID,String type,String name){
@@ -391,6 +390,7 @@ public class Db extends SQLiteOpenHelper {
             cv.put(U_ID, mCurrentUserId);
             cv.put(G_ID, mCurrentGroupId);
             cv.put(DATA_TYPE, dataType);
+            D.i("user_inf:"+cv.toString());
             db.insert(OFFLINE_TBL, null, cv);
         }else {
             String selection=U_ID+"=? and "+G_ID+"=? and "+DATA_TYPE+"=?";

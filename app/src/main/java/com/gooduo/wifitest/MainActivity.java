@@ -96,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
                                         (byte)0xb6},UdpController.DATA_PORT);
                             }
                         }.start();
+                        mLightBridge.setmReadyToSend(false);
                     }
                     break;
                 case LightControllerGroup.SINGLE_SEND_OK:

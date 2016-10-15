@@ -173,7 +173,8 @@ public class WifiClass {
     }
 
     public String getSSID() {
-        return (mWifiInfo == null) ? "NULL" : mWifiInfo.getSSID();
+//        return (mWifiInfo == null) ? "NULL" : mWifiInfo.getSSID();
+        return ssid;
     }
 
     public int getIpAddress() {

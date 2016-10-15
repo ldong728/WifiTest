@@ -100,6 +100,10 @@ function ap2sta(ssid,pasd){
 function saveCode(codeType){
     if(!debug)window.light.saveCodeToDb(codeType);
 }
+function deviceCodeSave(){
+    //alert("save");
+    if(!debug)window.light.saveCode();
+}
 function chooseGroup(groupId){
     if(!debug)window.light.chooseGroup(groupId);
 }
