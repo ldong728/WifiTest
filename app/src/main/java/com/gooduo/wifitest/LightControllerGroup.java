@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -400,12 +401,14 @@ public class LightControllerGroup {
 
     }
 
-    private Runnable SendQueue = new Runnable() {
+    private Runnable SendQueue = new Runnable() {  //消息发送队列
         @Override
         public void run() {
             while (threadFlag) {
                 if (mSendBuffer.size() > 0) {
+
                     Iterator it = mSendBuffer.entrySet().iterator();
+                    LinkedList<String> preDelList=new LinkedList<String>();
                     while (it.hasNext()) {
                         Map.Entry<String, ArrayList<byte[]>> e = (Map.Entry<String, ArrayList<byte[]>>) it.next();
                         ArrayList<byte[]> list = e.getValue();
@@ -419,15 +422,19 @@ public class LightControllerGroup {
                                     }
                                 }
                             } else {
-                                synchronized (mSendBuffer) {
-                                    mSendBuffer.remove(ip);
-//                                    String mac=mIPMap.
-                                    mUdpController.putMsg(new byte[]{(byte)0xAA,0x08,0x0A,0x08,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x13},ip);//执行指令,自动模式只有使用此指令才能开始运行
-                                    D.i("run");
-                                    Message msg=mHandle.obtainMessage(SINGLE_SEND_OK,ip);
-                                    mHandle.sendMessage(msg);
-                                }
+                                preDelList.add(ip);
+
                             }
+                        }
+                    }
+                    synchronized (mSendBuffer) {
+                        for(String ip:preDelList){
+                            mSendBuffer.remove(ip);
+//                                    String mac=mIPMap.
+                            mUdpController.putMsg(new byte[]{(byte)0xAA,0x08,0x0A,0x08,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x13},ip);//执行指令,自动模式只有使用此指令才能开始运行
+                            D.i("run");
+                            Message msg=mHandle.obtainMessage(SINGLE_SEND_OK,ip);
+                            mHandle.sendMessage(msg);
                         }
                     }
                 } else {
