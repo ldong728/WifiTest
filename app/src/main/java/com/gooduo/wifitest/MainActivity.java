@@ -263,9 +263,10 @@ public class MainActivity extends AppCompatActivity {
                             Log.i("godlee","Ap Name:"+info.getSSID());
                             Log.i("godlee", "Ap IP:" + gateIp);
                             String ssid= mWifiBridge.linkedOk(info.getSSID());
+                            WifiClass.ssid=ssid;
                             if(gateIp.equals(UdpController.DEFALT_IP)){//如果路由器IP为默认IP，即连接的设备为AP模式
                                 if(null!=ssid){
-                                    WifiClass.ssid=ssid;
+
                                     Log.i("godlee","currentSSid:"+WifiClass.ssid);
                                 }
                             }else{
