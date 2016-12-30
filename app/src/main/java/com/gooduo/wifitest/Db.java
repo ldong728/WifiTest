@@ -97,6 +97,7 @@ public class Db extends SQLiteOpenHelper {
         //用来暂时储存因手机处于离线状态无法与服务器进行同步的数据
         str="CREATE TABLE IF NOT EXISTS OFFLINE_TBL (OFFLINE_ID integer primary key autoincrement,U_ID integer,G_ID integer,DATA_TYPE text,TYPE text,DATA text,TIMESTAMP integer)";
         db.execSQL(str);
+
     }
 
     @Override
@@ -117,16 +118,18 @@ public class Db extends SQLiteOpenHelper {
                 mCurrentUsn=cursor.getString(1);
                 D.i("uid:"+mCurrentUserId+"U_SN"+mCurrentUsn);
             }else{
-                Log.i("godlee","no userInf in Db");
-                mCurrentUserId=-1;
+                D.i("no user in Db, create one");
+                int id=addUser( db,"localUser","localMail","0","localUser");
+                mCurrentUserId=id;
             }
+
             cursor.close();
         }
 
     }
 
-    public int addUser(String name,String mail,String phone,String pasd){
-        SQLiteDatabase db=getWritableDatabase();
+    private int addUser(SQLiteDatabase db,String name,String mail,String phone,String pasd){
+//        SQLiteDatabase db=getWritableDatabase();
         ContentValues cv=new ContentValues();
         String sql="update "+USER_TBL+" set "+U_DEFAULT+"=0";
         db.execSQL(sql);
@@ -144,11 +147,17 @@ public class Db extends SQLiteOpenHelper {
         if(cursor.moveToFirst())
             strid = cursor.getInt(0);
         cursor.close();
-        db.close();
+//        db.close();
         mCurrentUserId=strid;
 //        tempTest();//测试方法，将高性能灯作为联网模式添加
         Log.i("godlee","get added UserId="+mCurrentUserId);
         return strid;
+    }
+    public int addUser(String name,String mail,String phone,String pasd){
+           SQLiteDatabase db=getWritableDatabase();
+           int id=addUser(db,name,mail,phone,pasd);
+        db.close();
+        return id;
     }
     public String chooseUser(int userId){
         SQLiteDatabase db = getWritableDatabase();

@@ -35,13 +35,14 @@
     var localLinked=false;
     var inf=1;
     inf=initGroup();
-    alert(inf);
+//    alert(inf);
     inf=eval('('+inf+')');
     var deviceInf=inf.device;
     var type=inf.type;
     var ssid=inf.ssid;//需要连接的wifi ssid
     var groupInf=inf.inf
     var currentSSid=getCurrentSSID();
+//    alert(currentSSid);
     var deviceList=[];//组中总设备数
     var readyDevice=0;//已确认连接的设备数
 

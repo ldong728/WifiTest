@@ -104,7 +104,7 @@ public class WebSocketController{
             }
         }else{
             D.i("websocked conect fail,save to Db");
-            db.putDataToOffline(type,code);
+//            db.putDataToOffline(type,code);
         }
     }
 //    public void sendOtherData(String code,Db db){

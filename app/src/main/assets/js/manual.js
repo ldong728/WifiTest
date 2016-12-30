@@ -1,5 +1,6 @@
 var canvasList=new Array();
 var sliderList=new Array();
+var levels={};
 var sConfig={
     color:config.color||'#ffffff',
     totalLevel:config.totalLevel||100,
@@ -8,8 +9,6 @@ var sConfig={
     baseLineBorder:config.baseLineBorder||4,
     backGroundColor:config.backgroundAttachment||'#25bb9c',
     buttonDiam:config.buttonDiam||10
-
-
 }
 init();
 draw();
@@ -29,8 +28,9 @@ function init(){
         sCanvas.width=sWidth*2;
         sCanvas.height=sHeight*2;
         canvasList.push(sCanvas);
-        sSlider=new Slider(sCanvas,k,sConfig.color,left,top);
+        sSlider=new Slider(sCanvas,k,sConfig.color,left,top,$(v).next('div'));
         sliderList.push(sSlider);
+        levels[k]=0;
         sCanvas.addEventListener('touchstart',sSlider.touchStart,false);
         sCanvas.addEventListener("touchmove",sSlider.touchMove,false);
         sCanvas.addEventListener('touchend',sSlider.touchEnd,false);
@@ -47,7 +47,7 @@ function draw(){
     requestAnimationFrame(draw);
 }
 
-function Slider(canvas,index, color,left,top) {
+function Slider(canvas,index, color,left,top,displayer) {
 
     var _=this;
     _.choosen=false;
@@ -65,10 +65,13 @@ function Slider(canvas,index, color,left,top) {
     _.setValue=function(value){
         _.value=value;
         _.level=parseInt(value * sConfig.totalLevel / _.valueRange);
+        displayer.text(_.level+'%');
     }
     _.setLevel=function(level){
         _.level=parseInt(level);
         _.value=parseInt(level* _.valueRange / sConfig.totalLevel);
+        displayer.text(_.level+'%');
+
     }
 
     _.drawSelf=function() {
@@ -100,8 +103,10 @@ function Slider(canvas,index, color,left,top) {
     _.touchStart=function(e){
         _.choosen=true;
         var x = (e.touches[0].clientX - _.left-sConfig.baseValue)*2;
+        if(x>_.valueRange)x=_.valueRange;
+        if(x<sConfig.baseValue)x=0;
         //var y = (e.touches[0].clientY - _.top)*2;
-        console.log("index:"+ _.index+": "+x);
+        //console.log("index:"+ _.index+": "+x);
         _.setValue(x);
     }
     _.touchMove=function(e){
@@ -110,7 +115,7 @@ function Slider(canvas,index, color,left,top) {
             if(x>_.valueRange)x=_.valueRange;
             if(x<sConfig.baseValue)x=0;
                 _.setValue(x)
-            console.log(_.level);
+            //console.log(_.level);
         }
     }
     _.touchEnd=function(e){
@@ -120,7 +125,14 @@ function Slider(canvas,index, color,left,top) {
        //     _.setValue(x)
        // }else if(_.level<0)_.level=0;
        // else if(_.level>sConfig.totalLevel)_.level=sConfig.totalLevel;
-        console.log(_.level);
+       // console.log(_.level);
+        levels[_.index]= _.level;
+        createCode(_.index);
     }
 
+}
+function initStatus(data){
+    $.each(data,function(k,v){
+        sliderList[k].setLevel(v);
+    });
 }

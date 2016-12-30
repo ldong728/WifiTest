@@ -384,7 +384,6 @@ function color(index, colorIndex) {
         }
     }
     function fillLevelList(l,r){
-        console.log("haha");
         l=parseInt(l);
         r=parseInt(r);
         var le=getLevel(l)

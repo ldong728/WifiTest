@@ -56,6 +56,7 @@ function initCanvas() {
     }
     $('#manual_canvas').css('width',canvasWidth/2+'px');
     $('#manual_canvas').css('height',canvasHeight/2+'px');
+    initCode(getCode('TYPE_MANUAL'));
     drawBuffer();
 }
 function drawBuffer() {
@@ -95,21 +96,15 @@ function touchMove(e) {
         drawList[currentColor].setValue(valueRange);
     }
     if(tempLevel!=drawList[currentColor].level){
-        window.light.setManualCode(JSON.stringify({color:currentColor,level:drawList[currentColor].level}));
+        //window.light.setManualCode(JSON.stringify({color:currentColor,level:drawList[currentColor].level}));
+        sendManualCode(currentColor,drawList[currentColor].level);
         tempLevel=drawList[currentColor].level;
     }
-
-        //$('#temp').text(level);
-        //drawList[currentColor].level = level;
 
 }
 function touchEnd(e) {
     var x= (e.changedTouches[0].clientX - canvasLeft)*2;
     var y = (e.changedTouches[0].clientY - canvasTop)*2;
-
-
-
-
 }
 function getIndex(y) {
     var index = ((y - marginV) / colorHeight + 0.5) | 0;
@@ -117,8 +112,7 @@ function getIndex(y) {
     if (index < 0)index =-1;
     return index;
 }
-
-            function manualColor(index, color) {
+function manualColor(index, color) {
                 this.index = index;
                 this.color = color;
                 colorHeight=canvasHeight/7;
@@ -130,6 +124,10 @@ function getIndex(y) {
                     this.value=value;
                     this.level=parseInt(value * 100 / valueRange)
                 }
+                this.setLevel=function(level){
+        this.level=level;
+        this.value= parseInt(valueRange*level/100)
+    }
 
                 this.drawSelf=function(context) {
                     var drawTop=this.top+padding*2;
@@ -158,13 +156,14 @@ function getIndex(y) {
                     context.arc(baseValue+this.value,this.top+padding*2+5, 2*2, 0, Math.PI * 2,true);
                     context.fill();
                     context.closePath();
-
-
-
-
                 }
-
             }
+function initCode(data){
+    var ve=eval('('+data+')');
+    $.each(ve,function(k,v){
+        drawList[k].setLevel(v||0);
+    })
+}
 
 
 

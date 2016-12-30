@@ -1,7 +1,5 @@
 package com.gooduo.wifitest;
 
-import android.util.Log;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -45,13 +43,13 @@ public class LightsController {
     }
     public byte[] set(int color,int time,int level){
       byte[] temp= mLightsList[color].setPoint(time, level);
-        Log.i("godlee","set shortCode: "+Tool.bytesToHexString(temp));
+        D.i("set shortCode: "+Tool.bytesToHexString(temp));
 //        return mLightsList[color].getAutoCode();
         return temp;
     }
     public byte[] unset(int color,int time){
        byte[] temp= mLightsList[color].removeKey(time);
-        Log.i("godlee","unset shortCode: "+Tool.bytesToHexString(temp));
+        D.i("unset shortCode: "+Tool.bytesToHexString(temp));
         return temp;
 //        return  mLightsList[color].getAutoCode();
     }
@@ -107,14 +105,16 @@ public class LightsController {
         return data;
 
     }
-    public byte[] setMoon(boolean stu,int start,int end){
-        int sStart=start,sEnd=end;
+    public byte[] setMoon(boolean stu,int startH,int startM,int endH,int endM){
+        int sStartH=startH,sStartM=startM,sEndH=endH,sEndM=endM;
         int sStu=0x01;
         byte[] data=new byte[12];
         if(!stu){
             sStu=0x00;
-            sStart=0;
-            sEnd=0;
+            sStartH=0;
+            sStartM=0;
+            sEndH=0;
+            sEndM=0;
         }
         data[0]=(byte)0xaa;
         data[1]=(byte)0x08;
@@ -122,12 +122,12 @@ public class LightsController {
         data[3]=(byte)0x06;
         data[4]=(byte)sStu;
         data[5]=(byte)0x00;
-        data[6]=(byte)sStart;
-        data[7]=(byte)0x00;
-        data[8]=(byte)sEnd;
-        data[9]=(byte)0x00;
+        data[6]=(byte)sStartH;
+        data[7]=(byte)sStartM;
+        data[8]=(byte)sEndH;
+        data[9]=(byte)sEndM;
         data[10]=(byte)0x00;
-        data[11]=(byte)(0x06+0x0a+sStu+sStart+sEnd);
+        data[11]=(byte)(0x06+0x0a+sStu+sStartH+sStartM+sEndH+sEndM);
         mMoonCode=data;
         return data;
     }
@@ -175,7 +175,7 @@ public class LightsController {
                 sList.add(c);
             }
         }
-        Log.i("godlee",""+sList.get(245).getLevel());
+        D.i(""+sList.get(245).getLevel());
         ByteArrayOutputStream obj=new ByteArrayOutputStream();
         try{
             ObjectOutputStream out=new ObjectOutputStream(obj);
@@ -183,7 +183,7 @@ public class LightsController {
             return obj.toByteArray();
 //            return new byte[]{(byte)0x12,0x45};
         }catch(IOException e){
-            Log.e("godlee",e.getMessage());
+            D.e(e.getMessage());
             return null;
         }
     }
@@ -207,9 +207,9 @@ public class LightsController {
                     }
                 }
             }catch(IOException e){
-                Log.e("godlee",e.getMessage());
+                D.e(e.getMessage());
             }catch(ClassNotFoundException e){
-                Log.e("godlee", e.getMessage());
+                D.e( e.getMessage());
             }
     }
     public void setAutoMap(JSONObject data){
@@ -266,7 +266,7 @@ public class LightsController {
             }
             return obj.toString();
         }catch(JSONException e){
-            Log.e("godlee", e.getMessage());
+            D.e( e.getMessage());
             return null;
         }
     }
@@ -285,7 +285,7 @@ public class LightsController {
             }
             return obj.toString();
         }catch(JSONException e){
-            Log.e("godlee",e.getMessage());
+            D.e(e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -303,7 +303,7 @@ public class LightsController {
             obj.accumulate("mask",(int)mCloudCode[6]);
             return obj.toString();
         }catch(JSONException e){
-            Log.e("godlee",e.getMessage());
+            D.e(e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -315,7 +315,7 @@ public class LightsController {
             obj.accumulate("level",(int)mFlashCode[5]);
             return obj.toString();
         }catch(JSONException e){
-            Log.e("godlee",e.getMessage());
+            D.e(e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -324,11 +324,13 @@ public class LightsController {
         JSONObject obj=new JSONObject();
         try{
             obj.accumulate("stu",(int)mMoonCode[4]);
-            obj.accumulate("start",(int)mMoonCode[6]);
-            obj.accumulate("end",(int)mMoonCode[8]);
+            obj.accumulate("startH",(int)mMoonCode[6]);
+            obj.accumulate("startM",(int)mMoonCode[7]);
+            obj.accumulate("endH",(int)mMoonCode[8]);
+            obj.accumulate("endM",(int)mMoonCode[9]);
             return obj.toString();
         }catch(JSONException e){
-            Log.e("godlee",e.getMessage());
+            D.e(e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -350,7 +352,7 @@ public class LightsController {
     }
 
     /**
-     * 获取可保存如数据库的控制指令
+     * 获取可保存入数据库的控制指令
      * @param codeType 指令类型，包括，手动，自动及各种情景模式
      * @return byte[] byte数组，可直接保存入数据库
      */
@@ -365,7 +367,7 @@ public class LightsController {
                         sList.add(c);
                     }
                 }
-                Log.i("godlee",""+sList.get(245).getLevel());
+//                D.i(""+sList.get(245).getLevel());
                 ByteArrayOutputStream obj=new ByteArrayOutputStream();
                 try{
                     ObjectOutputStream out=new ObjectOutputStream(obj);
@@ -373,7 +375,7 @@ public class LightsController {
                     return obj.toByteArray();
 //            return new byte[]{(byte)0x12,0x45};
                 }catch(IOException e){
-                    Log.e("godlee",e.getMessage());
+                    D.e(e.getMessage());
                     return null;
                 }
             }

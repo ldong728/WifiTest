@@ -55,6 +55,22 @@ function sendAutoCode(color,time,level,mode){
     }
 
 }
+function sendManualCode(currentColor,level){
+    if(!debug) window.light.setManualCode(JSON.stringify({color:currentColor,level:level}));
+    saveCode('TYPE_MANUAL');
+}
+function sendCloudCode(stu,prob,mask){
+    if(!debug) window.light.setCloudCode(getJsonString({stu:stu,prob:prob,mask:mask}));
+    saveCode("TYPE_CLOUD");
+}
+function sendFlashCode(stu,prob,level){
+    if(!debug) window.light.setFlashCode(getJsonString({stu:stu,prob:prob,level:level}));
+    saveCode("TYPE_FLASH");
+}
+function sendMoonCode(stu,startH,startM,endH,endM){
+    if(!debug) window.light.setFlashCode(getJsonString({stu:stu,startH:startH,startM:startM,endH:endH,endM:endM}));
+    saveCode("TYPE_MOON");
+}
 function changeGroupType(ssid,pasd,merge){
     if(!debug){
         if(!merge){
@@ -80,7 +96,10 @@ function getCurrentSSID(){
 
 function getCode(codeType){
     if(!debug)return window.light.getControlCode(codeType);
-    else return '{"0":{"12":"60","20":"100"},"1":{"5":"100","30":"0"}}';
+    else{
+        if('TYPE_AUTO'==codeType)return '{"0":{"12":"60","20":"100"},"1":{"5":"100","30":"0"}}';
+        if('TYPE_MANUAL')return '{"0":0,"1":0,"2":0,"3":0,"4":0,"5":0,"6":26}'
+    }
 }
 function addDeviceToGroup(jsonData){
     if(!debug)window.light.addDevice(getJsonString(jsonData))
@@ -115,6 +134,9 @@ function scanWifi(){
 }
 function linkWifi(ssid){
     if(!debug)window.wifi.linkWifi(getJsonString({ssid:ssid}));
+}
+function goBack(){
+    headerTo('equip_index.html');
 }
 
 

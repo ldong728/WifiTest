@@ -22,12 +22,14 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import com.android.volley.toolbox.Volley;
+
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
+
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.lang.ref.WeakReference;
 
+import java.lang.ref.WeakReference;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -194,7 +196,8 @@ public class MainActivity extends AppCompatActivity {
 //                D.i("title:"+mWebView.getTitle());
 //                D.i("title:"+mWebView.getUrl());
                 if(keyCode == KeyEvent.KEYCODE_BACK && !mWebView.getUrl().equals("file:///android_asset/equip_index.html")){
-                    mWebView.goBack();
+//                    mWebView.goBack();
+                    mWebView.loadUrl("javascript:"+"goBack()");
                     return true;
                 }
                 return false;
@@ -260,9 +263,10 @@ public class MainActivity extends AppCompatActivity {
                             WifiInfo info=wm.getConnectionInfo();
                             DhcpInfo dhcpInfo=wm.getDhcpInfo();
                             String gateIp=Tool.intIpToString(dhcpInfo.serverAddress);
-                            Log.i("godlee","Ap Name:"+info.getSSID());
+                            Log.i("godlee","Ap NameChang:"+info.getSSID());
                             Log.i("godlee", "Ap IP:" + gateIp);
                             String ssid= mWifiBridge.linkedOk(info.getSSID());
+                            WifiClass.ssid=ssid;
                             if(gateIp.equals(UdpController.DEFALT_IP)){//如果路由器IP为默认IP，即连接的设备为AP模式
                                 if(null!=ssid){
                                     WifiClass.ssid=ssid;

@@ -46,9 +46,7 @@
         linkWifi(ssid);
         setTimeout(function(){
             linkedFail();
-        },10000);
-
-
+        },15000);
     });
 
 
@@ -74,6 +72,12 @@
             $('.item-list').append(content);
         });
     }
+    $(document).on('click','.yes',function(){
+        window.wifi.wifiOpt();
+    });
+    $(document).on('click','.no',function(){
+        app_msg.animation();
+    });
 
 
 </script>

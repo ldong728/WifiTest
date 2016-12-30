@@ -102,10 +102,10 @@ public class JsLightBridge extends JsBridge {
     public String sendAutoCode(final String data) {
 
 //        byte[] map = mLightControllerGroup.getAutoMap();
-//        Log.i("godlee", "put code" + Tool.bytesToHexString(map));
+//        D.i( "put code" + Tool.bytesToHexString(map));
 //        mDb.temp();
 //        mDb.saveCode(Db.TYPE_AUTO, map);
-//        Log.i("godlee", "put ok");
+//        D.i( "put ok");
         JSONObject sJson;
         int color, time, level;
         boolean send;
@@ -115,7 +115,7 @@ public class JsLightBridge extends JsBridge {
             time = Integer.parseInt(sJson.getString("time"));
             level = Integer.parseInt(sJson.getString("level"));
             send = sJson.getString("mode").equals("confirm") ? true : false;
-            Log.i("godlee", "color: " + color + " time: " + time + " level: " + level);
+            D.i( "color: " + color + " time: " + time + " level: " + level);
             mLightControllerGroup.autoController(color, time, level, send);
             mCurrentType=Db.TYPE_AUTO;
 //            JSONObject obj=mWsc.createCodeData(Db.TYPE_AUTO,mDb.getGroupId(),mLightControllerGroup.getControlCodeJson(Db.TYPE_AUTO),mSn);
@@ -134,12 +134,12 @@ public class JsLightBridge extends JsBridge {
     public void setManualCode(final String data) {
         JSONObject sJson;
         int color, level;
-        Log.i("godlee","manualCode");
+        D.i("manualCode");
         try {
             sJson = new JSONObject(data);
             color = Integer.parseInt(sJson.getString("color"));
             level = Integer.parseInt(sJson.getString("level"));
-            Log.i("godlee","color:"+color+" level:"+level);
+            D.i("color:"+color+" level:"+level);
             mLightControllerGroup.manualController(color, level);
             mCurrentType=Db.TYPE_MANUAL;
 //            JSONObject obj=mWsc.createCodeData(Db.TYPE_MANUAL,mDb.getGroupId(),mLightControllerGroup.getControlCodeJson(Db.TYPE_MANUAL),mSn);
@@ -191,13 +191,15 @@ public class JsLightBridge extends JsBridge {
     public void setMoonCode(final String data) {
         JSONObject sJson;
         boolean stu;
-        int start, end;
+        int startH,startM,endH,endM;
         try {
             sJson = new JSONObject(data);
             stu = Integer.parseInt(sJson.getString("stu")) == 0 ? false : true;
-            start = Integer.parseInt(sJson.getString("start"));
-            end = Integer.parseInt(sJson.getString("end"));
-            mLightControllerGroup.setMoon(stu, start, end);
+            startH = Integer.parseInt(sJson.getString("startH"));
+            startM = Integer.parseInt(sJson.getString("startM"));
+            endH = Integer.parseInt(sJson.getString("endH"));
+            endM = Integer.parseInt(sJson.getString("endM"));
+            mLightControllerGroup.setMoon(stu, startH,startM, endH,endM);
         } catch (JSONException e) {
             Log.e("godlee", e.getMessage());
             e.printStackTrace();
@@ -206,7 +208,7 @@ public class JsLightBridge extends JsBridge {
 
     @JavascriptInterface
     public void initTime() {
-        Log.i("godlee","initTime");
+        D.i("initTime");
         SimpleDateFormat data = new SimpleDateFormat("yyyy,MM,dd,HH,mm,ss");
         String sTime = data.format(new java.util.Date());
         String[] times = sTime.split(",");
@@ -231,13 +233,13 @@ public class JsLightBridge extends JsBridge {
                 (byte) (0x0a + 0x09 + (y - 1970) + M + d + h + m + s)
         };
         mLightControllerGroup.initTime(timeCode);
-        Log.i("godlee", data.toPattern());
-        Log.i("godlee", data.toLocalizedPattern());
-        Log.i("godlee", data.format(new java.util.Date()));
+        D.i( data.toPattern());
+        D.i( data.toLocalizedPattern());
+        D.i( data.format(new java.util.Date()));
     }
     @JavascriptInterface
         public String tempMethod(){
-        Log.i("godlee","temp");
+        D.i("temp");
         return "ok";
     }
     @JavascriptInterface
@@ -267,8 +269,8 @@ public class JsLightBridge extends JsBridge {
             id = mDb.addUser(name, email, phone, pasd);
 //            if(mWsc.isConnect()){
                 String str="{\"mode\":\"reg\",\"U_EMAIL\":\""+email+"\",\"U_PHONE\":\""+phone+"\",\"U_NAME\":\""+name+"\",\"U_PASD\":\""+pasd+"\",\"signature\":\"\"}";
-                mWsc.sendData(Db.TYPE_OTHER,str,mDb);
-                D.i(str);
+//                mWsc.sendData(Db.TYPE_OTHER,str,mDb);
+//                D.i(str);
 //                mWsc.sendData(str);
 //            }
 
@@ -307,7 +309,7 @@ public class JsLightBridge extends JsBridge {
 
     @JavascriptInterface
     public String getUserInf() {
-        Log.i("godlee","getInf");
+        D.i("getInf");
         JSONObject obj = mDb.getUserInf();
         if (null != obj) {
             return obj.toString();
@@ -408,7 +410,7 @@ public class JsLightBridge extends JsBridge {
 
     @JavascriptInterface
     public void chooseGroup(final String inf) {
-        Log.i("godlee", "choose Group");
+        D.i( "choose Group");
         int groupId = Integer.parseInt(inf);
         mDb.setGroupId(groupId);
 
@@ -420,7 +422,7 @@ public class JsLightBridge extends JsBridge {
         JSONObject groupInf = mDb.getGroupInf();
         JSONObject returnInf = new JSONObject();
         String deviceList=mLightControllerGroup.initGroup(mDb);
-//        Log.i("godlee","deviceList: "+deviceList);
+//        D.i("deviceList: "+deviceList);
         try {
             String sGroupType = groupInf.getString(Db.G_TYPE);
             JSONObject deviceListJson=new JSONObject(deviceList);
@@ -432,7 +434,7 @@ public class JsLightBridge extends JsBridge {
 //                    mLightControllerGroup.initGroup(mDb);
                     String[] deviceInf = mDb.getValue(Db.DEVICE_TBL, new String[]{Db.D_SSID}, Db.G_ID + "=?", new String[]{"" + mDb.getGroupId()});
                     String ssid = deviceInf[0];
-                    Log.i("godlee", "get device SSID from DB:" + ssid);
+                    D.i( "get device SSID from DB:" + ssid);
                     returnInf.accumulate("ssid", ssid);
                     Message msg = mHandler.obtainMessage(JsBridge.LOCAL_LINK, ssid);
                     mHandler.sendMessage(msg);
@@ -460,10 +462,10 @@ public class JsLightBridge extends JsBridge {
 
             D.i("save");
         }
-        mWsc.sendData(mCurrentType,mLightControllerGroup.getControlCodeJson(mCurrentType),mDb);
-        if(null!=mCurrentScene){
-            mWsc.sendData(mCurrentScene,mLightControllerGroup.getControlCodeJson(mCurrentScene),mDb);
-        }
+//        mWsc.sendData(mCurrentType,mLightControllerGroup.getControlCodeJson(mCurrentType),mDb);
+//        if(null!=mCurrentScene){
+//            mWsc.sendData(mCurrentScene,mLightControllerGroup.getControlCodeJson(mCurrentScene),mDb);
+//        }
     }
 
     @JavascriptInterface

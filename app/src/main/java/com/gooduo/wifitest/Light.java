@@ -2,9 +2,7 @@ package com.gooduo.wifitest;
 
 import android.util.Log;
 
-import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 
 /**
  * Created by Administrator on 2016/6/29.
@@ -104,20 +102,27 @@ public class Light {
         mControlMap[index].setLevel(level);
         buffer.put(mControlMap[index].getCode(mColor));
         length+=CODE_LENGTH;
-        for(leftKey=index-1;leftKey>0;leftKey--){
-            if(mControlMap[leftKey].isKey()==true)break;
-            leftCount++;
+        if(index>0){
+            for(leftKey=index-1;leftKey>0;leftKey--){
+                if(mControlMap[leftKey].isKey()==true)break;
+                leftCount++;
+            }
+        }else{
+            leftKey=0;
         }
-        for(rightKey=index+1;rightKey<TOTAL-1;rightKey++){
-            if(mControlMap[rightKey].isKey()==true)break;
-            rightCount++;
+        if(index<TOTAL-1){
+            for(rightKey=index+1;rightKey<TOTAL-1;rightKey++){
+                if(mControlMap[rightKey].isKey()==true)break;
+                rightCount++;
+            }
+        }else{
+            rightKey=TOTAL-1;
         }
         if(leftCount>0){
-
-            leftE=(level-mControlMap[leftKey].getLevel())/(leftCount+1);
-            leftOffsetCount=(level-mControlMap[leftKey].getLevel())%(leftCount+1);
+            leftE=(level-mControlMap[leftKey].getLevel())/(leftCount+1);  //获取每一点的平均亮度差
+            leftOffsetCount=(level-mControlMap[leftKey].getLevel())%(leftCount+1);//获取求亮度差后的余数
             for(int i=0;i<leftCount;i++){
-                offset=i<leftOffsetCount-1? 1:0;
+                offset=i<Math.abs(leftOffsetCount)-1? Math.abs(leftOffsetCount)/leftOffsetCount:0;//将余数放入每一点
                 mControlMap[index-i-1].setLevel(mControlMap[index-i].getLevel()-leftE-offset);
                 buffer.put(mControlMap[index - i - 1].getCode(mColor));
                 length+=CODE_LENGTH;
@@ -127,12 +132,11 @@ public class Light {
             rightE=(level-mControlMap[rightKey].getLevel())/(rightCount+1);
             rightOffsetCount=(level-mControlMap[rightKey].getLevel())%(rightCount+1);
             for(int j=0;j<rightCount;j++){
-                offset=j<rightOffsetCount-1? 1:0;
+                offset=j<Math.abs(rightOffsetCount)-1? Math.abs(rightOffsetCount)/rightOffsetCount:0;
                 mControlMap[index+j+1].setLevel(mControlMap[index+j].getLevel()-rightE-offset);
                 buffer.put( mControlMap[index+j+1].getCode(mColor));
                 length+=CODE_LENGTH;
             }
-//            Log.i("godlee","rightE="+rightE+";  rightCount="+rightCount);
         }
         if(buffer.hasArray()){
             byte[] data=new byte[length];
@@ -159,6 +163,7 @@ public class Light {
             if(mControlMap[i].isKey()){
                 return setLevel(i,mControlMap[i].getLevel());
             }else if(i==0){
+//                D.i("追朔到源头");
                 byte[] data=setLevel(i,0);
                 mControlMap[i].setKey(false);
                 return data;
