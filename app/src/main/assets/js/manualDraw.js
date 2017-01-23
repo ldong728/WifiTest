@@ -42,7 +42,7 @@ function initCanvas() {
     myCanvas.width = canvasWidth;
     myCanvas.height = canvasHeight;
     valueRange=canvasWidth-marginH*2-padding*3-textSize*4.5;
-    colorHeight=(canvasHeight-marginV*2)/colorNumber
+    colorHeight=(canvasHeight-marginV*2)/colorNumber;
     myContext = myCanvas.getContext('2d');
     bufferCanvas = document.createElement('canvas');
     bufferContext = bufferCanvas.getContext('2d');

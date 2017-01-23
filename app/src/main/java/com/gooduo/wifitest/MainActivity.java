@@ -41,8 +41,6 @@ public class MainActivity extends AppCompatActivity {
     private static LightControllerGroup mLightControllerGroup;
     private static JsLightBridge mLightBridge;
     private static JsWifiBridge mWifiBridge;
-//    private static JsWebBridge mWebBridge;
-    private static WebSocketController mWebController;
     private static WifiReceiver mReceiver;
     private MyHandler mHander = new MyHandler(this);
     private RequestQueue mRequestQueue;
@@ -57,7 +55,6 @@ public class MainActivity extends AppCompatActivity {
             switch (msg.what) {
                 case JsBridge.LOCAL_LINK:{
                     String ssid=(String)msg.obj;
-//                    mWifiManage.connectBySSID(ssid);
                     break;
                 }
 
@@ -109,8 +106,6 @@ public class MainActivity extends AppCompatActivity {
                     break;
             }
         }
-
-
     }
 
     @Override
@@ -163,9 +158,9 @@ public class MainActivity extends AppCompatActivity {
         mUdpController.start();
         mDb=new Db(this,Db.DB_NAME,null,2);
         mLightControllerGroup=new LightControllerGroup(mHander);
-        mWebController = new WebSocketController(mHander);
+//        mWebController = new WebSocketController(mHander);
         mWifiBridge=new JsWifiBridge(mUdpController,mWifiManage,mHander);
-        mLightBridge=new JsLightBridge(mHander,mLightControllerGroup,mDb, mWebController);
+        mLightBridge=new JsLightBridge(mHander,mLightControllerGroup,mDb);
 //        mWebBridge =new JsWebBridge(mHander,mDb,mRequestQueue);
 
 //        mLightControllerGroup.addGroupMember("C4BE8474C223");
@@ -187,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
         filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
         registerReceiver(mReceiver,filter);
-        mWebController.connect();
+//        mWebController.connect();
         Log.i("godlee", "wifiTest started");
         mWebView.setOnKeyListener(new View.OnKeyListener() {
             @Override

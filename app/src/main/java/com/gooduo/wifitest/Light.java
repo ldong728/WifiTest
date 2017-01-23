@@ -104,7 +104,7 @@ public class Light {
         length+=CODE_LENGTH;
         if(index>0){
             for(leftKey=index-1;leftKey>0;leftKey--){
-                if(mControlMap[leftKey].isKey()==true)break;
+                if(mControlMap[leftKey].isKey())break;
                 leftCount++;
             }
         }else{
@@ -112,7 +112,7 @@ public class Light {
         }
         if(index<TOTAL-1){
             for(rightKey=index+1;rightKey<TOTAL-1;rightKey++){
-                if(mControlMap[rightKey].isKey()==true)break;
+                if(mControlMap[rightKey].isKey())break;
                 rightCount++;
             }
         }else{

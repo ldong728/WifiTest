@@ -4,6 +4,8 @@
 /* 2016-08-01 */
 body{position:relative;width:100%;min-width:320px;max-width:auto;margin:0 auto;background:#25bb9c;font:14px/1 Helvetica,Arial,sans-serif;color:#555;}
 .shadow{background:rgba(0,0,0,0);}
+div{cursor: pointer}
+
 /* Tool */
 .app-tool{position:relative;padding:12px 5%;height:30px;line-height:30px;white-space:nowrap;overflow:hidden;}
 .app-tool .pos-m{display:block;position:absolute;left:20%;right:20%;text-align:center;font-size:15px;color:#fff;}

@@ -16,7 +16,6 @@ import de.tavendo.autobahn.WebSocketHandler;
 public class WebSocketController{
 //    public static final int WEB_SOCKET_CONNECT_OK=0xefabc;
     private static final String URL="ws://192.168.0.78:7272";
-
     private WebSocketConnection mWsConnection;
     private Handler mHandler;
     private ReceiveMessage mReceive;

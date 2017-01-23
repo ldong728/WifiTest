@@ -32,7 +32,7 @@ public class JsLightBridge extends JsBridge {
     private String mSn;
     private boolean mReadyToSend=false;
     private LightControllerGroup mLightControllerGroup;
-    private WebSocketController mWsc;
+//    private WebSocketController mWsc;
     private Db mDb;
     private LinkedList<String> mOfflineList;
     //websocket 连接控制
@@ -43,7 +43,7 @@ public class JsLightBridge extends JsBridge {
         }
         @Override
         public void onOpen() {
-            mOfflineList=mDb.getOfflineQueue();
+//            mOfflineList=mDb.getOfflineQueue();
             D.i("webSocket connect ok");
         }
         @Override
@@ -68,32 +68,32 @@ public class JsLightBridge extends JsBridge {
                 D.i(payload);
             }
             //处理因断线无法同步的数据
-            if(null!=mOfflineList){
-                String data=mOfflineList.poll();
-                D.i("get data from offline_tbl: "+data);
-                if(null!=data){
-                    mWsc.sendData(data);
-                    mDb.deleteDataFromOffline(data);
-                }
-            }
+//            if(null!=mOfflineList){
+//                String data=mOfflineList.poll();
+//                D.i("get data from offline_tbl: "+data);
+//                if(null!=data){
+//                    mWsc.sendData(data);
+//                    mDb.deleteDataFromOffline(data);
+//                }
+//            }
 
 
         }
     };
 
-    public JsLightBridge(Handler mHandler, LightControllerGroup lightControllerGroup, Db mDb,WebSocketController mWsc) {
+    public JsLightBridge(Handler mHandler, LightControllerGroup lightControllerGroup, Db mDb) {
         super(mHandler);
         mLightControllerGroup = lightControllerGroup;
         this.mDb = mDb;
         mSn=mDb.getmCurrentUsn();
 //        D.i("sn="+mSn);
-        this.mWsc=mWsc;
+//        this.mWsc=mWsc;
 
-        mWsc.setReceiver(mReceive);
+//        mWsc.setReceiver(mReceive);
     }
     private void syncCode(String type, String data){
         if(isGroupOnLine){
-            mWsc.sendData(type,data,mDb);
+//            mWsc.sendData(type,data,mDb);
         }
     }
 
@@ -268,7 +268,7 @@ public class JsLightBridge extends JsBridge {
             String pasd = obj.getString("pasd");
             id = mDb.addUser(name, email, phone, pasd);
 //            if(mWsc.isConnect()){
-                String str="{\"mode\":\"reg\",\"U_EMAIL\":\""+email+"\",\"U_PHONE\":\""+phone+"\",\"U_NAME\":\""+name+"\",\"U_PASD\":\""+pasd+"\",\"signature\":\"\"}";
+//                String str="{\"mode\":\"reg\",\"U_EMAIL\":\""+email+"\",\"U_PHONE\":\""+phone+"\",\"U_NAME\":\""+name+"\",\"U_PASD\":\""+pasd+"\",\"signature\":\"\"}";
 //                mWsc.sendData(Db.TYPE_OTHER,str,mDb);
 //                D.i(str);
 //                mWsc.sendData(str);
@@ -367,7 +367,7 @@ public class JsLightBridge extends JsBridge {
             data.accumulate(Db.G_SSID_PASD,pasd);
             data.accumulate("device",mDb.getDeviceList()[0]);
             data.accumulate("U_SN",mDb.getmCurrentUsn());
-            mWsc.sendData(Db.TYPE_OTHER,data.toString(),mDb);
+//            mWsc.sendData(Db.TYPE_OTHER,data.toString(),mDb);
         }catch(JSONException e){
             e.printStackTrace();
         }
@@ -399,7 +399,7 @@ public class JsLightBridge extends JsBridge {
             data.accumulate(Db.D_TYPE,"light");
             data.accumulate(Db.D_NAME,"light");
             data.accumulate(Db.U_SN,mDb.getmCurrentUsn());
-            mWsc.sendData(Db.TYPE_OTHER,data.toString(),mDb);
+//            mWsc.sendData(Db.TYPE_OTHER,data.toString(),mDb);
 
 
 

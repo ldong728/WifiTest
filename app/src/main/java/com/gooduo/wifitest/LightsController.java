@@ -311,8 +311,9 @@ public class LightsController {
     public String getJsonFlash(){
         JSONObject obj=new JSONObject();
         try{
-            obj.accumulate("prob",(int)mFlashCode[4]);
-            obj.accumulate("level",(int)mFlashCode[5]);
+            obj.accumulate("stu",(int)mFlashCode[4]);
+            obj.accumulate("prob",(int)mFlashCode[5]);
+            obj.accumulate("level",(int)mFlashCode[6]);
             return obj.toString();
         }catch(JSONException e){
             D.e(e.getMessage());
