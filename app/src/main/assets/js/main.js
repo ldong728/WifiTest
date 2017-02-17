@@ -125,6 +125,7 @@ function deviceCodeSave(){
 }
 function chooseGroup(groupId){
     if(!debug)window.light.chooseGroup(groupId);
+
 }
 function scanWifi(){
     if(!debug)window.wifi.scanWifi();

@@ -69,7 +69,8 @@ function drawBuffer() {
     });
 }
 function draw() {
-    myCanvas.width = myCanvas.width;
+    myContext.clearRect(0,0,canvasWidth,canvasHeight)
+    //myCanvas.width = myCanvas.width;
     myContext.drawImage(bufferCanvas, 0, 0);
     drawList[currentColor].drawSelf(myContext);
     requestAnimationFrame(draw);

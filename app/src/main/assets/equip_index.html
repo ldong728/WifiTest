@@ -54,7 +54,7 @@
             $('.equip-list').append("当前无设备");
         }
         $(document).on('click','.group-inf',function(){
-            window.light.chooseGroup($(this).attr('id'));
+            chooseGroup($(this).attr('id'));
             headerTo('equip_info.html');
         })
 
