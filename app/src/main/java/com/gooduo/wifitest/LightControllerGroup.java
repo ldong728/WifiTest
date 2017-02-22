@@ -23,13 +23,14 @@ public class LightControllerGroup {
     public static final int SINGLE_SEND_OK=0xcdfe;
     public static final int RECEIVE_PORT = 21195;
     private boolean mLocal = true;
-    private boolean mGroupOnLine = false;
+//    private boolean mGroupOnLine = false;
 
     public boolean isSendOk() {
         return sendOk;
     }
 
     private boolean sendOk = true;
+
     private boolean threadFlag = true;
     private final Handler mHandle;
     public UdpController mUdpController;
@@ -37,6 +38,7 @@ public class LightControllerGroup {
     private final HashMap<String, ArrayList<byte[]>> mSendBuffer;//待发指令缓存（IP地址->指令列表）
     private HashMap<String, DataPack> buffer;//接收数据包的缓存映射，用于补全断帧
     public LightsController mLightsController;
+//    public boolean mReadyToSend=false;
 
     public LightControllerGroup(Handler handler) {
         mHandle = handler;
@@ -136,6 +138,10 @@ public class LightControllerGroup {
 
     public void setMoon(boolean stu, int startH,int startM, int endH,int endM) {
         byte[] code = mLightsController.setMoon(stu, startH,startM, endH,endM);
+        putCodeToQueue(code);
+    }
+    public void saveToDevice(){
+        byte[] code= mLightsController.saveCode();
         putCodeToQueue(code);
     }
 
@@ -309,7 +315,7 @@ public class LightControllerGroup {
      * @param code
      */
     private void putCodeToQueue(byte[] code) {
-        sendOk = false;
+
 //        D.i("put code sendStuation:"+sendOk);
 
         ArrayList<byte[]> list = new ArrayList<byte[]>(48);
@@ -332,7 +338,7 @@ public class LightControllerGroup {
                         synchronized (oldList) {
                             for (byte[] oldCode : oldList) {
                                 if ((oldCode!=null)&&(oldCode[3] & 0xff) == mode && (oldCode[4] & 0xff) == colorOrValue) {//将待发序列中重复或过时指令设为空，使其在发送指令的线程中得以删除
-                                    D.i( "delete old code " + Tool.bytesToHexString(oldCode));
+//                                    D.i( "delete old code " + Tool.bytesToHexString(oldCode));
 //                                    preDelIndexList.add(oldList.indexOf(oldCode));
                                     oldList.set(oldList.indexOf(oldCode),null);
                                 } else {
@@ -348,6 +354,12 @@ public class LightControllerGroup {
                 }
             }
         }
+        if(sendOk){
+            sendOk=false;
+            JsLightBridge.getJsCurrentBridge().postToJs("sendingData","sending");
+//            D.i("notify the Thread");
+//            SendQueue.notify();
+        }
     }
 
     /**
@@ -358,6 +370,11 @@ public class LightControllerGroup {
     private DataPack formatReceive(DataPack revPacket) {
         if (revPacket.getLength() % Light.CODE_LENGTH != 0) {
             DataPack sBuff = buffer.get(revPacket.getIp());
+            boolean isHead=revPacket.isHead();
+            if(isHead){
+                buffer.put(revPacket.getIp(),revPacket);
+                return null;
+            }
             if (sBuff != null) {
                 sBuff.merge(revPacket);
                 if (0 == sBuff.getLength() % Light.CODE_LENGTH) {
@@ -368,7 +385,6 @@ public class LightControllerGroup {
                     return null;
                 }
             } else {
-                buffer.put(revPacket.getIp(), revPacket);
                 return null;
             }
         }
@@ -412,10 +428,9 @@ public class LightControllerGroup {
 
     private Runnable SendQueue = new Runnable() {
         @Override
-        public void run() {
+        public synchronized void run() {
             while (threadFlag) {
                 if (mSendBuffer.size() > 0) {
-
                     Iterator it = mSendBuffer.entrySet().iterator();
                     LinkedList<String> preDelList=new LinkedList<String>();
                     while (it.hasNext()) {
@@ -435,7 +450,6 @@ public class LightControllerGroup {
                                 }
                             } else {
                                 preDelList.add(ip);
-
                             }
                         }
                     }
@@ -451,9 +465,18 @@ public class LightControllerGroup {
                 } else {
                     if (!sendOk) {
                         sendOk = true;
+//                        if(mReadyToSend){
+////                            putCodeToQueue(mLightsController.saveCode());
+//                            mReadyToSend=false;
+//                        }
+                        JsLightBridge.getJsCurrentBridge().postToJs("sendingData","sent");
                         mHandle.sendEmptyMessage(SEND_OK);
                     }
-
+//                    try {
+//                        this.wait();
+//                    }catch(InterruptedException e){
+//                        D.e(e.getMessage());
+//                    }
                 }
                 try {
                     Thread.sleep(1500);

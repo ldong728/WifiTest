@@ -177,7 +177,7 @@ function touchMove(e) {
     if(level>=105)level=0;
     //console.log(level);
     palette[currentColor].setLevel(level);
-
+    e.preventDefault()
 
 }
 /**
@@ -272,6 +272,7 @@ function colorSelectMove(e){
             drawList[currentColor].add(new point(currentX, y));
         }
     }
+    e.preventDefault()
 }
 function colorSelectEnd(e){
     if(colorControlable){

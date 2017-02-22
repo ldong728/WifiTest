@@ -141,5 +141,38 @@ function goBack(){
 }
 
 
+//弹出遮蔽层（mask）的方法
+function showMask() {
+    document.getElementById('popWindow').style.display = 'block';
+    document.getElementById('maskLayer').style.display = 'block';
+}
+function closeMask() {
+    document.getElementById('popWindow').style.display = 'none';
+    document.getElementById('maskLayer').style.display = 'none';
+}
+
+
+function saveManual(){
+    showMask()
+    saveCode('TYPE_MANUAL')
+    deviceCodeSave()
+}
+
+function saveAuto(){
+    showMask()
+    saveCode('TYPE_AUTO')
+    deviceCodeSave()
+}
+
+function codeSaved(){
+    closeMask()
+    //time out方法未完成
+}
+
+
+
+
+
+
 
 

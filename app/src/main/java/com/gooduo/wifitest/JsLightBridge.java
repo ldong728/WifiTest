@@ -20,17 +20,12 @@ public class JsLightBridge extends JsBridge {
     public static final String INF="inf";
     public static final String STATUS_DEL_DEVICE="delDevice";
     public static final String STATUS_USER_ADD="SN";
-    public  boolean ismReadyToSend() {
-        return mReadyToSend;
-    }
-    public void setmReadyToSend(boolean mReadyToSend) {
-        this.mReadyToSend = mReadyToSend;
-    }
+    public static JsLightBridge jsBridge;
     private boolean isGroupOnLine=false;
     private String mCurrentType;
     private String mCurrentScene;
     private String mSn;
-    private boolean mReadyToSend=false;
+//    private boolean mReadyToSend=false;
     private LightControllerGroup mLightControllerGroup;
 //    private WebSocketController mWsc;
     private Db mDb;
@@ -80,8 +75,15 @@ public class JsLightBridge extends JsBridge {
 
         }
     };
+    public static JsLightBridge initJsLightBridge(Handler mHandler, LightControllerGroup lightControllerGroup, Db mDb){
+        jsBridge = new JsLightBridge(mHandler,lightControllerGroup,mDb);
+        return jsBridge;
+    }
+    public static JsLightBridge getJsCurrentBridge(){
+        return jsBridge;
+    }
 
-    public JsLightBridge(Handler mHandler, LightControllerGroup lightControllerGroup, Db mDb) {
+    private JsLightBridge(Handler mHandler, LightControllerGroup lightControllerGroup, Db mDb) {
         super(mHandler);
         mLightControllerGroup = lightControllerGroup;
         this.mDb = mDb;
@@ -456,12 +458,12 @@ public class JsLightBridge extends JsBridge {
     }
     @JavascriptInterface
     public void saveCode(){
-        mReadyToSend=true;
-        if(mLightControllerGroup.isSendOk()){
-            mHandler.sendEmptyMessage(LightControllerGroup.SEND_OK);
-
-            D.i("save");
-        }
+        mLightControllerGroup.saveToDevice();
+//        if(mLightControllerGroup.isSendOk()){
+//            mHandler.sendEmptyMessage(LightControllerGroup.SEND_OK);
+//
+//            D.i("save");
+//        }
 //        mWsc.sendData(mCurrentType,mLightControllerGroup.getControlCodeJson(mCurrentType),mDb);
 //        if(null!=mCurrentScene){
 //            mWsc.sendData(mCurrentScene,mLightControllerGroup.getControlCodeJson(mCurrentScene),mDb);

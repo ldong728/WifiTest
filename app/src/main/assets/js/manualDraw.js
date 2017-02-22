@@ -86,21 +86,22 @@ function touchStart(e) {
 
 }
 function touchMove(e) {
-        var x = (e.touches[0].clientX - canvasLeft)*2;
-        var value = x - baseValue;
 
-    if(value>=0&&value<=valueRange){
+    var x = (e.touches[0].clientX - canvasLeft) * 2;
+    var value = x - baseValue;
+    if (value >= 0 && value <= valueRange) {
         drawList[currentColor].setValue(value);
-    }else if(value<0){
+    } else if (value < 0) {
         drawList[currentColor].setValue(0);
-    }else if(value>valueRange){
+    } else if (value > valueRange) {
         drawList[currentColor].setValue(valueRange);
     }
-    if(tempLevel!=drawList[currentColor].level){
+    if (tempLevel != drawList[currentColor].level) {
         //window.light.setManualCode(JSON.stringify({color:currentColor,level:drawList[currentColor].level}));
-        sendManualCode(currentColor,drawList[currentColor].level);
-        tempLevel=drawList[currentColor].level;
+        sendManualCode(currentColor, drawList[currentColor].level);
+        tempLevel = drawList[currentColor].level;
     }
+    e.preventDefault()
 
 }
 function touchEnd(e) {

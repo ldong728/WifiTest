@@ -27,7 +27,8 @@ class ControllerPoint implements Serializable {
         this.mKey=key;
     }
     public void setLevel(int level){
-        this.mLevel=level;
+
+        this.mLevel=level>-1?level:0;
     }
     public int getLevel(){
         return mLevel;

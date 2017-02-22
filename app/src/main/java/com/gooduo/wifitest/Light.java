@@ -95,9 +95,9 @@ public class Light {
         ByteBuffer buffer=ByteBuffer.allocate(CODE_LENGTH*TOTAL);
         int leftKey,rightKey;
         int leftCount=0,rightCount=0;
-        int leftE=0,rightE=0;
-        int leftOffsetCount=0,rightOffsetCount=0;
-        int offset=0;
+//        int leftE=0,rightE=0;
+//        int leftOffsetCount=0,rightOffsetCount=0;
+//        int offset=0;
         mControlMap[index].setKey(true);
         mControlMap[index].setLevel(level);
         buffer.put(mControlMap[index].getCode(mColor));
@@ -119,24 +119,36 @@ public class Light {
             rightKey=TOTAL-1;
         }
         if(leftCount>0){
-            leftE=(level-mControlMap[leftKey].getLevel())/(leftCount+1);  //获取每一点的平均亮度差
-            leftOffsetCount=(level-mControlMap[leftKey].getLevel())%(leftCount+1);//获取求亮度差后的余数
-            for(int i=0;i<leftCount;i++){
-                offset=i<Math.abs(leftOffsetCount)-1? Math.abs(leftOffsetCount)/leftOffsetCount:0;//将余数放入每一点
-                mControlMap[index-i-1].setLevel(mControlMap[index-i].getLevel()-leftE-offset);
-                buffer.put(mControlMap[index - i - 1].getCode(mColor));
-                length+=CODE_LENGTH;
-            }
+                double levelDiffL=level-mControlMap[leftKey].getLevel();
+                for(int i=1;i<leftCount+1;i++){
+                    mControlMap[leftKey+i].setLevel(mControlMap[leftKey].getLevel()+(int)(i*levelDiffL/(double)leftCount));
+                    buffer.put(mControlMap[leftKey+i].getCode(mColor));
+                    length+=CODE_LENGTH;
+                }
+//            leftE=(level-mControlMap[leftKey].getLevel())/(leftCount+1);  //获取每一点的平均亮度差
+//            leftOffsetCount=(level-mControlMap[leftKey].getLevel())%(leftCount+1);//获取求亮度差后的余数
+//            for(int i=0;i<leftCount;i++){
+//                offset=i<Math.abs(leftOffsetCount)-1? Math.abs(leftOffsetCount)/leftOffsetCount:0;//将余数放入每一点
+//                mControlMap[index-i-1].setLevel(mControlMap[index-i].getLevel()-leftE-Math.abs(offset));
+//                buffer.put(mControlMap[index - i - 1].getCode(mColor));
+//                length+=CODE_LENGTH;
+//            }
         }
         if(rightCount>0){
-            rightE=(level-mControlMap[rightKey].getLevel())/(rightCount+1);
-            rightOffsetCount=(level-mControlMap[rightKey].getLevel())%(rightCount+1);
-            for(int j=0;j<rightCount;j++){
-                offset=j<Math.abs(rightOffsetCount)-1? Math.abs(rightOffsetCount)/rightOffsetCount:0;
-                mControlMap[index+j+1].setLevel(mControlMap[index+j].getLevel()-rightE-offset);
-                buffer.put( mControlMap[index+j+1].getCode(mColor));
+            double levelDiffR=mControlMap[rightKey].getLevel()-level;
+            for(int j=1;j<rightCount+1;j++){
+                mControlMap[index+j].setLevel(mControlMap[index].getLevel()+(int)(j*levelDiffR/(double)rightCount));
+                buffer.put(mControlMap[index+j].getCode(mColor));
                 length+=CODE_LENGTH;
             }
+//            rightE=(level-mControlMap[rightKey].getLevel())/(rightCount+1);
+//            rightOffsetCount=(level-mControlMap[rightKey].getLevel())%(rightCount+1);
+//            for(int j=0;j<rightCount;j++){
+//                offset=j<Math.abs(rightOffsetCount)-1? Math.abs(rightOffsetCount)/rightOffsetCount:0;
+//                mControlMap[index+j+1].setLevel(mControlMap[index+j].getLevel()-rightE-Math.abs(offset));
+//                buffer.put( mControlMap[index+j+1].getCode(mColor));
+//                length+=CODE_LENGTH;
+//            }
         }
         if(buffer.hasArray()){
             byte[] data=new byte[length];

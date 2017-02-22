@@ -117,6 +117,7 @@ function Slider(canvas,index, color,left,top,displayer) {
                 _.setValue(x)
             //console.log(_.level);
         }
+        e.preventDefault()
     }
     _.touchEnd=function(e){
         _.choosen=false;

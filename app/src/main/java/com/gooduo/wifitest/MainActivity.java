@@ -77,26 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
                 case LightControllerGroup.SEND_OK:
                     Log.i("godlee", "send all over");
-                    if(mLightBridge.ismReadyToSend()){
-                        new Thread(){
-                            @Override
-                            public void run(){
-                                mUdpController.sendMsg(new byte[]{(byte)0xaa,
-                                        (byte)0x08,
-                                        (byte)0x0a,
-                                        (byte)0x07,
-                                        (byte)0xa5,
-                                        (byte)0x00,
-                                        (byte)0x00,
-                                        (byte)0x00,
-                                        (byte)0x00,
-                                        (byte)0x00,
-                                        (byte)0x00,
-                                        (byte)0xb6},UdpController.DATA_PORT);
-                            }
-                        }.start();
-                        mLightBridge.setmReadyToSend(false);
-                    }
+
                     break;
                 case LightControllerGroup.SINGLE_SEND_OK:
                     String ip=(String)msg.obj;
@@ -160,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
         mLightControllerGroup=new LightControllerGroup(mHander);
 //        mWebController = new WebSocketController(mHander);
         mWifiBridge=new JsWifiBridge(mUdpController,mWifiManage,mHander);
-        mLightBridge=new JsLightBridge(mHander,mLightControllerGroup,mDb);
+        mLightBridge=JsLightBridge.initJsLightBridge(mHander,mLightControllerGroup,mDb);
 //        mWebBridge =new JsWebBridge(mHander,mDb,mRequestQueue);
 
 //        mLightControllerGroup.addGroupMember("C4BE8474C223");

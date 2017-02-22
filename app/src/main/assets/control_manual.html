@@ -14,20 +14,35 @@
 </head>
 
 <body>
+<!--    mask元素开始-->
+    <div id="popWindow" class="popWindow" style="display: none;">
+    </div>
+    <div id="maskLayer" class="maskLayer" style="display: none;">
+        <div style="margin:20px 0px 0px 0px">
+            <img src="image/loading1.gif" alt=""></br>
+            保存中…
+        </div>
+    </div>
+        
+<!--    mask元素结束-->
+
     <div class="app-mode shadow">
         <div class="app-tool clearfix">
             <a onClick="app_slide.show();" class="pos-l img"><img src="image/icon/6.png" alt=""></a>
             <span class="pos-m">鱼缸#1</span>
-            <a href="equip_index.html" class="pos-r img"><img src="image/icon/16.png" alt=""></a>
+            <a href="equip_info.html" class="pos-r img"><img src="image/icon/16.png" alt=""></a>
         </div>
         <div class="mode-type">
-            <a href="control_mix.html">自动</a><a href="control_manual.html" class="cur-a">手动</a>
+            <a id="to_auto">自动</a><a class="cur-a">手动</a>
         </div>
         <div class="mode-info">
             <div class="radius">
                 <div class="ctr-2 manual_canvas_wrap">
                     <canvas id="manual_canvas"></canvas>
                 </div>
+            </div>
+            <div class="radius" >
+                <input type="button" id="saveButton" value="保  存" class="noset" onClick="saveManual()">
             </div>
         </div>
         <!--侧边代码开始-->
@@ -46,8 +61,23 @@
         <!--侧边代码结束-->
     </div>
 <script>
-    alert("save!!!!");
-    deviceCodeSave();
-</script>
+    $('#to_auto').click(function(){headerTo('control_mix.html')})
+    function sendingData(state) {
+        var btn = $('#saveButton');
+        if (state == "sending") {
+            btn.val("发 送 中…");
+            btn.get(0).disabled = true;
+            $('#to_auto').get(0).disabled = true
+        } else if (state == "sent") {
+            closeMask();
+            btn.val('保  存');
+            btn.get(0).disabled = false;
+            $('#to_auto').get(0).disabled = false
+        } else {
+        }
+
+    }
+                               
+    </script>
 </body>
 </html>
