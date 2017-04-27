@@ -40,7 +40,7 @@ function getGroupList(data){
 }
 function getGroupInf(){
     if(!debug){
-        return window.light.getGroupInf();
+        return eval('('+window.light.getGroupInf()+')');
     }
     return '{G_SSID:"abcd",G_SSID_PASD:"abcd"}'
 }

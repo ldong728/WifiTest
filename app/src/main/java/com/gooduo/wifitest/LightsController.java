@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 //import java.security.MessageDigest;
@@ -160,6 +161,32 @@ public class LightsController {
                 (byte)0x00,
                 (byte)0x13};
         return data;
+    }
+    public byte[] timeCode(){
+        SimpleDateFormat data = new SimpleDateFormat("yyyy,MM,dd,HH,mm,ss");
+        String sTime = data.format(new java.util.Date());
+        String[] times = sTime.split(",");
+        int y = Integer.parseInt(times[0]);
+        int M = Integer.parseInt(times[1]);
+        int d = Integer.parseInt(times[2]);
+        int h = Integer.parseInt(times[3]);
+        int m = Integer.parseInt(times[4]);
+        int s = Integer.parseInt(times[5]);
+        byte[] timeCode = new byte[]{
+                (byte) 0xaa,
+                (byte) 0x08,
+                (byte) 0x0a,
+                (byte) 0x09,
+                (byte) (y - 1970),
+                (byte) M,
+                (byte) d,
+                (byte) h,
+                (byte) m,
+                (byte) s,
+                (byte) 0,
+                (byte) (0x0a + 0x09 + (y - 1970) + M + d + h + m + s)
+        };
+        return timeCode;
     }
 
     /**

@@ -29,7 +29,7 @@
     <div class="app-mode shadow">
         <div class="app-tool clearfix">
             <a onClick="app_slide.show();" class="pos-l img"><img src="image/icon/6.png" alt=""></a>
-            <span class="pos-m">鱼缸#1</span>
+            <span class="pos-m" id="group-name"></span>
             <a href="equip_info.html" class="pos-r img"><img src="image/icon/16.png" alt=""></a>
         </div>
         <div class="mode-type">
@@ -48,7 +48,7 @@
         <!--侧边代码开始-->
         <div class="app-slide">
             <div class="main">
-                <div class="tab">鱼缸#1</div>
+                <div class="tab" id="slide-group-name"></div>
                 <dl class="list">
                     <dt></dt>
                     <!--<dd><a href="control_mix.html">混合模式</a></dd>-->
@@ -61,6 +61,9 @@
         <!--侧边代码结束-->
     </div>
 <script>
+    var inf=getGroupInf();
+    $('#group-name').text(inf.G_NAME);
+    $('#slide-group-name').text(inf.G_NAME);
     $('#to_auto').click(function(){headerTo('control_mix.html')})
     function sendingData(state) {
         var btn = $('#saveButton');

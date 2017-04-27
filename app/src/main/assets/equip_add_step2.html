@@ -46,7 +46,7 @@
 
     $(document).on('click','.group',function(){
         chooseGroup($(this).attr('id'));
-        var groupInf=eval('('+getGroupInf()+')');
+        var groupInf=getGroupInf();
         ssid=groupInf.G_SSID;
         pasd=groupInf.G_SSID_PASD;
         if(!mac){

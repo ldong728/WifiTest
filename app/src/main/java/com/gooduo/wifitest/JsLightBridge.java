@@ -8,7 +8,6 @@ import android.webkit.JavascriptInterface;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 
 /**
@@ -211,33 +210,7 @@ public class JsLightBridge extends JsBridge {
     @JavascriptInterface
     public void initTime() {
         D.i("initTime");
-        SimpleDateFormat data = new SimpleDateFormat("yyyy,MM,dd,HH,mm,ss");
-        String sTime = data.format(new java.util.Date());
-        String[] times = sTime.split(",");
-        int y = Integer.parseInt(times[0]);
-        int M = Integer.parseInt(times[1]);
-        int d = Integer.parseInt(times[2]);
-        int h = Integer.parseInt(times[3]);
-        int m = Integer.parseInt(times[4]);
-        int s = Integer.parseInt(times[5]);
-        byte[] timeCode = new byte[]{
-                (byte) 0xaa,
-                (byte) 0x08,
-                (byte) 0x0a,
-                (byte) 0x09,
-                (byte) (y - 1970),
-                (byte) M,
-                (byte) d,
-                (byte) h,
-                (byte) m,
-                (byte) s,
-                (byte) 0,
-                (byte) (0x0a + 0x09 + (y - 1970) + M + d + h + m + s)
-        };
-        mLightControllerGroup.initTime(timeCode);
-        D.i( data.toPattern());
-        D.i( data.toLocalizedPattern());
-        D.i( data.format(new java.util.Date()));
+        mLightControllerGroup.initTime();
     }
     @JavascriptInterface
         public String tempMethod(){
@@ -329,6 +302,7 @@ public class JsLightBridge extends JsBridge {
     @JavascriptInterface
     public String getGroupInf(){
         JSONObject obj=mDb.getGroupInf();
+        D.i(obj.toString());
         return obj.toString();
     }
 

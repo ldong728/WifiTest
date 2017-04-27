@@ -275,7 +275,8 @@ public class LightControllerGroup {
 
     }
 
-    public void initTime(byte[] timeData) {
+    public void initTime() {
+        byte[] timeData =mLightsController.timeCode();
         putCodeToQueue(timeData);
 //        mUdpController.putMsg(timeData, ip);
     }
